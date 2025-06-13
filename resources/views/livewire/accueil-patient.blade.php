@@ -3,7 +3,7 @@
     <div class="mb-4 md:mb-8 p-4 md:p-6 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="text-center md:text-left">
             <h1 class="text-2xl md:text-3xl font-bold mb-1">
-                Cabinet Tayba
+                Cabinet Dentaire
             </h1>
             <p class="text-green-100 text-base md:text-lg">
                     {{ is_array(Auth::user()->typeuser) ? (Auth::user()->typeuser['Libelle'] ?? '') : (is_object(Auth::user()->typeuser) ? Auth::user()->typeuser->Libelle : Auth::user()->typeuser) }}
@@ -30,13 +30,12 @@
         </div>
     </div>
 
-    @if($isDocteurProprietaire || $isDocteur)
+    @if($isDocteurProprietaire || $isDocteur || $isSecretaire)
         <div class="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-8 bg-gray-50 z-10 py-2 md:py-4 justify-center items-center">
             {{-- Consultation --}}
             <button wire:click="{{ $selectedPatient ? 'setAction(\'consultation\')' : '' }}"
                 class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200"
-                      :class="{'bg-white text-green-600': true, 'group-hover:bg-green-500 group-hover:text-white': false}">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
                     <i class="fas fa-stethoscope text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
                 </span>
                 <span class="font-semibold">Consultation</span>

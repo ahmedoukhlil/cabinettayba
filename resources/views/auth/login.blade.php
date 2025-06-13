@@ -13,7 +13,7 @@
         <div class="max-w-md w-full space-y-8">
             <div class="text-center">
                 <div class="flex items-center justify-center mb-4">
-                    <span class="font-bold text-green-700 text-3xl md:text-4xl tracking-wide">Cabinet Tayba</span>
+                    <span class="text-4xl font-bold text-green-700 tracking-wide">CABINET TAYBA</span>
                 </div>
                 <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
                     Connexion
@@ -89,7 +89,7 @@
             <!-- Footer -->
             <div class="text-center mt-8">
                 <p class="text-sm text-gray-600">
-                    &copy; {{ date('Y') }} Tayba. Tous droits réservés.
+                    &copy; {{ date('Y') }} Cabinet Tayba. Tous droits réservés.
                 </p>
             </div>
         </div>

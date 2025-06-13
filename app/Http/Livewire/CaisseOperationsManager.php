@@ -41,6 +41,7 @@ class CaisseOperationsManager extends Component
         // Par défaut, filtrer sur la journée courante
         $today = now()->toDateString();
         $this->date_debut = $today;
+        
         if ($this->isDocteur) {
             $this->medecin_id = $user->fkidmedecin;
         }

@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue sur Medipole</h1>
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue sur Cabinet Orient</h1>
         <p class="text-lg text-gray-600">Gérez efficacement votre cabinet avec nos outils intégrés</p>
     </div>
 

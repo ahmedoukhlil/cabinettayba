@@ -10,6 +10,7 @@ use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReglementFactureController;
 use App\Http\Livewire\StatistiquesManager;
+use App\Http\Controllers\CaisseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,4 +111,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/historique-paiement/print/{patient}', [PaiementController::class, 'printHistorique'])->name('paiement.print-historique');
 
     Route::get('/statistiques', StatistiquesManager::class)->name('statistiques');
+
+    Route::get('/caisse/etat-journalier/{date?}', [CaisseController::class, 'printEtatCaisse'])->name('caisse.etat-journalier');
 });

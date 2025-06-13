@@ -13,7 +13,7 @@
                     @if($isDocteurProprietaire)
                         <div class="relative">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Médecin</label>
-                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
                                 <option value="">Tous les médecins</option>
                                 @foreach($medecins as $medecin)
                                     <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
@@ -46,11 +46,15 @@
         @if($operations->count() > 0)
             <!-- Totaux généraux -->
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
+                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6 flex justify-between items-center">
                     <h2 class="text-2xl font-bold text-white flex items-center">
                         <i class="fas fa-chart-line mr-3"></i>
                         Totaux généraux
                     </h2>
+                    <a href="{{ route('caisse.etat-journalier', ['date' => $date_debut]) }}" target="_blank" class="bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors">
+                        <i class="fas fa-print mr-2"></i>
+                        Imprimer l'état de caisse
+                    </a>
                 </div>
                 <div class="p-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

@@ -33,7 +33,7 @@ class UserManager extends Component
 
     protected $rules = [
         'login' => 'required|min:3|unique:t_user,login',
-        'password' => 'required|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/',
+        'password' => 'required|min:6',
         'nomComplet' => 'required|min:3',
         'role' => 'required|in:1,2,3', // 1=Secrétaire, 2=Médecin, 3=Propriétaire
     ];
@@ -43,8 +43,7 @@ class UserManager extends Component
         'login.min' => 'L\'identifiant doit contenir au moins 3 caractères.',
         'login.unique' => 'Cet identifiant est déjà utilisé.',
         'password.required' => 'Le mot de passe est obligatoire.',
-        'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-        'password.regex' => 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.',
+        'password.min' => 'Le mot de passe doit contenir au moins 6 caractères.',
         'nomComplet.required' => 'Le nom complet est obligatoire.',
         'nomComplet.min' => 'Le nom complet doit contenir au moins 3 caractères.',
         'role.required' => 'Le rôle est obligatoire.',
@@ -110,7 +109,7 @@ class UserManager extends Component
     {
         if ($this->userId) {
             $this->rules['login'] = 'required|min:3|unique:t_user,login,' . $this->userId . ',Iduser';
-            $this->rules['password'] = 'nullable|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/';
+            $this->rules['password'] = 'nullable|min:6';
         }
 
         $this->validate();
@@ -140,21 +139,36 @@ class UserManager extends Component
                 'DtCr' => now(),
             ];
 
-            if ($this->password) {
-                $userData['password'] = Hash::make($this->password);
-            }
-
             if ($this->userId) {
-                TUser::where('Iduser', $this->userId)->update($userData);
+                // Si c'est une modification
+                $user = TUser::find($this->userId);
+                if (!$user) {
+                    throw new \Exception('Utilisateur non trouvé');
+                }
+
+                // Mettre à jour les données de base
+                $user->update($userData);
+
+                // Mettre à jour le mot de passe si fourni
+                if (!empty($this->password)) {
+                    $user->password = $this->password;
+                    $user->save();
+                }
+
                 session()->flash('message', 'Utilisateur modifié avec succès.');
             } else {
+                // Si c'est une création
+                if (empty($this->password)) {
+                    throw new \Exception('Le mot de passe est requis pour la création d\'un utilisateur');
+                }
+                $userData['password'] = $this->password;
                 TUser::create($userData);
                 session()->flash('message', 'Utilisateur créé avec succès.');
             }
 
             $this->closeModal();
         } catch (\Exception $e) {
-            session()->flash('error', 'Une erreur est survenue lors de l\'enregistrement de l\'utilisateur.');
+            session()->flash('error', 'Une erreur est survenue lors de l\'enregistrement de l\'utilisateur : ' . $e->getMessage());
         }
     }
 

@@ -130,22 +130,16 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div class="flex flex-row gap-2 justify-end">
-                                    <button wire:click.stop="openAddActeForm({{ $facture['id'] }})" class="w-auto px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2 justify-center">
+                                <div class="flex flex-row gap-2 justify-end mt-4">
+                                    <button wire:click="ouvrirReglementFacture({{ $facture['id'] }})" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center">
+                                        Payer
+                                    </button>
+                                    <button wire:click.stop="openAddActeForm({{ $facture['id'] }})" class="min-w-[150px] px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center gap-2">
                                         <i class="fas fa-plus"></i> Ajouter un acte
                                     </button>
-                                    <a href="{{ route('consultations.facture-patient', $facture['id']) }}" target="_blank" class="w-auto px-4 py-2 text-sm bg-gray-700 text-white rounded hover:bg-gray-800 flex items-center gap-2 justify-center">
+                                    <a href="{{ route('consultations.facture-patient', $facture['id']) }}" target="_blank" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-gray-700 text-white rounded hover:bg-gray-800 flex items-center justify-center gap-2">
                                         <i class="fas fa-print"></i> Imprimer
                                     </a>
-                                    @if($reste > 0)
-                                        <button wire:click.stop="ouvrirReglementFacture({{ $facture['id'] }})" class="w-auto px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2 justify-center">
-                                            <i class="fas fa-file-invoice-dollar"></i> Régler
-                                        </button>
-                                    @elseif($reste < 0)
-                                        <button wire:click.stop="ouvrirReglementFacture({{ $facture['id'] }})" class="w-auto px-4 py-2 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 flex items-center gap-2 justify-center">
-                                            <i class="fas fa-undo"></i> Rembourser
-                                        </button>
-                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -190,20 +184,47 @@
                             <div><strong>Montant facturé :</strong> {{ number_format($factureSelectionnee['montant_total'] ?? 0, 0, '', ' ') }} MRU</div>
                             <div><strong>Part assurance :</strong> {{ number_format($totalPEC, 0, '', ' ') }} MRU</div>
                             <div><strong>Part patient :</strong> {{ number_format($totalPatient, 0, '', ' ') }} MRU</div>
-                            <div><strong>Reste à payer patient :</strong> {{ number_format($restePatient, 0, '', ' ') }} MRU</div>
+                            <div>
+                                <strong>Reste à payer patient :</strong> 
+                                <span class="{{ $restePatient < 0 ? 'text-green-600' : '' }}">
+                                    {{ number_format($restePatient, 0, '', ' ') }} MRU
+                                    @if($restePatient < 0)
+                                        (Acompte)
+                                    @endif
+                                </span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Formulaire de règlement -->
                     <form wire:submit.prevent="enregistrerReglement">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Montant du règlement</label>
-                                <input type="number" wire:model.defer="montantReglement" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                        <div class="mt-4">
+                            <label for="montantReglement" class="block text-sm font-medium text-gray-700">
+                                Montant du paiement
+                            </label>
+                            <div class="mt-1">
+                                <input type="number" step="0.01" wire:model="montantReglement" id="montantReglement"
+                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    placeholder="Entrez un montant positif pour un paiement/acompte, négatif pour un remboursement">
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Mode de paiement</label>
-                                <select wire:model.defer="modePaiement" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                            @if($factureSelectionnee['est_reglee'])
+                                <p class="mt-2 text-sm text-gray-500">
+                                    Cette facture est déjà réglée. Vous pouvez ajouter un nouveau paiement ou un remboursement.
+                                </p>
+                            @else
+                                <p class="mt-2 text-sm text-gray-500">
+                                    Montant restant à payer : {{ number_format($factureSelectionnee['reste_a_payer'], 2) }} MRU
+                                </p>
+                            @endif
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="modePaiement" class="block text-sm font-medium text-gray-700">
+                                Mode de paiement
+                            </label>
+                            <div class="mt-1">
+                                <select wire:model="modePaiement" id="modePaiement" required
+                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                     <option value="">Sélectionnez un mode de paiement</option>
                                     @foreach($modesPaiement as $mode)
                                         <option value="{{ $mode->idtypepaie }}">{{ $mode->LibPaie }}</option>
@@ -211,10 +232,16 @@
                                 </select>
                             </div>
                         </div>
+
                         <div class="mt-6 flex justify-end">
-                            <button type="submit" class="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded hover:from-green-700 hover:to-green-600">
-                                Enregistrer le règlement
-                            </button>
+                            <div class="flex justify-end mt-4">
+                                <button type="button" wire:click="closeReglementForm" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Annuler
+                                </button>
+                                <button type="button" wire:click="enregistrerReglement" class="ml-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Payer
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

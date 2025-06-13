@@ -171,7 +171,7 @@
                                         @error('nni') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                     <div>
-                                        <label for="genre" class="block text-sm font-medium text-gray-700">Genre *</label>
+                                        <label for="genre" class="block text-sm font-medium text-gray-700">Genre</label>
                                         <select wire:model.defer="genre" id="genre" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500">
                                             <option value="">Sélectionner</option>
                                             <option value="H">Homme (H)</option>

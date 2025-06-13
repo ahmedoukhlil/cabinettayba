@@ -70,6 +70,14 @@ class TUser extends Authenticatable
     }
 
     /**
+     * Méthode pour vérifier si le mot de passe correspond
+     */
+    public function checkPassword($password)
+    {
+        return Hash::check($password, $this->password);
+    }
+
+    /**
      * Accesseur pour obtenir le rôle de l'utilisateur sous forme de chaîne
      */
     public function getRoleNameAttribute()
@@ -369,5 +377,32 @@ class TUser extends Authenticatable
     {
         // Seul le docteur propriétaire peut modifier les utilisateurs
         return $this->IdClasseUser == 3;
+    }
+
+    public function canSecretairePerform($action)
+    {
+        if (!$this->isSecretaire()) {
+            return false;
+        }
+
+        $secretairePermissions = [
+            'manage_rdv' => ['rendez-vous.create', 'rendez-vous.view', 'rendez-vous.edit'],
+            'manage_patient' => ['patient.create', 'patient.view', 'patient.edit'],
+            'manage_caisse' => ['caisse-operations.view', 'caisse-operations.create'],
+            'view_actes' => ['act.view'],
+            'view_assureurs' => ['assureur.view']
+        ];
+
+        if (!isset($secretairePermissions[$action])) {
+            return false;
+        }
+
+        foreach ($secretairePermissions[$action] as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

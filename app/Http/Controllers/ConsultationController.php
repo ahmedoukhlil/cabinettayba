@@ -28,7 +28,7 @@ class ConsultationController extends Controller
         $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 3600, function() {
             $user = Auth::user();
             return [
-                'NomCabinet' => $user->cabinet->NomCabinet ?? 'Medipole',
+                'NomCabinet' => $user->cabinet->NomCabinet ?? 'Cabinet Orient',
                 'Adresse' => $user->cabinet->Adresse ?? 'Adresse du Cabinet',
                 'Telephone' => $user->cabinet->Telephone ?? 'Téléphone du Cabinet'
             ];

@@ -95,6 +95,7 @@ class ReglementFacture extends Component
                         'reste_a_payer_pec' => $resteAPayerPEC,
                         'TXPEC' => $facture->TXPEC ?? 0,
                         'ISTP' => $facture->ISTP ?? 0,
+                        'est_reglee' => $resteAPayerPatient <= 0 && $resteAPayerPEC <= 0
                     ];
                 });
         } else {
@@ -106,7 +107,12 @@ class ReglementFacture extends Component
     {
         $this->factureSelectionnee = collect($this->factures)->firstWhere('id', $factureId);
         if ($this->factureSelectionnee) {
-            $this->montantReglement = $this->factureSelectionnee['reste_a_payer'];
+            // Si la facture est déjà réglée, on permet d'ajouter un montant positif
+            if ($this->factureSelectionnee['est_reglee']) {
+                $this->montantReglement = 0;
+            } else {
+                $this->montantReglement = $this->factureSelectionnee['reste_a_payer'];
+            }
             // Détection assuré ou non
             $facture = Facture::find($factureId);
             if ($facture && $facture->ISTP == 1) {
@@ -146,12 +152,14 @@ class ReglementFacture extends Component
             }
 
             $isRemboursement = $this->montantReglement < 0;
-            $montantAbsolu = abs($this->montantReglement);
+            $isAcompte = $this->montantReglement > $this->factureSelectionnee['reste_a_payer'];
+            $montantOperation = $this->montantReglement;
+            $montantAbsolu = abs($montantOperation);
 
             $operation = CaisseOperation::create([
                 'dateoper' => now(),
-                'MontantOperation' => $isRemboursement ? -$montantAbsolu : $montantAbsolu,
-                'designation' => ($isRemboursement ? 'Remboursement' : 'Règlement') . ' facture N°' . $facture->Nfacture,
+                'MontantOperation' => $montantOperation,
+                'designation' => ($isRemboursement ? 'Remboursement' : ($isAcompte ? 'Acompte' : 'Règlement')) . ' facture N°' . $facture->Nfacture,
                 'fkidTiers' => $this->selectedPatient['ID'],
                 'entreEspece' => $isRemboursement ? 0 : $montantAbsolu,
                 'retraitEspece' => $isRemboursement ? $montantAbsolu : 0,
@@ -171,9 +179,9 @@ class ReglementFacture extends Component
 
             // Mise à jour de la facture selon le type de règlement
             if ($facture->ISTP == 1 && $this->pourQui === 'pec') {
-                $facture->ReglementPEC = ($facture->ReglementPEC ?? 0) + $this->montantReglement;
+                $facture->ReglementPEC = ($facture->ReglementPEC ?? 0) + $montantOperation;
             } else {
-                $facture->TotReglPatient = ($facture->TotReglPatient ?? 0) + $this->montantReglement;
+                $facture->TotReglPatient = ($facture->TotReglPatient ?? 0) + $montantOperation;
             }
             $facture->save();
 
@@ -182,17 +190,18 @@ class ReglementFacture extends Component
             $this->dernierReglement = [
                 'facture' => $facture,
                 'patient' => $this->selectedPatient,
-                'montant' => $this->montantReglement,
+                'montant' => $montantOperation,
                 'mode' => $typePaiement->LibPaie,
                 'date' => now()->format('d/m/Y H:i'),
                 'medecin' => $medecin->Nom,
                 'operation' => $operation,
-                'isRemboursement' => $isRemboursement
+                'isRemboursement' => $isRemboursement,
+                'isAcompte' => $isAcompte
             ];
 
             $this->reset(['montantReglement', 'modePaiement', 'factureSelectionnee', 'pourQui']);
             $this->loadFactures();
-            session()->flash('message', ($isRemboursement ? 'Remboursement' : 'Règlement') . ' enregistré avec succès.');
+            session()->flash('message', ($isRemboursement ? 'Remboursement' : ($isAcompte ? 'Acompte' : 'Règlement')) . ' enregistré avec succès.');
 
             $receiptUrl = route('reglement-facture.receipt', $operation->getKey());
             $this->dispatchBrowserEvent('open-receipt', ['url' => $receiptUrl]);
@@ -285,10 +294,10 @@ class ReglementFacture extends Component
 
             // Mise à jour de la facture uniquement pour l'acte sélectionné
             $facture = \App\Models\Facture::find($this->factureIdForActe);
-            $prixRefActe = $this->prixReference;
+            $prixFactureActe = $this->prixFacture;
             $txpec = $facture->TXPEC ?? 0;
-            $nouveauTotFacture = ($facture->TotFacture ?? 0) + $prixRefActe;
-            $montantPEC = $prixRefActe * $txpec;
+            $nouveauTotFacture = ($facture->TotFacture ?? 0) + $prixFactureActe;
+            $montantPEC = $prixFactureActe * $txpec;
             $totalPEC = ($facture->TotalPEC ?? 0) + $montantPEC;
             $totalfactPatient = $nouveauTotFacture - $totalPEC;
             $facture->TotFacture = $nouveauTotFacture;

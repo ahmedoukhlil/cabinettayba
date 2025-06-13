@@ -95,10 +95,12 @@
         <tbody>
         <tr>
             <td>
-                @if($facture->TypeReglement == 'P')
-                    Paiement facture N°{{ $facture->Nfacture }}
-                @else
+                @if($operation->MontantOperation < 0)
                     Remboursement facture N°{{ $facture->Nfacture }}
+                @elseif($operation->MontantOperation > $facture->TotFacture)
+                    Acompte facture N°{{ $facture->Nfacture }}
+                @else
+                    Paiement facture N°{{ $facture->Nfacture }}
                 @endif
             </td>
             <td>{{ number_format(abs($operation->MontantOperation), 2) }} MRU</td>
@@ -112,10 +114,12 @@
         </tr>
     </table>
     <div class="montant-lettres">
-        @if($facture->TypeReglement == 'P')
-            Arrêté le présent paiement à la somme de : <strong>{{ $operation->MontantEnLettre ?? $facture->en_lettres ?? '---' }}</strong>
-        @else
+        @if($operation->MontantOperation < 0)
             Arrêté le présent remboursement à la somme de : <strong>{{ $operation->MontantEnLettre ?? $facture->en_lettres ?? '---' }}</strong>
+        @elseif($operation->MontantOperation > $facture->TotFacture)
+            Arrêté le présent acompte à la somme de : <strong>{{ $operation->MontantEnLettre ?? $facture->en_lettres ?? '---' }}</strong>
+        @else
+            Arrêté le présent paiement à la somme de : <strong>{{ $operation->MontantEnLettre ?? $facture->en_lettres ?? '---' }}</strong>
         @endif
     </div>
     <div style="margin-top: 10px; font-size: 13px; text-align: left;">

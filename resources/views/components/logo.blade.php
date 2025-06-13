@@ -1,3 +1,5 @@
 @props(['size' => 'h-16'])
 
-<span class="font-bold text-green-700 text-xl md:text-2xl lg:text-3xl tracking-wide">Cabinet Tayba</span> 
+<div class="flex items-center">
+    <span class="text-2xl font-bold text-green-700 tracking-wide">CABINET TAYBA</span>
+</div> 
