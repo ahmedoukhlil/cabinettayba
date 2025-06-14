@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue sur Cabinet Orient</h1>
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Bienvenue sur Cabinet Tayba</h1>
         <p class="text-lg text-gray-600">Gérez efficacement votre cabinet avec nos outils intégrés</p>
     </div>
 
@@ -33,7 +33,7 @@
 
         <!-- Carte Patients -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
-            <div class="bg-gradient-to-r from-green-500 to-green-600 p-6">
+            <div class="bg-primary p-6">
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold text-white">Patients</h2>
                     <div class="bg-white bg-opacity-20 p-3 rounded-full">
@@ -44,7 +44,7 @@
             <div class="p-6">
                 <p class="text-gray-600 mb-4">Gérez votre base de données de patients</p>
                 <div class="space-y-4">
-                    <a href="{{ route('patients.index') }}" class="block w-full text-center bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors duration-300">
+                    <a href="{{ route('patients.index') }}" class="block w-full text-center bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary hover:text-white transition-colors duration-300">
                         <i class="fas fa-user-plus mr-2"></i>Nouveau patient
                     </a>
                     <a href="{{ route('patients.index') }}" class="block w-full text-center bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-300">
@@ -56,7 +56,7 @@
 
         <!-- Carte Caisse -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
-            <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6">
+            <div class="bg-gradient-to-r from-primary to-primary-dark p-6">
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold text-white">Caisse</h2>
                     <div class="bg-white bg-opacity-20 p-3 rounded-full">
@@ -67,7 +67,7 @@
             <div class="p-6">
                 <p class="text-gray-600 mb-4">Gérez les opérations de caisse et les paiements</p>
                 <div class="space-y-4">
-                    <button disabled class="block w-full text-center bg-purple-500 text-white py-2 px-4 rounded-lg opacity-50 cursor-not-allowed">
+                    <button disabled class="block w-full text-center bg-primary text-white py-2 px-4 rounded-lg opacity-50 cursor-not-allowed">
                         <i class="fas fa-plus mr-2"></i>Nouvelle opération
                     </button>
                     <a href="{{ route('caisse-operations') }}" class="block w-full text-center bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors duration-300">

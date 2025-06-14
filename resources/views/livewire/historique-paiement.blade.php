@@ -2,9 +2,9 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
     <div id="historique-paiement-modal" wire:key="historique-paiement-modal-{{ $patient['ID'] ?? '0' }}" class="bg-white rounded-lg shadow-lg w-full max-w-3xl p-4 relative print-modal max-h-[85vh] overflow-y-auto">
         <!-- Bouton X pour fermer -->
-        <button type="button" wire:click="fermerModal" class="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl font-bold focus:outline-none print:hidden" aria-label="Fermer">&times;</button>
+        <button type="button" wire:click="fermerModal" class="absolute top-2 right-2 text-gray-500 hover:text-primary text-2xl font-bold focus:outline-none print:hidden" aria-label="Fermer">&times;</button>
         @if (session()->has('message'))
-            <div class="mb-4 p-2 bg-green-100 text-green-800 rounded text-center">
+            <div class="mb-4 p-2 bg-primary-light text-primary rounded text-center">
                 {{ session('message') }}
             </div>
         @endif
@@ -22,7 +22,7 @@
             <div class="flex items-center gap-2">
                 <div class="text-sm text-gray-600 mr-4">Date d'édition : {{ now()->format('d/m/Y H:i') }}</div>
                 <!-- Lien vers la vue d'impression dédiée -->
-                <a href="{{ route('paiement.print-historique', $patient['ID'] ?? $patient['id'] ?? 0) }}" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 print:hidden">Imprimer</a>
+                <a href="{{ route('reglement-facture.receipt', ['operation' => $operation->id]) }}" target="_blank" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark print:hidden">Imprimer</a>
             </div>
         </div>
 

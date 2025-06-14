@@ -1,8 +1,8 @@
 <div class="min-h-screen bg-gray-50">
     <div class="container mx-auto px-4 py-8">
         <!-- Filtres -->
-        <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-            <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
+        <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
+            <div class="px-8 py-6">
                 <h2 class="text-2xl font-bold text-white flex items-center">
                     <i class="fas fa-filter mr-3"></i>
                     Filtres
@@ -12,8 +12,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     @if($isDocteurProprietaire)
                         <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Médecin</label>
-                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                            <label class="block text-sm font-semibold text-white mb-2">Médecin</label>
+                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
                                 <option value="">Tous les médecins</option>
                                 @foreach($medecins as $medecin)
                                     <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
@@ -21,21 +21,30 @@
                             </select>
                         </div>
                         <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-                            <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                            <label class="block text-sm font-semibold text-white mb-2">Date</label>
+                            <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
                         </div>
                     @elseif($isDocteur)
                         <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Médecin</label>
+                            <label class="block text-sm font-semibold text-white mb-2">Médecin</label>
                             <input type="text" value="{{ Auth::user()->NomComplet ?? Auth::user()->name ?? '' }}" class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" disabled>
                         </div>
                         <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Date</label>
-                            <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                            <label class="block text-sm font-semibold text-white mb-2">Date</label>
+                            <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
                         </div>
                     @elseif($isSecretaire)
                         <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Date du jour</label>
+                            <label class="block text-sm font-semibold text-white mb-2">Médecin</label>
+                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
+                                <option value="">Tous les médecins</option>
+                                @foreach($medecins as $medecin)
+                                    <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-sm font-semibold text-white mb-2">Date du jour</label>
                             <input type="date" value="{{ now()->toDateString() }}" class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" disabled>
                         </div>
                     @endif
@@ -46,12 +55,12 @@
         @if($operations->count() > 0)
             <!-- Totaux généraux -->
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6 flex justify-between items-center">
+                <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6 flex justify-between items-center">
                     <h2 class="text-2xl font-bold text-white flex items-center">
                         <i class="fas fa-chart-line mr-3"></i>
                         Totaux généraux
                     </h2>
-                    <a href="{{ route('caisse.etat-journalier', ['date' => $date_debut]) }}" target="_blank" class="bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors">
+                    <a href="{{ route('caisse.etat-journalier', ['date' => $date_debut]) }}" target="_blank" class="bg-white text-cyan-700 px-4 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
                         <i class="fas fa-print mr-2"></i>
                         Imprimer l'état de caisse
                     </a>
@@ -108,7 +117,7 @@
 
             <!-- Totaux par médecin -->
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
+                <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
                     <h2 class="text-2xl font-bold text-white flex items-center">
                         <i class="fas fa-user-md mr-3"></i>
                         Totaux par médecin
@@ -142,55 +151,53 @@
             </div>
 
             <!-- Liste des opérations -->
-            <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-list mr-3"></i>
-                        Liste des opérations
-                    </h2>
-                </div>
-                <div class="p-8">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médecin</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opération</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Moyen de paiement</th>
+            <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-list mr-3"></i>
+                    Liste des opérations
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médecin</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opération</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Moyen de paiement</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($operations as $operation)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ \Carbon\Carbon::parse($operation->dateoper)->format('d/m/Y') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $operation->medecin->Nom ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $operation->tiers->Nom ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $operation->designation }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm {{ $operation->entreEspece ? 'text-green-600' : 'text-red-600' }}">
+                                        {{ number_format($operation->MontantOperation, 0, ',', ' ') }} MRU
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $operation->TypePAie ?? 'CASH' }}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($operations as $operation)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ \Carbon\Carbon::parse($operation->dateoper)->format('d/m/Y') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $operation->medecin->Nom ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $operation->tiers->Nom ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $operation->designation }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm {{ $operation->entreEspece ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ number_format($operation->MontantOperation, 0, ',', ' ') }} MRU
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $operation->TypePAie ?? 'CASH' }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="px-6 py-4 border-t border-gray-200">
-                        {{ $operations->links() }}
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $operations->links() }}
                 </div>
             </div>
         @else

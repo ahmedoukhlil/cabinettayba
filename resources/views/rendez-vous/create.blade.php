@@ -7,7 +7,7 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-blue-600">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-primary to-primary-dark">
                 <h2 class="text-lg font-medium text-white">Création de rendez-vous</h2>
             </div>
 

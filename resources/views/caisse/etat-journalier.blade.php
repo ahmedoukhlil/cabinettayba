@@ -9,37 +9,62 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            font-size: 11px;
+            color: #333;
         }
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
-        .cabinet-info {
-            margin-bottom: 20px;
+        .header h1 {
+            color: #009CA4;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            color: #666;
+            margin: 5px 0;
+        }
+        .operations {
+            margin-bottom: 30px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
-            font-size: 11px;
         }
         th, td {
-            border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            border-bottom: 1px solid #ddd;
         }
         th {
-            background-color: #f5f5f5;
+            background-color: #e0f7fa;
+            color: #009CA4;
         }
         .totals {
-            margin-top: 20px;
-            border-top: 2px solid #000;
-            padding-top: 10px;
+            background-color: #e0f7fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .totals h4 {
+            color: #009CA4;
+            margin-top: 0;
         }
         .totals table {
-            width: auto;
-            margin-left: auto;
+            margin-bottom: 0;
+        }
+        .totals th {
+            background-color: transparent;
+            color: #666;
+        }
+        .positive {
+            color: #009CA4;
+        }
+        .negative {
+            color: #00737a;
+        }
+        .cabinet-info {
+            margin-bottom: 20px;
         }
         .footer {
             margin-top: 50px;
@@ -70,13 +95,19 @@
             .no-print {
                 display: none;
             }
+            table {
+                page-break-inside: avoid;
+            }
+            .totals {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
 <body>
     {{-- @include('consultations.entete-facture') --}}
     <div class="header">
-        <h1>Cabinet Orient - État de caisse journalier</h1>
+        <h1>Cabinet Tayba - État de caisse journalier</h1>
         <div class="cabinet-info">
             <h2>{{ $cabinet->Nom ?? 'Cabinet' }}</h2>
             <p>Date : {{ $date->format('d/m/Y') }}</p>

@@ -1,3 +1,3 @@
-<div class="header" style="text-align:center; margin-bottom:20px;">
+<div class="print-header">
     <img src="{{ asset('EnteteMedipole.jpg') }}" alt="En-tête Medipole" class="w-100">
 </div> 

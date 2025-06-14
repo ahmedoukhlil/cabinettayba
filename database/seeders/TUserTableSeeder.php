@@ -24,7 +24,7 @@ class TUserTableSeeder extends Seeder
                 'password' => Hash::make('docteur123'),
                 'ismasquer' => 0,
                 'NomComplet' => 'Dr. Diop Amadou',
-                'IdClasseUser' => 4, // Doct Proprietaire
+                'IdClasseUser' => 3, // Doct Proprietaire
                 'fonction' => 'Dentiste',
                 'fkidmedecin' => 1,
                 'DtCr' => $now,

@@ -81,6 +81,9 @@ class CaisseOperationsManager extends Component
                 $query->where('fkidmedecin', $user->fkidmedecin);
             } elseif ($this->isSecretaire) {
                 $query->where('fkiduser', $user->id);
+                if ($this->medecin_id) {
+                    $query->where('fkidmedecin', $this->medecin_id);
+                }
             } elseif ($this->medecin_id) {
                 $query->where('fkidmedecin', $this->medecin_id);
             }
@@ -102,6 +105,9 @@ class CaisseOperationsManager extends Component
             $query->where('fkidmedecin', $user->fkidmedecin);
         } elseif ($this->isSecretaire) {
             $query->where('fkiduser', $user->id);
+            if ($this->medecin_id) {
+                $query->where('fkidmedecin', $this->medecin_id);
+            }
         } elseif ($this->medecin_id) {
             $query->where('fkidmedecin', $this->medecin_id);
         }
@@ -148,53 +154,40 @@ class CaisseOperationsManager extends Component
             ->values()
             ->toArray();
 
-        $totauxGenerauxParMoyenPaiement = collect($typesPaiement)->mapWithKeys(function($type) use ($operations) {
-            $recettes = $operations->where('TypePAie', $type)
-                ->where('entreEspece', '>', 0)
-                ->sum('MontantOperation');
-            
-            $depenses = $operations->where('TypePAie', $type)
-                ->where('retraitEspece', '>', 0)
-                ->sum('MontantOperation');
-
-            return [$type => [
-                'recettes' => $recettes,
-                'depenses' => $depenses,
-                'solde' => $recettes - $depenses
-            ]];
-        })->toArray();
+        $totauxGenerauxParMoyenPaiement = [];
+        foreach ($typesPaiement as $type) {
+            $operationsType = $operations->where('TypePAie', $type);
+            $totauxGenerauxParMoyenPaiement[$type] = [
+                'recettes' => $operationsType->sum('entreEspece'),
+                'depenses' => $operationsType->sum('retraitEspece'),
+                'solde' => $operationsType->sum('entreEspece') - $operationsType->sum('retraitEspece')
+            ];
+        }
 
         // Calculer les totaux par médecin
-        $totauxParMedecin = collect($medecinsMap)->mapWithKeys(function($medecin) use ($operations, $typesPaiement) {
-            $medecinOperations = $operations->where('fkidmedecin', $medecin->idMedecin);
+        $totauxParMedecin = $medecinsMap->map(function($medecin) use ($operations) {
+            $operationsMedecin = $operations->where('fkidmedecin', $medecin->idMedecin);
+            $recettes = $operationsMedecin->sum('entreEspece');
+            $depenses = $operationsMedecin->sum('retraitEspece');
             
-            $recettes = $medecinOperations->where('entreEspece', '>', 0)->sum('MontantOperation');
-            $depenses = $medecinOperations->where('retraitEspece', '>', 0)->sum('MontantOperation');
-            
-            $modesPaiement = collect($typesPaiement)->mapWithKeys(function($type) use ($medecinOperations) {
-                $recettesType = $medecinOperations->where('TypePAie', $type)
-                    ->where('entreEspece', '>', 0)
-                    ->sum('MontantOperation');
-                
-                $depensesType = $medecinOperations->where('TypePAie', $type)
-                    ->where('retraitEspece', '>', 0)
-                    ->sum('MontantOperation');
+            // Calculer les totaux par mode de paiement pour ce médecin
+            $modesPaiement = [];
+            foreach ($operationsMedecin->pluck('TypePAie')->unique() as $type) {
+                $opsType = $operationsMedecin->where('TypePAie', $type);
+                $modesPaiement[$type] = [
+                    'recettes' => $opsType->sum('entreEspece'),
+                    'depenses' => $opsType->sum('retraitEspece'),
+                    'solde' => $opsType->sum('entreEspece') - $opsType->sum('retraitEspece')
+                ];
+            }
 
-                return [$type => [
-                    'recettes' => $recettesType,
-                    'depenses' => $depensesType,
-                    'solde' => $recettesType - $depensesType
-                ]];
-            })->filter(fn($totals) => $totals['recettes'] > 0 || $totals['depenses'] > 0)
-              ->toArray();
-
-            return [$medecin->idMedecin => [
+            return [
                 'nom' => $medecin->Nom,
                 'recettes' => $recettes,
                 'depenses' => $depenses,
                 'solde' => $recettes - $depenses,
                 'modes_paiement' => $modesPaiement
-            ]];
+            ];
         })->toArray();
 
         // Récupérer les opérations paginées
@@ -207,8 +200,11 @@ class CaisseOperationsManager extends Component
         });
 
         return view('livewire.caisse-operations-manager', [
-            'medecins' => $medecins,
             'operations' => $paginatedOperations,
+            'medecins' => $medecins,
+            'isSecretaire' => $this->isSecretaire,
+            'isDocteur' => $this->isDocteur,
+            'isDocteurProprietaire' => $this->isDocteurProprietaire,
             'totalRecettes' => $totalRecettes,
             'totalDepenses' => $totalDepenses,
             'solde' => $solde,

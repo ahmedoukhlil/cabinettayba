@@ -3,12 +3,12 @@
         <div class="flex gap-4">
             <div class="flex-1">
                 <input type="text" wire:model.debounce.300ms="search" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                        placeholder="Rechercher un acte...">
             </div>
             <div class="w-64">
                 <select wire:model="selectedTypeActe" 
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
                     <option value="">Tous les types</option>
                     @foreach($typesActes as $type)
                         <option value="{{ $type->IDTypeActe }}">{{ $type->TypeActe }}</option>
@@ -28,12 +28,12 @@
                         <p class="text-sm text-gray-600 mt-1">{{ $acte->ActeArab }}</p>
                     </div>
                     <div class="text-right">
-                        <span class="text-lg font-bold text-blue-600">{{ number_format($acte->PrixRef, 2) }} DH</span>
+                        <span class="text-lg font-bold text-primary">{{ number_format($acte->PrixRef, 2) }} DH</span>
                     </div>
                 </div>
                 @if($acte->typeActe)
                     <div class="mt-2">
-                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                        <span class="inline-block bg-primary-light text-primary text-xs px-2 py-1 rounded">
                             {{ $acte->typeActe->TypeActe }}
                         </span>
                     </div>
