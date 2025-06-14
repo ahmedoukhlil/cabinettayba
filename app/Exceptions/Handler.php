@@ -37,5 +37,11 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        if (!config('app.debug')) {
+            $this->renderable(function (\Throwable $e) {
+                return response()->view('errors.500', [], 500);
+            });
+        }
     }
 }

@@ -103,8 +103,8 @@
                                     </thead>
                                     <tbody>
                                  @php
-                                $details = \App\Models\Detailfacturepatient::where('fkidfacture', $facture['id'])->get();
                                 $totalPrix = 0;
+                                $details = \App\Models\Detailfacturepatient::where('fkidfacture', $facture['id'])->get();
                             @endphp
                                         @foreach($details as $detail)
                                             @php

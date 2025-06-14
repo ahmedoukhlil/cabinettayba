@@ -413,18 +413,6 @@ class ReglementFacture extends Component
         $isDocteur = ($user->IdClasseUser ?? null) == 2;
         $isDocteurProprietaire = ($user->IdClasseUser ?? null) == 3;
 
-        if (!is_array($this->selectedPatient)) {
-            // Logique de gestion des erreurs
-        }
-
-        if ($this->factures) {
-            // Logique de gestion des logs
-        }
-
-        if ($this->factureSelectionnee) {
-            // Logique de gestion des logs
-        }
-
         return view('livewire.reglement-facture', [
             'isDocteur' => $isDocteur,
             'isDocteurProprietaire' => $isDocteurProprietaire,
