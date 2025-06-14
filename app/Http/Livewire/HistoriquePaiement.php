@@ -65,7 +65,6 @@ class HistoriquePaiement extends Component
 
     public function showModal($patientId)
     {
-        \Log::info('showModal appelé', ['patientId' => $patientId]);
         $this->loadPatient($patientId);
         $this->show = true;
     }
@@ -88,14 +87,12 @@ class HistoriquePaiement extends Component
 
     public function imprimer()
     {
-        \Log::info('Méthode imprimer appelée dans HistoriquePaiement');
         session()->flash('message', 'Méthode imprimer appelée');
         $this->dispatchBrowserEvent('imprimer-modal');
     }
 
     public function fermerModal()
     {
-        \Log::info('Méthode fermerModal appelée dans HistoriquePaiement');
         session()->flash('message', 'Méthode fermerModal appelée');
         $this->show = false;
     }

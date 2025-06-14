@@ -196,9 +196,6 @@ class CreateRendezVous extends Component
                                   ->get();
 
         } catch (\Exception $e) {
-            logger('Erreur lors de la recherche', [
-                'error' => $e->getMessage()
-            ]);
             $this->patients = collect();
         }
 
@@ -215,9 +212,9 @@ class CreateRendezVous extends Component
                 $this->patients = collect();
             }
         } catch (\Exception $e) {
-            logger('Erreur lors de la sélection du patient', [
-                'error' => $e->getMessage()
-            ]);
+            // logger('Erreur lors de la sélection du patient', [
+            //     'error' => $e->getMessage()
+            // ]);
         }
     }
 

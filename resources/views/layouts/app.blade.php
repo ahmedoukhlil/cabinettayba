@@ -136,7 +136,6 @@
     <!-- Script impression modal paiement -->
     <script>
     document.addEventListener('imprimer-modal', function () {
-        console.log('Événement imprimer-modal reçu !');
         let printModal = document.getElementById('historique-paiement-modal');
         if (!printModal) return;
         let printContents = printModal.innerHTML;

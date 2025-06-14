@@ -121,7 +121,6 @@ class PatientSearch extends Component
                 $this->search = '';
                 $this->patients = [];
                 
-                \Log::info('Patient sélectionné', $this->selectedPatient);
                 $this->emit('patientSelected', $this->selectedPatient);
             } else {
                 session()->flash('error', 'Patient non trouvé.');

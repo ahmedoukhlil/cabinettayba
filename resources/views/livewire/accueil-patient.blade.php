@@ -263,7 +263,7 @@
 <script>
     document.addEventListener('livewire:load', function () {
         Livewire.on('openModal', (modalName) => {
-            console.log('Opening modal:', modalName);
+            // console.log('Opening modal:', modalName);
         });
     });
 

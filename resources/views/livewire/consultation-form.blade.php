@@ -138,7 +138,6 @@
                     {{-- <pre>
                     tauxPEC={{ $tauxPEC ?? 'null' }}
                     nomAssureur={{ $nomAssureur ?? 'null' }}
-                    selectedPatient={{ print_r($selectedPatient, true) }}
                     </pre> --}}
 
                     <!-- Affichage de l'assurance -->

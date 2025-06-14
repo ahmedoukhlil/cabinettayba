@@ -22,7 +22,6 @@ class ActeSearch extends Component
 
     public function updatedSearch($value)
     {
-        \Log::info('ActeSearch::updatedSearch', ['value' => $value, 'fkidassureur' => $this->fkidassureur]);
         $this->showDropdown = true;
         $query = Acte::where('Acte', 'like', '%' . $value . '%');
         if ($this->fkidassureur) {
@@ -35,41 +34,22 @@ class ActeSearch extends Component
             ->get()
             ->unique('Acte')
             ->values();
-        \Log::info('Actes trouvés', ['count' => $this->actes->count()]);
     }
 
     public function selectActe($id)
     {
-        \Log::info('ActeSearch::selectActe - Début', [
-            'id' => $id,
-            'type' => gettype($id),
-            'raw_id' => $id
-        ]);
-
         if (!$id) {
-            \Log::info('ActeSearch::selectActe - ID null ou vide, sortie');
             return;
         }
 
         $id = is_string($id) ? (int)$id : $id;
         $this->selectedActeId = $id;
         $acte = Acte::find($id);
-        \Log::info('ActeSearch::selectActe - Acte trouvé', [
-            'acte' => $acte ? [
-                'id' => $acte->ID,
-                'nom' => $acte->Acte,
-                'prix' => $acte->PrixRef
-            ] : null
-        ]);
 
         if ($acte) {
             $this->search = $acte->Acte;
             $this->showDropdown = false;
             $this->emitUp('acteSelected', $acte->ID, $acte->PrixRef);
-            \Log::info('ActeSearch::selectActe - Événement émis', [
-                'id' => $acte->ID,
-                'prix' => $acte->PrixRef
-            ]);
         }
     }
 

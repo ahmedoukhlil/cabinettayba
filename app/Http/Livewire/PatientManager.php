@@ -218,8 +218,6 @@ class PatientManager extends Component
             $this->resetForm();
             $this->closeModal();
         } catch (\Exception $e) {
-            \Log::error('Erreur création patient : ' . $e->getMessage());
-            \Log::error('Stack trace : ' . $e->getTraceAsString());
             session()->flash('error', 'Erreur SQL : ' . $e->getMessage() . ' (code: ' . $e->getCode() . ')');
             // Ne pas fermer le modal ni reset le formulaire en cas d'erreur
         }
