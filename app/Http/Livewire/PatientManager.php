@@ -45,22 +45,34 @@ class PatientManager extends Component
     public $selectedPatientId;
     public $paymentHistory = [];
 
-    protected $rules = [
-        'nom' => 'required|min:2|regex:/^[\p{L}\s-]+$/u',
-        'prenom' => 'required|min:2|regex:/^[\p{L}\s-]+$/u',
-        'nni' => 'nullable|regex:/^[0-9]+$/',
-        'dateNaissance' => 'nullable|date|before:today',
-        'genre' => 'nullable|in:M,F',
-        'telephone1' => 'required|min:8|regex:/^[0-9+\s-]+$/',
-        'telephone2' => 'nullable|min:8|regex:/^[0-9+\s-]+$/',
-        'adresse' => 'nullable|min:5',
-        'identifiantAssurance' => 'nullable|min:3',
-        'assureur' => 'nullable|integer',
-        'matriculeFonct' => 'nullable|min:3',
-        'nomContact' => 'nullable|min:3',
-        'classerSous' => 'nullable|min:2',
-        // 'identifiantPatient' => 'required|integer|unique:patients,IdentifiantPatient,' . ($this->patientId ?? 'NULL') . ',ID',
-    ];
+    public function rules()
+    {
+        return [
+            'nom' => 'required|min:2|regex:/^[\p{L}\s-]+$/u',
+            'nni' => [
+                'nullable',
+                function($attribute, $value, $fail) {
+                    if ($value === 'Non renseigné') {
+                        return;
+                    }
+                    if ($value && !preg_match('/^[A-Za-z0-9\-_. ]+$/', $value)) {
+                        $fail('Le NNI ne doit contenir que des lettres, chiffres, espaces ou - _ . ou être "Non renseigné".');
+                    }
+                }
+            ],
+            'dateNaissance' => 'nullable|date',
+            'genre' => 'nullable|in:H,F',
+            'telephone1' => 'required|min:8',
+            'telephone2' => 'nullable|min:8',
+            'adresse' => 'nullable',
+            'identifiantAssurance' => 'nullable|min:1',
+            'assureur' => 'nullable|integer',
+            'matriculeFonct' => 'nullable|min:3',
+            'nomContact' => 'nullable|min:3',
+            'classerSous' => 'nullable|min:2',
+            // 'identifiantPatient' => 'required|integer|unique:patients,IdentifiantPatient,' . ($this->patientId ?? 'NULL') . ',ID',
+        ];
+    }
 
     protected $messages = [
         'nom.required' => 'Le nom est requis',
@@ -69,15 +81,13 @@ class PatientManager extends Component
         'prenom.required' => 'Le prénom est requis',
         'prenom.min' => 'Le prénom doit contenir au moins 2 caractères',
         'prenom.regex' => 'Le prénom ne doit contenir que des lettres, espaces et tirets',
-        'nni.regex' => 'Le NNI ne doit contenir que des chiffres',
+        'nni.regex' => 'Le NNI ne doit contenir que des lettres, chiffres, espaces ou - _ .',
         'dateNaissance.date' => 'La date de naissance n\'est pas valide',
         'dateNaissance.before' => 'La date de naissance doit être antérieure à aujourd\'hui',
-        'genre.in' => 'Le genre doit être M ou F',
+        'genre.in' => 'Le genre doit être H ou F',
         'telephone1.required' => 'Le numéro de téléphone est requis',
         'telephone1.min' => 'Le numéro de téléphone doit contenir au moins 8 caractères',
-        'telephone1.regex' => 'Le numéro de téléphone n\'est pas valide',
         'telephone2.min' => 'Le numéro de téléphone secondaire doit contenir au moins 8 caractères',
-        'telephone2.regex' => 'Le numéro de téléphone secondaire n\'est pas valide',
         'adresse.min' => 'L\'adresse doit contenir au moins 5 caractères',
         'identifiantAssurance.min' => 'L\'identifiant d\'assurance doit contenir au moins 3 caractères',
         'matriculeFonct.min' => 'Le matricule fonctionnaire doit contenir au moins 3 caractères',
@@ -150,6 +160,10 @@ class PatientManager extends Component
     public function openModal()
     {
         $this->resetForm();
+        if (!$this->patientId) {
+            $dernierIdentifiant = Patient::max('IdentifiantPatient') ?? 0;
+            $this->identifiantPatient = $dernierIdentifiant + 1;
+        }
         $this->showModal = true;
     }
 
@@ -160,15 +174,11 @@ class PatientManager extends Component
 
     public function save()
     {
-        try {
-            if (!$this->patientId) {
-                $dernierIdentifiant = Patient::max('IdentifiantPatient') ?? 0;
-                $this->identifiantPatient = $dernierIdentifiant + 1;
-            }
-            $rules = $this->rules;
-            $rules['identifiantPatient'] = 'required|integer|unique:patients,IdentifiantPatient,' . ($this->patientId ?? 'NULL') . ',ID';
-            $this->validate($rules);
+        $rules = $this->rules();
+        $rules['identifiantPatient'] = 'required|integer|unique:patients,IdentifiantPatient,' . ($this->patientId ?? 'NULL') . ',ID';
+        $this->validate($rules);
 
+        try {
             $data = [
                 'Nom' => $this->nom,
                 'Prenom' => $this->nom,
@@ -179,7 +189,7 @@ class PatientManager extends Component
                 'Telephone2' => $this->telephone2,
                 'Adresse' => $this->adresse,
                 'IdentifiantAssurance' => $this->isAssured ? $this->identifiantAssurance : '',
-                'Assureur' => $this->isAssured ? $this->assureur : 0,
+                'Assureur' => $this->isAssured ? $this->assureur : 1,
                 'MatriculeFonct' => $this->matriculeFonct,
                 'NomContact' => $this->nom,
                 'ClasserSous' => $this->classerSous,
@@ -207,13 +217,11 @@ class PatientManager extends Component
 
             $this->resetForm();
             $this->closeModal();
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            session()->flash('error', 'Veuillez vérifier les informations saisies.');
-            throw $e;
         } catch (\Exception $e) {
-            \Log::error('Erreur lors de la sauvegarde du patient : ' . $e->getMessage());
-            \Log::error('Données du patient : ' . json_encode($data));
-            session()->flash('error', 'Une erreur est survenue lors de l\'enregistrement du patient. Veuillez réessayer.');
+            \Log::error('Erreur création patient : ' . $e->getMessage());
+            \Log::error('Stack trace : ' . $e->getTraceAsString());
+            session()->flash('error', 'Erreur SQL : ' . $e->getMessage() . ' (code: ' . $e->getCode() . ')');
+            // Ne pas fermer le modal ni reset le formulaire en cas d'erreur
         }
     }
 

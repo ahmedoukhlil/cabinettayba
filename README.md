@@ -62,3 +62,105 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+# Gestion Multi-Instances du Cabinet Médical
+
+Ce système permet de gérer plusieurs instances de l'application de cabinet médical à partir d'un template central.
+
+## Structure
+
+```
+.
+├── template/           # Dépôt template principal
+├── instances/         # Dossier contenant toutes les instances
+│   ├── cabinet1/     # Instance du cabinet 1
+│   ├── cabinet2/     # Instance du cabinet 2
+│   └── ...
+└── scripts/          # Scripts utilitaires
+    └── sync-instances.sh
+```
+
+## Installation
+
+1. **Configuration du Template**
+```bash
+# Cloner le template
+git clone <URL_DU_REPO_TEMPLATE> template
+cd template
+
+# Créer la branche principale
+git checkout -b main
+git push -u origin main
+```
+
+2. **Création d'une Nouvelle Instance**
+```bash
+# Cloner le template
+git clone <URL_DU_REPO_TEMPLATE> instances/nom-du-cabinet
+cd instances/nom-du-cabinet
+
+# Créer une branche spécifique
+git checkout -b instance/nom-du-cabinet
+
+# Configurer l'environnement
+cp .env.example .env
+# Modifier les configurations dans .env
+
+# Commit initial
+git add .
+git commit -m "Initial commit - Instance nom-du-cabinet"
+git push -u origin instance/nom-du-cabinet
+```
+
+## Synchronisation
+
+Pour synchroniser toutes les instances avec le template :
+
+```bash
+# Rendre le script exécutable
+chmod +x scripts/sync-instances.sh
+
+# Exécuter la synchronisation
+./scripts/sync-instances.sh
+```
+
+Le script va :
+1. Mettre à jour le template
+2. Parcourir toutes les instances
+3. Fusionner les modifications du template dans chaque instance
+4. Gérer les conflits si nécessaire
+
+## Gestion des Conflits
+
+Si des conflits surviennent lors de la synchronisation :
+
+1. Le script marquera l'instance comme ayant des conflits
+2. Vous devrez résoudre manuellement les conflits dans cette instance
+3. Une fois les conflits résolus :
+```bash
+git add .
+git commit -m "Résolution des conflits"
+git push origin instance/nom-du-cabinet
+```
+
+## Bonnes Pratiques
+
+1. **Modifications Spécifiques**
+   - Faire les modifications spécifiques à une instance dans sa branche
+   - Ne jamais modifier directement la branche main
+
+2. **Mises à Jour du Template**
+   - Faire les modifications communes dans le template
+   - Utiliser le script de synchronisation pour propager les changements
+
+3. **Configuration**
+   - Garder les configurations spécifiques dans le fichier .env
+   - Ne jamais commiter le fichier .env
+
+4. **Sauvegarde**
+   - Faire des sauvegardes régulières de chaque instance
+   - Vérifier les logs de synchronisation
+
+## Support
+
+Pour toute question ou problème, veuillez contacter l'administrateur système.

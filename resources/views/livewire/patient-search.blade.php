@@ -23,7 +23,7 @@
             @endif
             @if($isSearching)
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -34,14 +34,10 @@
 
     <!-- Patient sélectionné -->
     @if($selectedPatient)
-        <div class="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-            <div class="flex justify-between items-center">
-                <div>
-                    <span class="font-medium text-blue-800">{{ $selectedPatient['Prenom'] }}</span>
-                    @if($selectedPatient['Telephone1'])
-                        <span class="text-sm text-blue-600 ml-2">Tél: {{ $selectedPatient['Telephone1'] }}</span>
-                    @endif
-                </div>
+        <div class="mt-2 p-2 bg-primary-light rounded border border-primary">
+            <div class="flex items-center justify-between">
+                <span class="font-medium text-primary">{{ $selectedPatient['Prenom'] }}</span>
+                <span class="text-sm text-primary ml-2">Tél: {{ $selectedPatient['Telephone1'] }}</span>
             </div>
         </div>
     @endif
@@ -52,7 +48,7 @@
             @if($isSearching)
                 <div class="px-4 py-3 text-sm text-gray-500 text-center">
                     <div class="flex items-center justify-center">
-                        <svg class="animate-spin h-5 w-5 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg class="animate-spin h-5 w-5 text-primary mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -65,7 +61,7 @@
                         {{ count($patients) }} résultat(s) trouvé(s)
                     </div>
                     @foreach($patients as $patient)
-                        <div class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                        <div class="px-4 py-2 hover:bg-primary-light cursor-pointer border-b border-gray-100 last:border-b-0" 
                              wire:click="selectPatient({{ $patient['ID'] }})">
                             <div class="flex flex-col">
                                 <div class="flex items-center">

@@ -4,16 +4,16 @@
         <div x-data="{ show: true }" 
              x-show="show" 
              x-init="setTimeout(() => show = false, 5000)"
-             class="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50" 
+             class="fixed bottom-4 right-4 bg-primary-light border border-primary text-primary px-4 py-3 rounded shadow-lg z-50" 
              role="alert">
             <div class="flex items-center">
                 <div class="py-1">
-                    <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-5 w-5 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
-                <button type="button" @click="show = false" class="ml-4 text-green-700 hover:text-green-900">
+                <button type="button" @click="show = false" class="ml-4 text-primary hover:text-primary-dark">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -27,16 +27,16 @@
         <div x-data="{ show: true }" 
              x-show="show" 
              x-init="setTimeout(() => show = false, 5000)"
-             class="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50" 
+             class="fixed bottom-4 right-4 bg-primary-light border border-primary text-primary px-4 py-3 rounded shadow-lg z-50" 
              role="alert">
             <div class="flex items-center">
                 <div class="py-1">
-                    <svg class="h-5 w-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-5 w-5 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <span class="block sm:inline">{{ session('error') }}</span>
                 </div>
-                <button type="button" @click="show = false" class="ml-4 text-red-700 hover:text-red-900">
+                <button type="button" @click="show = false" class="ml-4 text-primary hover:text-primary-dark">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -47,15 +47,15 @@
 
     <!-- Formulaire de consultation -->
     <div class="space-y-6">
-        <div class="p-6 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg">
+        <div class="p-6 rounded-xl bg-primary text-white shadow-lg">
             <h2 class="text-2xl font-bold">Nouvelle Consultation</h2>
-            <p class="text-green-100 mt-1">Créez une nouvelle consultation pour le patient sélectionné</p>
+            <p class="text-primary-light mt-1">Créez une nouvelle consultation pour le patient sélectionné</p>
         </div>
 
         <div class="bg-white rounded-lg shadow-xl overflow-hidden">
             <div class="p-6">
                 @if ($errors->any())
-                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <div class="mb-4 bg-primary-light border border-primary text-primary px-4 py-3 rounded relative" role="alert">
                         <ul>
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -70,12 +70,12 @@
                         @if($patient)
                             <div class="space-y-2">
                                 <label class="block text-sm font-medium text-gray-700">Patient sélectionné</label>
-                                <div class="p-2 bg-blue-50 rounded border border-blue-200">
-                                    <span class="font-medium text-blue-800">
+                                <div class="p-2 bg-primary-light rounded border border-primary">
+                                    <span class="font-medium text-primary">
                                         {{ is_array($patient) ? ($patient['Prenom'] ?? '') : $patient->Prenom }}
                                     </span>
                                     @if(is_array($patient) ? ($patient['Telephone1'] ?? null) : ($patient->Telephone1 ?? null))
-                                        <span class="text-sm text-blue-600 ml-2">Tél: {{ is_array($patient) ? $patient['Telephone1'] : $patient->Telephone1 }}</span>
+                                        <span class="text-sm text-primary ml-2">Tél: {{ is_array($patient) ? $patient['Telephone1'] : $patient->Telephone1 }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -87,12 +87,12 @@
                             </div>
                         </div>
                         @if($selectedPatient)
-                            <div class="mt-2 p-2 bg-blue-50 rounded border border-blue-200 col-span-2">
+                            <div class="mt-2 p-2 bg-primary-light rounded border border-primary col-span-2">
                                 <div class="flex justify-between items-center">
                                     <div>
-                                        <span class="font-medium text-blue-800">{{ $selectedPatient['Prenom'] ?? '' }}</span>
+                                        <span class="font-medium text-primary">{{ $selectedPatient['Prenom'] ?? '' }}</span>
                                         @if(($selectedPatient['Telephone1'] ?? null))
-                                        <span class="text-sm text-blue-600 ml-2">Tél: {{ $selectedPatient['Telephone1'] }}</span>
+                                        <span class="text-sm text-primary ml-2">Tél: {{ $selectedPatient['Telephone1'] }}</span>
                                         @endif
                                     </div>
                                     <button type="button" wire:click.prevent="handlePatientCleared" class="text-gray-400 hover:text-gray-600">

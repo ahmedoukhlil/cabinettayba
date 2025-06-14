@@ -1,11 +1,11 @@
 <div class="w-full px-4 md:px-6 lg:px-8 max-w-7xl mx-auto mt-4 md:mt-10">
     {{-- Bannière de bienvenue --}}
-    <div class="mb-4 md:mb-8 p-4 md:p-6 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="mb-4 md:mb-8 p-4 md:p-6 rounded-xl bg-primary text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="text-center md:text-left">
             <h1 class="text-2xl md:text-3xl font-bold mb-1">
-                Cabinet Dentaire
+                Cabinet Tayba
             </h1>
-            <p class="text-green-100 text-base md:text-lg">
+            <p class="text-primary-light text-base md:text-lg">
                     {{ is_array(Auth::user()->typeuser) ? (Auth::user()->typeuser['Libelle'] ?? '') : (is_object(Auth::user()->typeuser) ? Auth::user()->typeuser->Libelle : Auth::user()->typeuser) }}
                 <span class="font-bold">
                     {{ Auth::user()->NomComplet ?? Auth::user()->name ?? '' }}
@@ -16,15 +16,15 @@
     </div>
 
     {{-- Encadré recherche patient + nouveau patient --}}
-    <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4 md:mb-8 border border-green-100">
+    <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4 md:mb-8 border border-primary-light">
         <div class="w-full">
             <livewire:patient-search />
         </div>
         <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-            <button wire:click="openGestionPatientsModal" class="w-full sm:w-auto px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg shadow hover:from-green-700 hover:to-green-600 transition text-base md:text-lg flex items-center justify-center gap-2">
+            <button wire:click="openGestionPatientsModal" class="w-full sm:w-auto px-4 md:px-6 py-2 md:py-3 bg-primary text-white rounded-lg shadow hover:bg-primary hover:text-white transition text-base md:text-lg flex items-center justify-center gap-2">
                 <i class="fas fa-users"></i> Gestion des patients
             </button>
-            <button wire:click="showCreateRdv" class="w-full sm:w-auto px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg shadow hover:from-green-700 hover:to-green-600 transition text-base md:text-lg flex items-center justify-center gap-2">
+            <button wire:click="showCreateRdv" class="w-full sm:w-auto px-4 md:px-6 py-2 md:py-3 bg-primary text-white rounded-lg shadow hover:bg-primary hover:text-white transition text-base md:text-lg flex items-center justify-center gap-2">
                 <i class="fas fa-calendar-plus"></i> Créer RDV
             </button>
         </div>
@@ -34,69 +34,71 @@
         <div class="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-8 bg-gray-50 z-10 py-2 md:py-4 justify-center items-center">
             {{-- Consultation --}}
             <button wire:click="{{ $selectedPatient ? 'setAction(\'consultation\')' : '' }}"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-stethoscope text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-stethoscope text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Consultation</span>
             </button>
             {{-- Caisse Paie --}}
             <button wire:click="showCaisseOperations"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-cash-register text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-cash-register text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Caisse Paie</span>
             </button>
             {{-- Facture/Devis --}}
             <button wire:click="{{ $selectedPatient ? 'setAction(\'reglement\')' : '' }}"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-file-invoice-dollar text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-file-invoice-dollar text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Facture/Devis</span>
             </button>
             {{-- RDV Patient --}}
             <button wire:click="{{ $selectedPatient ? 'setAction(\'rendezvous\')' : '' }}"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-calendar-plus text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-calendar-plus text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">RDV Patient</span>
             </button>
             {{-- Liste de soins --}}
             <button wire:click="ouvrirListeActesModal"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-hospital-user text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-hospital-user text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Liste de soins</span>
             </button>
             {{-- Assurances --}}
             <button wire:click="ouvrirAssureurModal"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-house-user text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-house-user text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Assurances</span>
             </button>
             {{-- Statistiques --}}
             @if($isDocteurProprietaire)
-                <button wire:click="showStatistiques" class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg">
-                    <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                        <i class="fas fa-chart-bar text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                <button wire:click="showStatistiques" class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
+                    <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                        <i class="fas fa-chart-bar text-primary text-xl md:text-2xl"></i>
                     </span>
                     <span class="font-semibold">Statistiques</span>
                 </button>
             @endif
             {{-- Utilisateurs (modal) --}}
+            @if($isDocteurProprietaire)
             <button wire:click="openUsersModal"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-green-600 bg-white text-green-700 rounded-xl shadow hover:bg-gradient-to-r hover:from-green-600 hover:to-green-500 hover:text-white transition text-base md:text-lg">
-                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-green-600 group-hover:bg-green-500 group-hover:text-white">
-                    <i class="fas fa-users-cog text-green-600 text-xl md:text-2xl group-hover:text-white"></i>
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
+                    <i class="fas fa-users-cog text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Utilisateurs</span>
             </button>
+            @endif
         </div>
 
         @if($showCaisseOperations)
@@ -111,9 +113,9 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-0 relative animate-fade-in">
                 <!-- Header du modal -->
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-blue-50 rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-blue-700">Gestion des patients</h2>
-                    <button wire:click="closeCreateModal" class="text-gray-500 hover:text-red-600 text-2xl flex items-center gap-2">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
+                    <h2 class="text-xl font-bold text-primary">Gestion des patients</h2>
+                    <button wire:click="closeCreateModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -150,9 +152,9 @@
     @if($showGestionPatientsModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl p-0 relative animate-fade-in">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-blue-50 rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-blue-700">Gestion des patients</h2>
-                    <button wire:click="closeGestionPatientsModal" class="text-gray-500 hover:text-red-600 text-2xl flex items-center gap-2">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
+                    <h2 class="text-xl font-bold text-primary">Gestion des patients</h2>
+                    <button wire:click="closeGestionPatientsModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -164,17 +166,17 @@
     @endif
 
     @if($selectedPatient)
-        <div class="bg-green-50 border border-green-200 rounded-xl p-5 mb-8 flex items-center gap-6 shadow">
-            <i class="fas fa-user-circle text-green-400 text-5xl"></i>
+        <div class="bg-primary-light border border-primary rounded-xl p-5 mb-8 flex items-center gap-6 shadow">
+            <i class="fas fa-user-circle text-primary text-5xl"></i>
             <div class="flex-1">
                 <div class="flex items-center">
                     <span class="text-lg font-semibold">{{ $selectedPatient['Prenom'] ?? '' }}</span>
-                    <button wire:click="setPatient(null)" class="ml-2 text-red-500 hover:text-red-700">
+                    <button wire:click="setPatient(null)" class="ml-2 text-primary hover:text-primary-dark">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 @if($selectedPatient['Telephone1'] ?? null)
-                    <div class="text-green-600 text-base">Tél: {{ $selectedPatient['Telephone1'] }}</div>
+                    <div class="text-primary text-base">Tél: {{ $selectedPatient['Telephone1'] }}</div>
                 @endif
             </div>
         </div>
@@ -185,21 +187,21 @@
                     <livewire:consultation-form :patient="$selectedPatient" wire:key="consultation-{{ $selectedPatient['ID'] ?? 'new' }}" lazy />
                 </div>
                 <div wire:loading wire:target="setAction" class="flex justify-center items-center py-8">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             @elseif($action === 'reglement')
                 <div wire:loading.remove wire:target="setAction">
                     <livewire:reglement-facture :selectedPatient="$selectedPatient" wire:key="reglement-{{ $selectedPatient['ID'] ?? 'new' }}" lazy />
                 </div>
                 <div wire:loading wire:target="setAction" class="flex justify-center items-center py-8">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             @elseif($action === 'rendezvous')
                 <div wire:loading.remove wire:target="setAction">
                     <livewire:create-rendez-vous :patient="$selectedPatient" wire:key="rdv-{{ $selectedPatient['ID'] ?? 'new' }}" lazy />
                 </div>
                 <div wire:loading wire:target="setAction" class="flex justify-center items-center py-8">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             @endif
         </div>
@@ -211,7 +213,7 @@
     @if($showAssureurModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-0 relative animate-fade-in">
-                <button wire:click="fermerAssureurModal" class="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold z-10">&times;</button>
+                <button wire:click="fermerAssureurModal" class="absolute top-4 right-4 text-gray-500 hover:text-primary text-2xl font-bold z-10">&times;</button>
                 <livewire:assureur-manager wire:key="assureur-manager-modal" />
             </div>
         </div>
@@ -220,9 +222,9 @@
     @if($showListeActesModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl p-0 relative animate-fade-in" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-blue-50 rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-blue-700">Liste des soins</h2>
-                    <button wire:click="fermerListeActesModal" class="text-gray-500 hover:text-red-600 text-2xl flex items-center gap-2">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
+                    <h2 class="text-xl font-bold text-primary">Liste des soins</h2>
+                    <button wire:click="fermerListeActesModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -237,9 +239,9 @@
     @if($showUsersModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-0 relative animate-fade-in">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-blue-50 rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-blue-700">Gestion des utilisateurs</h2>
-                    <button wire:click="closeUsersModal" class="text-gray-500 hover:text-red-600 text-2xl flex items-center gap-2">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
+                    <h2 class="text-xl font-bold text-primary">Gestion des utilisateurs</h2>
+                    <button wire:click="closeUsersModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>

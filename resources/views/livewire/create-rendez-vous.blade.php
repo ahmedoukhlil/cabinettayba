@@ -1,12 +1,12 @@
 <div class="space-y-6">
-    <div class="p-6 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg z-30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="p-6 rounded-xl bg-primary text-white shadow-lg z-30 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold">Nouveau Rendez-vous</h2>
-            <p class="text-green-100 mt-1">Planifiez un nouveau rendez-vous pour le patient sélectionné</p>
+        <h2 class="text-2xl font-bold">Nouveau Rendez-vous</h2>
+        <p class="text-primary-light mt-1">Planifiez un nouveau rendez-vous pour le patient sélectionné</p>
         </div>
         <div class="flex items-center gap-2 mt-4 md:mt-0">
             <span class="text-lg font-semibold">Rdv aujourd'hui :</span>
-            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-white text-green-700 font-bold text-lg shadow">{{ $totalRdvJour }}</span>
+            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-white text-primary font-bold text-lg shadow">{{ $totalRdvJour }}</span>
         </div>
     </div>
 
@@ -97,7 +97,7 @@
 
     <!-- Liste des rendez-vous -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600">
+        <div class="px-6 py-4 border-b border-gray-200 bg-primary">
             <h3 class="text-lg font-medium text-white">Liste des rendez-vous</h3>
         </div>
         <div class="overflow-x-auto">

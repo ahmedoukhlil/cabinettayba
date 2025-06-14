@@ -15,7 +15,7 @@ class CheckPermission
         if (!Auth::check()) {
             return redirect('login');
         }
-
+    
         $user = Auth::user();
         
         // Vérification spéciale pour les actions de la secrétaire
@@ -27,19 +27,19 @@ class CheckPermission
                 'actes' => 'view_actes',
                 'assureurs' => 'view_assureurs'
             ];
-
+    
             foreach ($secretaireActions as $prefix => $action) {
                 if (strpos($permission, $prefix) === 0 && $user->canSecretairePerform($action)) {
                     return $next($request);
                 }
             }
         }
-
+        
+        // Vérification standard des permissions
         if (!$user->hasPermission($permission)) {
-            // Rediriger ou renvoyer une erreur 403
             return response()->view('errors.403', [], 403);
         }
-
+    
         return $next($request);
     }
 }

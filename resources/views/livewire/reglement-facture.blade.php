@@ -1,7 +1,7 @@
 <div class="space-y-6">
-    <div class="p-6 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg z-30">
+    <div class="p-6 rounded-xl text-white shadow-lg z-30" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
         <h2 class="text-2xl font-bold">Facture/DEVIS</h2>
-        <p class="text-green-100 mt-1">Sélectionnez un patient pour gérer ses paiements</p>
+        <p class="text-white mt-1">Sélectionnez un patient pour gérer ses paiements</p>
         <div class="text-xs mt-2">isDocteurProprietaire = {{ var_export($isDocteurProprietaire, true) }}</div>
     </div>
 
@@ -161,7 +161,7 @@
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                 <!-- Header vert dégradé -->
-                <div class="p-6 rounded-t-lg bg-gradient-to-r from-green-600 to-green-500 text-white shadow relative">
+                <div class="p-6 rounded-t-lg text-white shadow relative" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
                     <button wire:click="closeReglementForm" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
                     <h2 class="text-2xl font-bold">Facture/DEVIS</h2>
                     <p class="text-green-100 mt-1">Facture N° {{ $factureSelectionnee['numero'] }}</p>
@@ -267,7 +267,7 @@
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                 <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
                     <!-- Header vert dégradé -->
-                    <div class="p-6 rounded-t-lg bg-gradient-to-r from-green-600 to-green-500 text-white shadow">
+                    <div class="p-6 rounded-t-lg text-white shadow" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
                         <h2 class="text-2xl font-bold">Ajouter un acte à la facture</h2>
                         <p class="text-green-100 mt-1">Facture N° {{ $factures->firstWhere('id', $factureIdForActe)['numero'] ?? '' }}</p>
                     </div>

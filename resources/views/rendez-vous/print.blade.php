@@ -26,7 +26,7 @@
         .a5 .recu-footer { bottom: 0; }
         .print-btn, .format-select { display: inline-block; vertical-align: middle; }
         .format-select { margin-right: 12px; font-size: 1rem; padding: 6px 10px; border-radius: 5px; border: 1px solid #bbb; background: #f4f6fa; }
-        @media print { 
+        @media print {
             .a4, .a5 { box-shadow: none; }
             .a4 .recu-footer, .a5 .recu-footer { position: fixed; bottom: 0; left: 0; width: 100%; }
             .print-btn, .format-select { display: none !important; }
@@ -80,12 +80,12 @@
     </table>
     <div class="recu-footer">@include('partials.recu-footer')</div>
 </div>
-<script>
+    <script>
     const formatSelect = document.getElementById('formatSelect');
     const recuContainer = document.getElementById('recu-container');
     formatSelect.addEventListener('change', function() {
         recuContainer.className = this.value;
     });
-</script>
+    </script>
 </body>
 </html> 

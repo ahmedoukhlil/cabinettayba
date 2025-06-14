@@ -1,18 +1,18 @@
 <div class="min-h-screen bg-gray-50">
     <div class="container mx-auto px-4 py-8">
         <!-- Filtres -->
+        <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
+            <h2 class="text-2xl font-bold text-white flex items-center">
+                <i class="fas fa-filter mr-3"></i>
+                Filtres
+            </h2>
+        </div>
         <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-            <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
-                <h2 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fas fa-filter mr-3"></i>
-                    Filtres
-                </h2>
-            </div>
             <div class="p-8">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="relative">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Médecin</label>
-                        <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                        <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
                             <option value="">Tous les médecins</option>
                             @foreach($medecins as $medecin)
                                 <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
@@ -21,14 +21,14 @@
                     </div>
                     <div class="relative">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Date début</label>
-                        <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                        <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
                     </div>
                     <div class="relative">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Date fin</label>
-                        <input type="date" wire:model="date_fin" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                        <input type="date" wire:model="date_fin" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
                     </div>
                     <div class="flex items-end gap-2">
-                        <button wire:click="resetFilters" class="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg hover:from-green-700 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+                        <button wire:click="resetFilters" class="w-full px-4 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors">
                             Réinitialiser
                         </button>
                     </div>
@@ -38,13 +38,13 @@
         <!-- Affichage des statistiques (reprendre la structure de caisse-operations-manager) -->
         @if($operations->count() > 0)
             <!-- Liste des opérations -->
+            <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-list mr-3"></i>
+                    Liste des opérations
+                </h2>
+            </div>
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-list mr-3"></i>
-                        Liste des opérations
-                    </h2>
-                </div>
                 <div class="p-8">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -90,24 +90,24 @@
                 </div>
             </div>
             <!-- Totaux généraux -->
+            <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-chart-line mr-3"></i>
+                    Totaux généraux
+                </h2>
+            </div>
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-chart-line mr-3"></i>
-                        Totaux généraux
-                    </h2>
-                </div>
                 <div class="p-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="bg-gradient-to-br from-cyan-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                             <dt class="text-sm font-semibold text-gray-600 mb-2">Total des recettes</dt>
                             <dd class="text-3xl font-bold text-gray-900">{{ number_format($totalRecettes, 0, ',', ' ') }} MRU</dd>
                         </div>
-                        <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="bg-gradient-to-br from-cyan-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                             <dt class="text-sm font-semibold text-gray-600 mb-2">Total des dépenses</dt>
                             <dd class="text-3xl font-bold text-gray-900">{{ number_format($totalDepenses, 0, ',', ' ') }} MRU</dd>
                         </div>
-                        <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="bg-gradient-to-br from-cyan-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                             <dt class="text-sm font-semibold text-gray-600 mb-2">Bilan</dt>
                             <dd class="text-3xl font-bold {{ $solde >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ number_format($solde, 0, ',', ' ') }} MRU
@@ -122,12 +122,12 @@
                             @foreach($totauxGenerauxParMoyenPaiement as $type => $totaux)
                                 <div class="bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
                                     <div class="flex items-center justify-between mb-4">
-                                        <div class="text-lg font-bold text-green-700">{{ $type }}</div>
+                                        <div class="text-lg font-bold text-cyan-600">{{ $type }}</div>
                                     </div>
                                     <div class="space-y-3">
                                         <div class="flex justify-between items-center">
                                             <span class="text-sm text-gray-600">Recettes</span>
-                                            <span class="text-lg font-semibold text-green-600">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</span>
+                                            <span class="text-lg font-semibold text-cyan-600">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</span>
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <span class="text-sm text-gray-600">Dépenses</span>
@@ -135,7 +135,7 @@
                                         </div>
                                         <div class="flex justify-between items-center pt-3 border-t border-gray-200">
                                             <span class="text-sm font-semibold text-gray-700">Solde</span>
-                                            <span class="text-lg font-semibold {{ $totaux['solde'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                            <span class="text-lg font-semibold {{ $totaux['solde'] >= 0 ? 'text-cyan-600' : 'text-red-600' }}">
                                                 {{ number_format($totaux['solde'], 0, ',', ' ') }} MRU
                                             </span>
                                         </div>
@@ -148,13 +148,13 @@
             </div>
 
             <!-- Totaux par médecin -->
+            <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
+                <h2 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-user-md mr-3"></i>
+                    Totaux par médecin
+                </h2>
+            </div>
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-green-600 to-green-500 px-8 py-6">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-user-md mr-3"></i>
-                        Totaux par médecin
-                    </h2>
-                </div>
                 <div class="p-8">
                     <div class="space-y-8">
                         @foreach($totauxParMedecin as $medecinId => $totaux)

@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabinet Orient</title>
+    <title>Cabinet Tayba</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     @livewireStyles
+    <style>
+        :root {
+            --color-primary: #009CA4;
+            --color-primary-light: #e0f7fa;
+            --color-primary-dark: #00737a;
+        }
+        .text-primary { color: var(--color-primary) !important; }
+        .bg-primary { background-color: var(--color-primary) !important; }
+        .border-primary { border-color: var(--color-primary) !important; }
+        .hover\:bg-primary:hover { background-color: var(--color-primary) !important; }
+        .hover\:text-primary:hover { color: var(--color-primary) !important; }
+        .bg-primary-light { background-color: var(--color-primary-light) !important; }
+        .text-primary-dark { color: var(--color-primary-dark) !important; }
+        .bg-primary-dark { background-color: var(--color-primary-dark) !important; }
+        .hover\:text-white:hover { color: #fff !important; }
+        .from-primary { --tw-gradient-from: var(--color-primary) !important; }
+        .to-primary-dark { --tw-gradient-to: var(--color-primary-dark) !important; }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
@@ -18,21 +36,11 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <a href="{{ route('accueil.patient') }}" class="flex items-center">
-                        <x-logo />
+                        <span class="text-2xl font-bold text-primary">CABINET TAYBA</span>
                     </a>
                     <!-- Menu desktop -->
                     <div class="hidden md:flex space-x-4">
-                        <a href="{{ route('accueil.patient') }}" class="nav-link">
-                            Accueil 
-                        </a>
-                        <a href="{{ route('caisse-operations') }}" class="nav-link">
-                            Caisse
-                        </a>
-                        @if(auth()->user() && auth()->user()->IdClasseUser == 3)
-                            <a href="{{ route('users.index') }}" class="nav-link">
-                                Utilisateurs
-                            </a>
-                        @endif
+                        
                     </div>
                 </div>
 
@@ -74,17 +82,8 @@
         <!-- Menu mobile -->
         <div class="mobile-menu hidden md:hidden">
             <div class="px-2 pt-2 pb-3 space-y-2">
-                <a href="{{ route('accueil.patient') }}" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
-                    Accueil
-                </a>
-                <a href="{{ route('caisse-operations') }}" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
-                    Caisse
-                </a>
-                @if(auth()->user() && auth()->user()->IdClasseUser == 3)
-                    <a href="{{ route('users.index') }}" class="mobile-nav-link block px-3 py-2 rounded-md text-base font-medium">
-                        Utilisateurs
-                    </a>
-                @endif
+               
+                
                 @if(auth()->check())
                     <form id="mobile-logout-form" action="{{ route('logout') }}" method="POST" class="block">
                         @csrf

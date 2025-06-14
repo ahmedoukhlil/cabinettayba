@@ -13,7 +13,7 @@
         <div class="max-w-md w-full space-y-8">
             <div class="text-center">
                 <div class="flex items-center justify-center mb-4">
-                    <span class="text-4xl font-bold text-green-700 tracking-wide">CABINET TAYBA</span>
+                    <span class="text-4xl font-bold text-primary tracking-wide">CABINET TAYBA</span>
                 </div>
                 <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
                     Connexion
@@ -23,13 +23,13 @@
             <!-- Carte de connexion -->
             <div class="bg-white rounded-2xl shadow-xl p-8">
                 @if($errors->any())
-                    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
+                    <div class="mb-6 bg-primary-light border-l-4 border-primary p-4">
                         <div class="flex">
                             <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                                <i class="fas fa-exclamation-circle text-primary"></i>
                             </div>
                             <div class="ml-3">
-                                <p class="text-sm text-red-700">
+                                <p class="text-sm text-primary">
                                     {{ $errors->first() }}
                                 </p>
                             </div>
@@ -48,7 +48,7 @@
                                 <i class="fas fa-user text-gray-400"></i>
                             </div>
                             <input id="login" type="text" name="login" value="{{ old('login') }}" required autofocus
-                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                 placeholder="Entrez votre identifiant">
                         </div>
                     </div>
@@ -61,7 +61,7 @@
                                 <i class="fas fa-lock text-gray-400"></i>
                             </div>
                             <input id="password" type="password" name="password" required
-                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                                 placeholder="Entrez votre mot de passe">
                         </div>
                     </div>
@@ -70,7 +70,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <input id="remember" type="checkbox" name="remember"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
                             <label for="remember" class="ml-2 block text-sm text-gray-700">
                                 Se souvenir de moi
                             </label>

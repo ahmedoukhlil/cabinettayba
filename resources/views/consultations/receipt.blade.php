@@ -29,7 +29,7 @@
         .a5 .recu-footer { bottom: 0; }
         .print-btn, .format-select { display: inline-block; vertical-align: middle; }
         .format-select { margin-right: 12px; font-size: 1rem; padding: 6px 10px; border-radius: 5px; border: 1px solid #bbb; background: #f4f6fa; }
-        @media print { 
+        @media print {
             .a4, .a5 { box-shadow: none; }
             .a4 .recu-footer, .a5 .recu-footer { position: fixed; bottom: 0; left: 0; width: 100%; }
             .print-btn, .format-select { display: none !important; }
@@ -51,23 +51,23 @@
     <div class="consult-title">REÇU DE CONSULTATION</div>
     <div class="bloc-patient">
         <table class="bloc-patient-table">
-            <tr>
-                <td class="label">N° Fiche :</td>
+        <tr>
+            <td class="label">N° Fiche :</td>
                 <td class="value">{{ $consultation->patient->NumFiche }}</td>
-                <td class="label">Nom Patient :</td>
+            <td class="label">Nom Patient :</td>
                 <td class="value">{{ $consultation->patient->Prenom }}</td>
                 <td class="label">Réf :</td>
                 <td class="value">{{ $consultation->OrdreConsultation ?? '' }}</td>
-            </tr>
-            <tr>
+        </tr>
+        <tr>
                 <td class="label">Praticien :</td>
                 <td class="value praticien-value">Dr. {{ $consultation->medecin->Nom }} {{ $consultation->medecin->Prenom }}</td>
                 <td class="label">Date :</td>
                 <td class="value">{{ \Carbon\Carbon::parse($consultation->DateConsultation)->format('d/m/Y') }}</td>
                 <td class="label">Tél :</td>
                 <td class="value">{{ $consultation->patient->Telephone1 ?? '' }}</td>
-            </tr>
-        </table>
+        </tr>
+    </table>
     </div>
     <table class="details-table">
         <thead>
@@ -77,7 +77,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
+            <tr>
             <td>{{ $consultation->acte->Acte }}</td>
             <td>{{ number_format($consultation->Montant, 2) }} DH</td>
         </tr>
