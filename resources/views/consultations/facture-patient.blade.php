@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FACTURE</title>
+    <title>{{ $facture->Type ?: 'FACTURE' }}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fff; font-size: 12px; }
         .a4 { width: 210mm; min-height: 297mm; margin: auto; background: #fff; padding: 0 18mm 0 10mm; position: relative; box-sizing: border-box; display: flex; flex-direction: column; min-height: 297mm; }
@@ -67,7 +67,7 @@
             </tr>
             <tr>
                 <td class="label">Praticien :</td>
-                <td class="value praticien-value"> {{ $facture->medecin->Nom ?? '' }}</td>
+                <td class="value praticien-value">{{ $facture->medecin->Nom ?? '' }}</td>
                 <td class="label">Date :</td>
                 <td class="value">{{ $facture->DtFacture ? $facture->DtFacture->format('d/m/Y H:i') : '' }}</td>
                 <td class="label">Tél :</td>
@@ -127,7 +127,7 @@
                 </tr>
                 <tr>
                     <td>Reste à payer PEC</td>
-                    <td>{{ number_format($facture->TotalPEC - $facture->ReglementPEC, 2) }} MRU</td>
+                    <td>{{ number_format($facture->restePEC, 2) }} MRU</td>
                 </tr>
             @endif
             <tr>
@@ -136,7 +136,7 @@
             </tr>
             <tr>
                 <td>Reste à payer patient</td>
-                <td>{{ number_format($facture->ISTP == 1 ? ($facture->TotalfactPatient - $facture->TotReglPatient) : ($facture->TotFacture - $facture->TotReglPatient), 2) }} MRU</td>
+                <td>{{ number_format($facture->restePatient, 2) }} MRU</td>
             </tr>
         </tbody>
     </table>
@@ -147,37 +147,33 @@
 </div>
 
 <script>
+// Cache des éléments DOM fréquemment utilisés
+const elements = {
+    documentType: document.getElementById('documentType'),
+    documentTitle: document.getElementById('documentTitle'),
+    montantLettres: document.querySelector('.montant-lettres'),
+    totalLabel: document.querySelector('.totaux-table tr:first-child td:first-child'),
+    detailsFacture: document.getElementById('detailsFacture'),
+    pageFormat: document.getElementById('pageFormat'),
+    container: document.getElementById('documentContainer')
+};
+
 function updateDocumentType() {
-    const select = document.getElementById('documentType');
-    const title = document.getElementById('documentTitle');
-    const montantLettres = document.querySelector('.montant-lettres');
-    const totalLabel = document.querySelector('.totaux-table tr:first-child td:first-child');
-    const detailsFacture = document.getElementById('detailsFacture');
+    const isDevis = elements.documentType.value === 'Devis';
     
-    if (select.value === 'Devis') {
-        title.textContent = 'DEVIS';
-        montantLettres.innerHTML = montantLettres.innerHTML.replace('facture', 'devis');
-        totalLabel.textContent = 'Total devis';
-        detailsFacture.style.display = 'none';
-    } else {
-        title.textContent = 'FACTURE';
-        montantLettres.innerHTML = montantLettres.innerHTML.replace('devis', 'facture');
-        totalLabel.textContent = 'Total facture';
-        detailsFacture.style.display = 'table-row-group';
-    }
+    elements.documentTitle.textContent = isDevis ? 'DEVIS' : 'FACTURE';
+    elements.montantLettres.innerHTML = elements.montantLettres.innerHTML.replace(
+        isDevis ? 'facture' : 'devis',
+        isDevis ? 'devis' : 'facture'
+    );
+    elements.totalLabel.textContent = `Total ${isDevis ? 'devis' : 'facture'}`;
+    elements.detailsFacture.style.display = isDevis ? 'none' : 'table-row-group';
 }
 
 function updatePageFormat() {
-    const select = document.getElementById('pageFormat');
-    const container = document.getElementById('documentContainer');
-    
-    if (select.value === 'A5') {
-        container.classList.remove('a4');
-        container.classList.add('a5');
-    } else {
-        container.classList.remove('a5');
-        container.classList.add('a4');
-    }
+    const isA5 = elements.pageFormat.value === 'A5';
+    elements.container.classList.toggle('a4', !isA5);
+    elements.container.classList.toggle('a5', isA5);
 }
 </script>
 </body>

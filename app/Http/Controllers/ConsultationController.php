@@ -51,8 +51,8 @@ class ConsultationController extends Controller
 
     public function showFacturePatient($factureId)
     {
-        // Utiliser le cache pour les données du cabinet
-        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 3600, function() {
+        // Utiliser le cache pour les données du cabinet (24h car rarement modifiées)
+        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 86400, function() {
             $user = Auth::user();
             return [
                 'NomCabinet' => $user->cabinet->NomCabinet ?? 'Dental House',
@@ -61,25 +61,48 @@ class ConsultationController extends Controller
             ];
         });
 
-        // Précharger uniquement les champs nécessaires avec les relations
-        $facture = Facture::select([
-            'Idfacture', 'Nfacture', 'DtFacture', 'TotFacture', 'TotalPEC', 
-            'TotalfactPatient', 'TotReglPatient', 'ReglementPEC', 'ISTP',
-            'FkidMedecinInitiateur', 'IDPatient'
-        ])->with([
-            'patient' => function($query) {
-                $query->select('ID', 'IdentifiantPatient', 'NomContact', 'Telephone1', 'IdentifiantAssurance', 'Assureur');
-            },
-            'patient.assureur:IDAssureur,LibAssurance',
-            'medecin:idMedecin,Nom',
-            'details:idDetfacture,Actes,Quantite,PrixFacture,fkidfacture',
-            'assureur:IDAssureur,LibAssurance'
-        ])->findOrFail($factureId);
+        // Mettre en cache la facture avec ses relations (1h car peut être modifiée)
+        $facture = cache()->remember('facture_' . $factureId, 3600, function() use ($factureId) {
+            return Facture::select([
+                'Idfacture', 'Nfacture', 'DtFacture', 'TotFacture', 'TotalPEC', 
+                'TotalfactPatient', 'TotReglPatient', 'ReglementPEC', 'ISTP',
+                'FkidMedecinInitiateur', 'IDPatient', 'Type', 'ModeReglement',
+                'Areglepar', 'DtReglement', 'TXPEC', 'fkidEtsAssurance'
+            ])
+            ->with([
+                'patient:id,IdentifiantPatient,NomContact,Telephone1,IdentifiantAssurance,Assureur',
+                'medecin:idMedecin,Nom',
+                'details' => function($query) {
+                    $query->select('idDetfacture', 'Actes', 'Quantite', 'PrixFacture', 'fkidfacture')
+                          ->orderBy('idDetfacture');
+                },
+                'assureur:IDAssureur,LibAssurance'
+            ])
+            ->withCount('details')
+            ->findOrFail($factureId);
+        });
 
-        // Mettre en cache la conversion en lettres
+        // Pré-calculer et mettre en cache les montants (1h)
+        $montants = cache()->remember('facture_montants_' . $factureId, 3600, function() use ($facture) {
+            $restePEC = $facture->TotalPEC - $facture->ReglementPEC;
+            $restePatient = $facture->ISTP == 1 
+                ? ($facture->TotalfactPatient - $facture->TotReglPatient)
+                : ($facture->TotFacture - $facture->TotReglPatient);
+
+            return [
+                'restePEC' => $restePEC,
+                'restePatient' => $restePatient
+            ];
+        });
+
+        // Mettre en cache la conversion en lettres (1h)
         $facture->en_lettres = cache()->remember('facture_lettres_' . $factureId, 3600, function() use ($facture) {
             return $this->numberToWords($facture->TotFacture ?? 0);
         });
+
+        // Ajouter les montants calculés à la facture
+        $facture->restePEC = $montants['restePEC'];
+        $facture->restePatient = $montants['restePatient'];
 
         return view('consultations.facture-patient', compact('facture', 'cabinet'));
     }
