@@ -75,12 +75,38 @@
     </table>
     <table class="totaux-table">
         <tr>
-            <td>Total consultation</td>
+            <td>Total facture</td>
             <td>{{ number_format($facture->TotFacture, 2) }} MRU</td>
+        </tr>
+        @if($facture->ISTP == 1)
+        <tr>
+            <td>Part assurance (PEC)</td>
+            <td>{{ number_format($facture->TotalPEC, 2) }} MRU</td>
+        </tr>
+        <tr>
+            <td>Part patient</td>
+            <td>{{ number_format($facture->TotalfactPatient, 2) }} MRU</td>
+        </tr>
+        <tr>
+            <td>Règlements PEC</td>
+            <td>{{ number_format($facture->ReglementPEC, 2) }} MRU</td>
+        </tr>
+        <tr>
+            <td>Reste à payer PEC</td>
+            <td>{{ number_format($facture->TotalPEC - $facture->ReglementPEC, 2) }} MRU</td>
+        </tr>
+        @endif
+        <tr>
+            <td>Règlements patient</td>
+            <td>{{ number_format($facture->TotReglPatient, 2) }} MRU</td>
+        </tr>
+        <tr>
+            <td>Reste à payer patient</td>
+            <td>{{ number_format($facture->ISTP == 1 ? ($facture->TotalfactPatient - $facture->TotReglPatient) : ($facture->TotFacture - $facture->TotReglPatient), 2) }} MRU</td>
         </tr>
     </table>
     <div class="montant-lettres">
-        Arrêté la présente consultation à la somme de : <strong>{{ $facture->en_lettres ?? '' }}</strong>
+        Arrêté la présente facture à la somme de : <strong>{{ $facture->en_lettres ?? '' }}</strong>
     </div>
     <div class="recu-footer">@include('partials.recu-footer')</div>
 </div>

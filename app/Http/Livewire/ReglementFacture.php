@@ -10,6 +10,8 @@ use App\Models\Medecin;
 use App\Models\RefTypePaiement;
 use Illuminate\Support\Facades\DB;
 use App\Models\Detailfacturepatient;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ReglementFacture extends Component
 {
@@ -35,6 +37,10 @@ class ReglementFacture extends Component
     public $showReglementModal = false;
     protected $facturesEnAttente;
     public $numberOfPaginatorsRendered = [];
+    public $showMedecinModal = false;
+    public $medecins = [];
+    public $selectedMedecinId = null;
+    public $searchMedecin = '';
 
     protected $listeners = [
         'patientSelected' => 'handlePatientSelected',
@@ -76,6 +82,7 @@ class ReglementFacture extends Component
         if ($this->selectedPatient) {
             $this->factures = Facture::where('IDPatient', $this->selectedPatient['ID'])
                 ->with(['medecin:idMedecin,Nom,Contact,DtAjout,fkidcabinet'])
+                ->orderBy('DtFacture', 'desc')
                 ->get()
                 ->map(function ($facture) {
                     $isAssure = $facture->ISTP > 0;
@@ -85,7 +92,7 @@ class ReglementFacture extends Component
                     return [
                         'id' => $facture->Idfacture,
                         'numero' => $facture->Nfacture,
-                        'medecin' => $facture->medecin,
+                        'medecin' => $facture->medecin ?: ['Nom' => Auth::user()->NomComplet ?? Auth::user()->name],
                         'montant_total' => $facture->TotFacture ?? 0,
                         'montant_pec' => floatval($facture->TotalPEC ?? 0),
                         'part_patient' => $facture->TotalfactPatient ?? 0,
@@ -405,6 +412,91 @@ class ReglementFacture extends Component
             ->where('estfacturer', 0)
             ->orderBy('DtFacture', 'desc')
             ->get();
+    }
+
+    public function openMedecinModal()
+    {
+        $user = auth()->user();
+        $isMedecin = !empty($user->fkidmedecin);
+
+        if ($isMedecin) {
+            // Si l'utilisateur est un médecin, créer directement la facture
+            $this->createFactureVide($user->fkidmedecin);
+        } else {
+            // Si l'utilisateur n'est pas un médecin, afficher le modal de sélection
+            $this->medecins = \App\Models\Medecin::where('fkidcabinet', auth()->user()->fkidcabinet)
+                ->orderBy('Nom')
+                ->get();
+            $this->showMedecinModal = true;
+        }
+    }
+
+    public function selectMedecin($medecinId)
+    {
+        $this->selectedMedecinId = $medecinId;
+        $this->createFactureVide($medecinId);
+        $this->showMedecinModal = false;
+    }
+
+    public function updatedSearchMedecin()
+    {
+        $this->medecins = \App\Models\Medecin::where('fkidcabinet', auth()->user()->fkidcabinet)
+            ->where('Nom', 'like', '%' . $this->searchMedecin . '%')
+            ->orderBy('Nom')
+            ->get();
+    }
+
+    public function createFactureVide($medecinId = null)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = auth()->user();
+            
+            // Si aucun médecin n'est spécifié, on vérifie si l'utilisateur est un médecin
+            if (!$medecinId) {
+                if (empty($user->fkidmedecin)) {
+                    throw new \Exception('Vous devez sélectionner un médecin pour créer la facture');
+                }
+                $medecinId = $user->fkidmedecin;
+            }
+
+            $annee = Carbon::now()->year;
+            $derniereFacture = Facture::where('anneeFacture', $annee)
+                                ->orderBy('Nfacture', 'desc')
+                                ->first();
+            
+            $numero = $derniereFacture ? intval(explode('-', $derniereFacture->Nfacture)[0]) + 1 : 1;
+            $nfacture = $numero . '-' . $annee;
+            $nordre = (Facture::where('anneeFacture', $annee)->max('nordre') ?? 0) + 1;
+
+            $facture = Facture::create([
+                'Nfacture' => $nfacture,
+                'anneeFacture' => $annee,
+                'nordre' => $nordre,
+                'DtFacture' => Carbon::now(),
+                'IDPatient' => $this->selectedPatient['ID'],
+                'ISTP' => 0,
+                'TXPEC' => 0,
+                'TotFacture' => 0,
+                'TotalPEC' => 0,
+                'TotalfactPatient' => 0,
+                'FkidMedecinInitiateur' => $medecinId,
+                'fkidCabinet' => $user->fkidcabinet,
+                'user' => $user->NomComplet ?? $user->name,
+                'TotReglPatient' => 0,
+                'ReglementPEC' => 0,
+                'PartLaboratoire' => 0,
+                'MontantAffectation' => 0
+            ]);
+
+            DB::commit();
+            $this->loadFactures();
+            session()->flash('message', 'Facture créée avec succès');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Erreur lors de la création de la facture: ' . $e->getMessage());
+        }
     }
 
     public function render()

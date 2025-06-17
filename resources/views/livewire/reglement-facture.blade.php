@@ -41,7 +41,12 @@
     <!-- Liste des factures -->
     @if($factures)
     <div class="mb-6">
-        <h3 class="text-lg font-semibold mb-4">Factures en attente de règlement</h3>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Factures en attente de règlement</h3>
+            <button wire:click="openMedecinModal" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2">
+                <i class="fas fa-plus"></i> Nouvelle facture
+            </button>
+        </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -330,6 +335,48 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    <!-- Modal de sélection du médecin -->
+    @if($showMedecinModal)
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <!-- Header -->
+                <div class="bg-primary text-white p-4 rounded-t-lg">
+                    <button wire:click="$set('showMedecinModal', false)" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
+                    <h2 class="text-2xl font-bold">Sélectionner un médecin</h2>
+                </div>
+
+                <!-- Contenu -->
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="mb-4">
+                        <input type="text" wire:model.debounce.300ms="searchMedecin" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                            placeholder="Rechercher un médecin...">
+                    </div>
+
+                    <div class="max-h-96 overflow-y-auto">
+                        <div class="grid grid-cols-1 gap-2">
+                            @foreach($medecins as $medecin)
+                            <button wire:click="selectMedecin({{ $medecin->idMedecin }})"
+                                class="text-left px-4 py-2 hover:bg-gray-100 rounded-md transition-colors duration-150">
+                                <div class="font-medium">Dr. {{ $medecin->Nom }}</div>
+                                @if($medecin->Contact)
+                                <div class="text-sm text-gray-500">{{ $medecin->Contact }}</div>
+                                @endif
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     @endif
 </div>
 

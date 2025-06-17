@@ -3,29 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabinet Tayba</title>
+    <title>Dental House</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     @livewireStyles
     <style>
-        :root {
-            --color-primary: #009CA4;
-            --color-primary-light: #e0f7fa;
-            --color-primary-dark: #00737a;
-        }
-        .text-primary { color: var(--color-primary) !important; }
-        .bg-primary { background-color: var(--color-primary) !important; }
-        .border-primary { border-color: var(--color-primary) !important; }
-        .hover\:bg-primary:hover { background-color: var(--color-primary) !important; }
-        .hover\:text-primary:hover { color: var(--color-primary) !important; }
-        .bg-primary-light { background-color: var(--color-primary-light) !important; }
-        .text-primary-dark { color: var(--color-primary-dark) !important; }
-        .bg-primary-dark { background-color: var(--color-primary-dark) !important; }
+        .text-primary { color: #1e3a8a !important; }
+        .bg-primary { background-color: #1e3a8a !important; }
+        .border-primary { border-color: #1e3a8a !important; }
+        .hover\:bg-primary:hover { background-color: #1e3a8a !important; }
+        .hover\:text-primary:hover { color: #1e3a8a !important; }
+        .bg-primary-light { background-color: #e6eaf2 !important; }
+        .text-primary-dark { color: #152a5c !important; }
         .hover\:text-white:hover { color: #fff !important; }
-        .from-primary { --tw-gradient-from: var(--color-primary) !important; }
-        .to-primary-dark { --tw-gradient-to: var(--color-primary-dark) !important; }
+        
+        /* Masquer les spinners globaux de Livewire */
+        [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline] {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -35,9 +32,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <a href="{{ route('accueil.patient') }}" class="flex items-center">
-                        <span class="text-2xl font-bold text-primary">CABINET TAYBA</span>
-                    </a>
+                    <div class="flex items-center">
+                        <a href="{{ route('dashboard') }}" class="flex items-center">
+                            <img src="{{ asset('dentalhouselogo.jpg') }}" alt="Dental House Logo" class="h-10 w-10 mr-3">
+                            <span class="text-xl font-bold text-[#1e3a8a]">Dental House</span>
+                        </a>
+                    </div>
                     <!-- Menu desktop -->
                     <div class="hidden md:flex space-x-4">
                         
@@ -136,6 +136,7 @@
     <!-- Script impression modal paiement -->
     <script>
     document.addEventListener('imprimer-modal', function () {
+        console.log('Événement imprimer-modal reçu !');
         let printModal = document.getElementById('historique-paiement-modal');
         if (!printModal) return;
         let printContents = printModal.innerHTML;
