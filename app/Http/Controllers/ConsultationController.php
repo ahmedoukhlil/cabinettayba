@@ -8,6 +8,7 @@ use App\Models\Medecin;
 use App\Models\Acte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ConsultationController extends Controller
 {
@@ -50,17 +51,37 @@ class ConsultationController extends Controller
 
     public function showFacturePatient($factureId)
     {
-        $facture = Facture::with([
-            'patient',
-            'medecin',
-            'details',
-            'assureur',
+        // Utiliser le cache pour les données du cabinet
+        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 3600, function() {
+            $user = Auth::user();
+            return [
+                'NomCabinet' => $user->cabinet->NomCabinet ?? 'Dental House',
+                'Adresse' => $user->cabinet->Adresse ?? 'Adresse de Dental House',
+                'Telephone' => $user->cabinet->Telephone ?? 'Téléphone de Dental House'
+            ];
+        });
+
+        // Précharger uniquement les champs nécessaires avec les relations
+        $facture = Facture::select([
+            'Idfacture', 'Nfacture', 'DtFacture', 'TotFacture', 'TotalPEC', 
+            'TotalfactPatient', 'TotReglPatient', 'ReglementPEC', 'ISTP',
+            'FkidMedecinInitiateur', 'IDPatient'
+        ])->with([
+            'patient' => function($query) {
+                $query->select('ID', 'IdentifiantPatient', 'NomContact', 'Telephone1', 'IdentifiantAssurance', 'Assureur');
+            },
+            'patient.assureur:IDAssureur,LibAssurance',
+            'medecin:idMedecin,Nom',
+            'details:idDetfacture,Actes,Quantite,PrixFacture,fkidfacture',
+            'assureur:IDAssureur,LibAssurance'
         ])->findOrFail($factureId);
 
-        // Montant en lettres (exemple simple, à adapter selon votre helper)
-        $facture->en_lettres = $this->numberToWords($facture->TotFacture ?? 0);
+        // Mettre en cache la conversion en lettres
+        $facture->en_lettres = cache()->remember('facture_lettres_' . $factureId, 3600, function() use ($facture) {
+            return $this->numberToWords($facture->TotFacture ?? 0);
+        });
 
-        return view('consultations.facture-patient', compact('facture'));
+        return view('consultations.facture-patient', compact('facture', 'cabinet'));
     }
 
     // Helper simple pour montant en lettres (à remplacer par votre propre logique si besoin)
