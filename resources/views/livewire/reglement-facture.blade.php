@@ -2,7 +2,6 @@
     <div class="p-6 rounded-xl text-white shadow-lg z-30" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
         <h2 class="text-2xl font-bold">Facture/DEVIS</h2>
         <p class="text-white mt-1">Sélectionnez un patient pour gérer ses paiements</p>
-        <div class="text-xs mt-2">isDocteurProprietaire = {{ var_export($isDocteurProprietaire, true) }}</div>
     </div>
 
     <div class="bg-white rounded-lg shadow-xl overflow-hidden">
@@ -42,7 +41,7 @@
     @if($factures)
     <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold">Factures en attente de règlement</h3>
+            <h2 class="text-xl font-semibold">Factures du patient</h2>
             <button wire:click="openMedecinModal" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2">
                 <i class="fas fa-plus"></i> Nouvelle facture
             </button>
@@ -62,89 +61,99 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($factures as $facture)
-                    <tr @if($factureSelectionnee && $factureSelectionnee['id'] == $facture['id']) class="bg-yellow-50" @endif style="cursor:pointer" wire:click="selectionnerFacture({{ $facture['id'] }})">
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $facture['numero'] }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">Dr. {{ $facture['medecin']['Nom'] ?? 'Non spécifié' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format($facture['montant_total'], 0, '', ' ') }} MRU</td>
+                    @php
+                        $isAssure = $facture->ISTP > 0;
+                        $resteAPayerPatient = ($isAssure ? ($facture->TotalfactPatient ?? 0) : ($facture->TotFacture ?? 0)) - ($facture->TotReglPatient ?? 0);
+                        $resteAPayerPEC = $isAssure ? (($facture->TotalPEC ?? 0) - ($facture->ReglementPEC ?? 0)) : 0;
+                    @endphp
+                    <tr @if($factureSelectionnee && $factureSelectionnee['id'] == $facture->Idfacture) class="bg-yellow-50" @endif 
+                        wire:key="facture-{{ $facture->Idfacture }}"
+                        style="cursor:pointer" 
+                        wire:click.stop="selectionnerFacture({{ $facture->Idfacture }})">
+                        <td class="px-6 py-4 whitespace-nowrap">{{ $facture->Nfacture }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">Dr. {{ $facture->medecin->Nom ?? 'Non spécifié' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format($facture->TotFacture ?? 0, 0, '', ' ') }} MRU</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
-                                $txpec = $facture['TXPEC'] ?? $selectedPatient['TauxPEC'] ?? 0;
-                                $montantPEC = (($facture['istp'] ?? $facture['ISTP'] ?? 0) > 0) ? ($facture['montant_total'] * $txpec) : 0;
+                                $txpec = $facture->TXPEC ?? $selectedPatient['TauxPEC'] ?? 0;
+                                $montantPEC = ($facture->ISTP > 0) ? ($facture->TotFacture * $txpec) : 0;
                             @endphp
-                            @if(($facture['istp'] ?? $facture['ISTP'] ?? 0) > 0)
+                            @if($facture->ISTP > 0)
                                 {{ number_format($montantPEC, 0, '', ' ') }} MRU
                             @else
                                 -
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format($facture['montant_reglements_patient'] ?? 0, 0, '', ' ') }} MRU</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format(($facture['part_patient'] ?? 0) - ($facture['montant_reglements_patient'] ?? 0), 0, '', ' ') }} MRU</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format($facture->TotReglPatient ?? 0, 0, '', ' ') }} MRU</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ number_format(($facture->TotalfactPatient ?? 0) - ($facture->TotReglPatient ?? 0), 0, '', ' ') }} MRU</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @php
-                                $reste = ($facture['part_patient'] ?? 0) - ($facture['montant_reglements_patient'] ?? 0);
-                            @endphp
-                            @if($reste > 0)
+                            @if($resteAPayerPatient > 0)
                                 <span class="inline-block px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">Non réglée</span>
-                            @elseif($reste < 0)
+                            @elseif($resteAPayerPatient < 0)
                                 <span class="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold">À rembourser</span>
                             @else
                                 <span class="inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">Réglée</span>
                             @endif
                         </td>
                     </tr>
-                    @if($factureSelectionnee && $factureSelectionnee['id'] == $facture['id'])
-                        <tr>
+                    @if($factureSelectionnee && $factureSelectionnee['id'] == $facture->Idfacture)
+                        <tr wire:key="details-{{ $facture->Idfacture }}">
                             <td colspan="8" class="bg-yellow-50 px-6 py-4">
                                 <div class="mb-2 font-semibold text-gray-700">Actes de la facture :</div>
-                                <table class="min-w-full mb-2">
-                                    <thead>
-                                        <tr class="text-xs text-gray-500 uppercase">
-                                            <th class="px-2 py-1 text-left"></th>
-                                            <th class="px-2 py-1 text-left">Acte</th>
-                                            <th class="px-2 py-1 text-left">Quantité</th>
-                                            <th class="px-2 py-1 text-left">Prix unitaire</th>
-                                            <th class="px-2 py-1 text-left">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                 @php
-                                $totalPrix = 0;
-                                $details = \App\Models\Detailfacturepatient::where('fkidfacture', $facture['id'])->get();
-                            @endphp
-                                        @foreach($details as $detail)
-                                            @php
-                                                $totalPrix += $detail->PrixFacture * $detail->Quantite;
-                                            @endphp
-                                            <tr>
-                                                <td class="px-2 py-1">
-                                                    @if(in_array(Auth::user()->IdClasseUser ?? null, [2, 3]))
-                                                        <button onclick="event.stopPropagation(); if(confirm('Êtes-vous sûr de vouloir supprimer cet acte ?')) { @this.removeActe({{ $detail->idDetfacture }}) }" class="text-red-600 hover:text-red-800">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    @endif
-                                                </td>
-                                                <td class="px-2 py-1">{{ $detail->Actes }}</td>
-                                                <td class="px-2 py-1">{{ $detail->Quantite }}</td>
-                                                <td class="px-2 py-1">{{ number_format($detail->PrixFacture, 2) }}</td>
-                                                <td class="px-2 py-1">{{ number_format($detail->PrixFacture * $detail->Quantite, 2) }}</td>
+                                <div wire:loading.remove wire:target="selectionnerFacture">
+                                    <table class="min-w-full mb-2">
+                                        <thead>
+                                            <tr class="text-xs text-gray-500 uppercase">
+                                                <th class="px-2 py-1 text-left"></th>
+                                                <th class="px-2 py-1 text-left">Acte</th>
+                                                <th class="px-2 py-1 text-left">Quantité</th>
+                                                <th class="px-2 py-1 text-left">Prix unitaire</th>
+                                                <th class="px-2 py-1 text-left">Total</th>
                                             </tr>
-                                        @endforeach
-                                        <tr>
-                                            <td colspan="4" class="text-right"><strong>Total&nbsp;:</strong></td>
-                                            <td><strong>{{ number_format($totalPrix, 0, '', ' ') }} MRU</strong></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div class="flex flex-row gap-2 justify-end mt-4">
-                                    <button wire:click="ouvrirReglementFacture({{ $facture['id'] }})" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center">
-                                        Payer
-                                    </button>
-                                    <button wire:click.stop="openAddActeForm({{ $facture['id'] }})" class="min-w-[150px] px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center gap-2">
-                                        <i class="fas fa-plus"></i> Ajouter un acte
-                                    </button>
-                                    <a href="{{ route('consultations.facture-patient', $facture['id']) }}" target="_blank" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-gray-700 text-white rounded hover:bg-gray-800 flex items-center justify-center gap-2">
-                                        <i class="fas fa-print"></i> Imprimer
-                                    </a>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $details = \App\Models\Detailfacturepatient::where('fkidfacture', $facture->Idfacture)->get();
+                                                $totalPrix = 0;
+                                            @endphp
+                                            @foreach($details as $detail)
+                                                @php
+                                                    $totalPrix += $detail->PrixFacture * $detail->Quantite;
+                                                @endphp
+                                                <tr wire:key="detail-{{ $detail->idDetfacture }}">
+                                                    <td class="px-2 py-1">
+                                                        @if(in_array(Auth::user()->IdClasseUser ?? null, [2, 3]))
+                                                            <button onclick="event.stopPropagation(); if(confirm('Êtes-vous sûr de vouloir supprimer cet acte ?')) { @this.removeActe({{ $detail->idDetfacture }}) }" class="text-red-600 hover:text-red-800">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-2 py-1">{{ $detail->Actes }}</td>
+                                                    <td class="px-2 py-1">{{ $detail->Quantite }}</td>
+                                                    <td class="px-2 py-1">{{ number_format($detail->PrixFacture, 2) }}</td>
+                                                    <td class="px-2 py-1">{{ number_format($detail->PrixFacture * $detail->Quantite, 2) }}</td>
+                                                </tr>
+                                            @endforeach
+                                            <tr>
+                                                <td colspan="4" class="text-right"><strong>Total&nbsp;:</strong></td>
+                                                <td><strong>{{ number_format($totalPrix, 0, '', ' ') }} MRU</strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="flex flex-row gap-2 justify-end mt-4">
+                                        <button wire:click.stop="ouvrirReglementFacture({{ $facture->Idfacture }})" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center">
+                                            Payer
+                                        </button>
+                                        <button wire:click.stop="openAddActeForm({{ $facture->Idfacture }})" class="min-w-[150px] px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center gap-2">
+                                            <i class="fas fa-plus"></i> Ajouter un acte
+                                        </button>
+                                        <a href="{{ route('consultations.facture-patient', $facture->Idfacture) }}" target="_blank" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-gray-700 text-white rounded hover:bg-gray-800 flex items-center justify-center gap-2">
+                                            <i class="fas fa-print"></i> Imprimer
+                                        </a>
+                                    </div>
+                                </div>
+                                <div wire:loading wire:target="selectionnerFacture" class="text-center py-4">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-indigo-600"></div>
                                 </div>
                             </td>
                         </tr>
@@ -152,6 +161,11 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="mt-4" wire:key="pagination">
+            {{ $factures->links() }}
         </div>
     </div>
     @endif
@@ -169,7 +183,7 @@
                 <div class="p-6 rounded-t-lg text-white shadow relative" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
                     <button wire:click="closeReglementForm" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
                     <h2 class="text-2xl font-bold">Facture/DEVIS</h2>
-                    <p class="text-green-100 mt-1">Facture N° {{ $factureSelectionnee['numero'] }}</p>
+                    <p class="text-green-100 mt-1">Facture N° {{ $factureSelectionnee['numero'] ?? '---' }}</p>
                 </div>
 
                 <!-- Détails de la facture -->
@@ -212,13 +226,13 @@
                                     class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                     placeholder="Entrez un montant positif pour un paiement/acompte, négatif pour un remboursement">
                             </div>
-                            @if($factureSelectionnee['est_reglee'])
+                            @if(($factureSelectionnee['est_reglee'] ?? false))
                                 <p class="mt-2 text-sm text-gray-500">
                                     Cette facture est déjà réglée. Vous pouvez ajouter un nouveau paiement ou un remboursement.
                                 </p>
                             @else
                                 <p class="mt-2 text-sm text-gray-500">
-                                    Montant restant à payer : {{ number_format($factureSelectionnee['reste_a_payer'], 2) }} MRU
+                                    Montant restant à payer : {{ number_format($factureSelectionnee['reste_a_payer'] ?? 0, 2) }} MRU
                                 </p>
                             @endif
                         </div>
@@ -339,44 +353,50 @@
 
     <!-- Modal de sélection du médecin -->
     @if($showMedecinModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <!-- Header -->
-                <div class="bg-primary text-white p-4 rounded-t-lg">
-                    <button wire:click="$set('showMedecinModal', false)" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
-                    <h2 class="text-2xl font-bold">Sélectionner un médecin</h2>
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
                 </div>
-
-                <!-- Contenu -->
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="mb-4">
-                        <input type="text" wire:model.debounce.300ms="searchMedecin" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                            placeholder="Rechercher un médecin...">
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <!-- Header -->
+                    <div class="bg-primary text-white p-4 rounded-t-lg">
+                        <button wire:click="$set('showMedecinModal', false)" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
+                        <h2 class="text-2xl font-bold">Sélectionner un médecin</h2>
                     </div>
-
-                    <div class="max-h-96 overflow-y-auto">
-                        <div class="grid grid-cols-1 gap-2">
-                            @foreach($medecins as $medecin)
-                            <button wire:click="selectMedecin({{ $medecin->idMedecin }})"
-                                class="text-left px-4 py-2 hover:bg-gray-100 rounded-md transition-colors duration-150">
-                                <div class="font-medium">Dr. {{ $medecin->Nom }}</div>
-                                @if($medecin->Contact)
-                                <div class="text-sm text-gray-500">{{ $medecin->Contact }}</div>
-                                @endif
-                            </button>
-                            @endforeach
+                    <!-- Contenu -->
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="mb-4">
+                            <input type="text" wire:model.debounce.300ms="searchMedecin" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                                placeholder="Rechercher un médecin...">
                         </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            <div class="grid grid-cols-1 gap-2">
+                                @foreach($medecins as $medecin)
+                                <button wire:click="selectMedecin({{ $medecin->idMedecin }})"
+                                    class="text-left px-4 py-2 hover:bg-gray-100 rounded-md transition-colors duration-150">
+                                    <div class="font-medium">Dr. {{ $medecin->Nom }}</div>
+                                    @if($medecin->Contact)
+                                    <div class="text-sm text-gray-500">{{ $medecin->Contact }}</div>
+                                    @endif
+                                </button>
+                                @endforeach
+                                @if(count($medecins) === 0)
+                                    <div class="text-center py-4 text-gray-500">Aucun médecin trouvé</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
+                        <button type="button" wire:click="$set('showMedecinModal', false)" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Annuler
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     @endif
 </div>
 

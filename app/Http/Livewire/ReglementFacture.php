@@ -10,13 +10,18 @@ use App\Models\Medecin;
 use App\Models\RefTypePaiement;
 use Illuminate\Support\Facades\DB;
 use App\Models\Detailfacturepatient;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Facturepatient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class ReglementFacture extends Component
 {
+    use WithPagination;
+
     public $selectedPatient = null;
-    public $factures;
+    protected $factures;
     public $factureSelectionnee;
     public $montantReglement;
     public $modePaiement;
@@ -36,24 +41,42 @@ class ReglementFacture extends Component
     public $acteSelectionne = false;
     public $showReglementModal = false;
     protected $facturesEnAttente;
-    public $numberOfPaginatorsRendered = [];
+    protected $currentPage = 1;
     public $showMedecinModal = false;
-    public $medecins = [];
     public $selectedMedecinId = null;
+    public $medecins = [];
     public $searchMedecin = '';
 
     protected $listeners = [
         'patientSelected' => 'handlePatientSelected',
         'acteSelected' => 'handleActeSelected',
-        'closeModal' => 'closeAddActeForm',
+        'closeModal' => 'closeAddActeForm'
     ];
+
+    public function getFacturesProperty()
+    {
+        if ($this->selectedPatient) {
+            return Facture::where('IDPatient', $this->selectedPatient['ID'])
+                ->with(['medecin' => function($query) {
+                    $query->select('idMedecin', 'Nom');
+                }])
+                ->select([
+                    'Idfacture', 'Nfacture', 'FkidMedecinInitiateur', 'DtFacture',
+                    'TotFacture', 'ISTP', 'TXPEC', 'TotalPEC', 'ReglementPEC',
+                    'TotalfactPatient', 'TotReglPatient'
+                ])
+                ->orderBy('DtFacture', 'desc')
+                ->paginate(10, ['*'], 'page', $this->currentPage);
+        }
+        return null;
+    }
 
     public function mount($selectedPatient = null)
     {
+        $this->showMedecinModal = false;
         $this->modesPaiement = RefTypePaiement::all();
         $this->actes = \App\Models\Acte::all();
         $this->seance = 'Dent';
-        
         if ($selectedPatient) {
             if (is_object($selectedPatient)) {
                 $selectedPatient = (array) $selectedPatient;
@@ -66,6 +89,7 @@ class ReglementFacture extends Component
 
     public function handlePatientSelected($patient)
     {
+        $this->showMedecinModal = false;
         $this->selectedPatient = $patient;
         $this->loadFactures();
     }
@@ -80,49 +104,38 @@ class ReglementFacture extends Component
     public function loadFactures()
     {
         if ($this->selectedPatient) {
-            $this->factures = Facture::where('IDPatient', $this->selectedPatient['ID'])
-                ->with(['medecin:idMedecin,Nom,Contact,DtAjout,fkidcabinet'])
-                ->orderBy('DtFacture', 'desc')
-                ->get()
-                ->map(function ($facture) {
-                    $isAssure = $facture->ISTP > 0;
-                    $resteAPayerPatient = ($isAssure ? ($facture->TotalfactPatient ?? 0) : ($facture->TotFacture ?? 0)) - ($facture->TotReglPatient ?? 0);
-                    $resteAPayerPEC = $isAssure ? (($facture->TotalPEC ?? 0) - ($facture->ReglementPEC ?? 0)) : 0;
-
-                    return [
-                        'id' => $facture->Idfacture,
-                        'numero' => $facture->Nfacture,
-                        'medecin' => $facture->medecin ?: ['Nom' => Auth::user()->NomComplet ?? Auth::user()->name],
-                        'montant_total' => $facture->TotFacture ?? 0,
-                        'montant_pec' => floatval($facture->TotalPEC ?? 0),
-                        'part_patient' => $facture->TotalfactPatient ?? 0,
-                        'montant_reglements_patient' => $facture->TotReglPatient ?? 0,
-                        'montant_reglements_pec' => $facture->ReglementPEC ?? 0,
-                        'reste_a_payer' => $resteAPayerPatient,
-                        'reste_a_payer_pec' => $resteAPayerPEC,
-                        'TXPEC' => $facture->TXPEC ?? 0,
-                        'ISTP' => $facture->ISTP ?? 0,
-                        'est_reglee' => $resteAPayerPatient <= 0 && $resteAPayerPEC <= 0
-                    ];
-                });
-        } else {
-            $this->factures = null;
+            $this->factures = $this->getFacturesProperty();
         }
     }
 
     public function selectionnerFacture($factureId)
     {
-        $this->factureSelectionnee = collect($this->factures)->firstWhere('id', $factureId);
-        if ($this->factureSelectionnee) {
+        $facture = Facture::find($factureId);
+        if ($facture) {
+            $this->factureSelectionnee = [
+                'id' => $facture->Idfacture,
+                'numero' => $facture->Nfacture,
+                'medecin' => $facture->medecin ? ['Nom' => $facture->medecin->Nom] : ['Nom' => Auth::user()->NomComplet ?? Auth::user()->name],
+                'montant_total' => $facture->TotFacture ?? 0,
+                'montant_pec' => floatval($facture->TotalPEC ?? 0),
+                'part_patient' => $facture->TotalfactPatient ?? 0,
+                'montant_reglements_patient' => $facture->TotReglPatient ?? 0,
+                'montant_reglements_pec' => $facture->ReglementPEC ?? 0,
+                'reste_a_payer' => (($facture->ISTP > 0 ? ($facture->TotalfactPatient ?? 0) : ($facture->TotFacture ?? 0)) - ($facture->TotReglPatient ?? 0)),
+                'reste_a_payer_pec' => $facture->ISTP > 0 ? (($facture->TotalPEC ?? 0) - ($facture->ReglementPEC ?? 0)) : 0,
+                'TXPEC' => $facture->TXPEC ?? 0,
+                'ISTP' => $facture->ISTP ?? 0,
+                'est_reglee' => ((($facture->ISTP > 0 ? ($facture->TotalfactPatient ?? 0) : ($facture->TotFacture ?? 0)) - ($facture->TotReglPatient ?? 0)) <= 0) && ($facture->ISTP > 0 ? (($facture->TotalPEC ?? 0) - ($facture->ReglementPEC ?? 0)) <= 0 : true),
+            ];
             // Si la facture est déjà réglée, on permet d'ajouter un montant positif
-            if ($this->factureSelectionnee['est_reglee']) {
+            if ($this->factureSelectionnee['reste_a_payer'] >= $this->factureSelectionnee['part_patient']) {
                 $this->montantReglement = 0;
             } else {
-                $this->montantReglement = $this->factureSelectionnee['reste_a_payer'];
+                $this->montantReglement = $this->factureSelectionnee['part_patient'] - $this->factureSelectionnee['reste_a_payer'];
             }
+
             // Détection assuré ou non
-            $facture = Facture::find($factureId);
-            if ($facture && $facture->ISTP == 1) {
+            if ($facture->ISTP == 1) {
                 $this->pourQui = 'patient'; // valeur par défaut
             } else {
                 $this->pourQui = null;
@@ -408,10 +421,13 @@ class ReglementFacture extends Component
 
     public function loadFacturesEnAttente()
     {
-        $this->facturesEnAttente = Facture::with(['patient', 'medecin'])
-            ->where('estfacturer', 0)
-            ->orderBy('DtFacture', 'desc')
-            ->get();
+        $this->facturesEnAttente = Cache::remember('factures_en_attente', 300, function() {
+            return Facture::with(['patient:id,ID,Nom,Prenom', 'medecin:idMedecin,Nom'])
+                ->where('estfacturer', 0)
+                ->select(['Idfacture', 'Nfacture', 'IDPatient', 'FkidMedecinInitiateur', 'DtFacture'])
+                ->orderBy('DtFacture', 'desc')
+                ->get();
+        });
     }
 
     public function openMedecinModal()
@@ -508,10 +524,8 @@ class ReglementFacture extends Component
         return view('livewire.reglement-facture', [
             'isDocteur' => $isDocteur,
             'isDocteurProprietaire' => $isDocteurProprietaire,
-            'facturesEnAttente' => $this->facturesEnAttente ?? Facture::with(['patient', 'medecin'])
-                ->where('estfacturer', 0)
-                ->orderBy('DtFacture', 'desc')
-                ->get()
+            'facturesEnAttente' => $this->facturesEnAttente,
+            'factures' => $this->getFacturesProperty()
         ]);
     }
 } 
