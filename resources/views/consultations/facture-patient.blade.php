@@ -114,28 +114,20 @@
         <tbody id="detailsFacture" style="display: {{ $facture->Type === 'Facture' ? 'table-row-group' : 'none' }}">
             @if($facture->ISTP == 1)
                 <tr>
-                    <td>Part assurance (PEC)</td>
+                    <td>Part assurance</td>
                     <td>{{ number_format($facture->TotalPEC, 2) }} MRU</td>
                 </tr>
                 <tr>
                     <td>Part patient</td>
                     <td>{{ number_format($facture->TotalfactPatient, 2) }} MRU</td>
                 </tr>
-                <tr>
-                    <td>Règlements PEC</td>
-                    <td>{{ number_format($facture->ReglementPEC, 2) }} MRU</td>
-                </tr>
-                <tr>
-                    <td>Reste à payer PEC</td>
-                    <td>{{ number_format($facture->restePEC, 2) }} MRU</td>
-                </tr>
             @endif
             <tr>
-                <td>Règlements patient</td>
+                <td>Total règlements</td>
                 <td>{{ number_format($facture->TotReglPatient, 2) }} MRU</td>
             </tr>
             <tr>
-                <td>Reste à payer patient</td>
+                <td>Reste à payer</td>
                 <td>{{ number_format($facture->restePatient, 2) }} MRU</td>
             </tr>
         </tbody>
