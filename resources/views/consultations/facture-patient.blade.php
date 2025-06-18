@@ -16,6 +16,9 @@
         .a5 .bloc-patient-table td { font-size: 10px; padding: 1px 4px; }
         .bloc-patient-table .label { font-weight: bold; color: #222; width: 80px; }
         .bloc-patient-table .value { color: #222; }
+        .bloc-patient-table .ref-cell { text-align: right; padding: 2px 4px; }
+        .bloc-patient-table .ref-label { font-weight: bold; padding-right: 3px; display: inline; }
+        .bloc-patient-table .ref-value { display: inline; }
         .details-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
         .details-table th, .details-table td { border: 1px solid #222; font-size: 12px; padding: 6px 8px; }
         .a5 .details-table th, .a5 .details-table td { font-size: 10px; padding: 4px 6px; }
@@ -36,6 +39,19 @@
         .print-controls select, .print-controls button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         .print-controls button { background: #2c5282; color: #fff; border: none; cursor: pointer; }
         .bloc-patient-table .praticien-value { padding-left: 2px !important; }
+        .signature-block {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            text-align: right;
+            padding-right: 20px;
+        }
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+        .signature-name {
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -59,29 +75,40 @@
         <table class="bloc-patient-table">
             <tr>
                 <td class="label">N° Fiche :</td>
-                <td class="value">{{ $facture->patient->IdentifiantPatient ?? '' }}</td>
+                <td class="value">{{ $facture->patient->IdentifiantPatient ?? 'N/A' }}</td>
+                <td class="ref-cell" colspan="2">
+                    <span class="ref-label">Réf :</span>
+                    <span class="ref-value">{{ $facture->Nfacture ?? 'N/A' }}</span>
+                </td>
+            </tr>
+            <tr>
                 <td class="label">Nom Patient :</td>
-                <td class="value">{{ $facture->patient->NomContact ?? '' }}</td>
-                <td class="label">Réf :</td>
-                <td class="value">{{ $facture->Nfacture ?? '' }}</td>
+                <td class="value">{{ $facture->patient->NomContact ?? 'N/A' }}</td>
+                <td class="ref-cell" colspan="2">
+                    <span class="ref-label">Date :</span>
+                    <span class="ref-value">{{ $facture->DtFacture ? $facture->DtFacture->format('d/m/Y H:i') : 'N/A' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Téléphone :</td>
+                <td class="value">{{ $facture->patient->Telephone1 ?? 'N/A' }}</td>
+                <td colspan="2"></td>
             </tr>
             <tr>
                 <td class="label">Praticien :</td>
-                <td class="value praticien-value">{{ $facture->medecin->Nom ?? '' }}</td>
-                <td class="label">Date :</td>
-                <td class="value">{{ $facture->DtFacture ? $facture->DtFacture->format('d/m/Y H:i') : '' }}</td>
-                <td class="label">Tél :</td>
-                <td class="value">{{ $facture->patient->Telephone1 ?? '' }}</td>
+                <td class="value">{{ $facture->medecin->Nom ?? '' }}</td>
+                <td colspan="2"></td>
             </tr>
-            @if($facture->assureur)
+            @if($facture->patient && $facture->patient->assureur)
             <tr>
                 <td class="label">Assureur :</td>
-                <td class="value" colspan="5">
-                    {{ $facture->assureur->LibAssurance }}
-                    @if($facture->patient && $facture->patient->IdentifiantAssurance)
+                <td class="value">
+                    {{ $facture->patient->assureur->LibAssurance ?? 'N/A' }}
+                    @if($facture->patient->IdentifiantAssurance)
                         ({{ $facture->patient->IdentifiantAssurance }})
                     @endif
                 </td>
+                <td colspan="2"></td>
             </tr>
             @endif
         </table>
@@ -135,6 +162,12 @@
     <div class="montant-lettres">
         Arrêté le présent {{ strtolower($facture->Type ?: 'facture') }} à la somme de : <strong>{{ $facture->en_lettres ?? '' }}</strong>
     </div>
+
+    <div class="signature-block">
+        <div class="signature-title">Signature</div>
+        <div class="signature-name">{{ $facture->medecin->Nom ?? 'Non spécifié' }}</div>
+    </div>
+
     <div class="recu-footer">@include('partials.recu-footer')</div>
 </div>
 

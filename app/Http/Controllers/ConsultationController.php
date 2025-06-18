@@ -63,24 +63,46 @@ class ConsultationController extends Controller
 
         // Mettre en cache la facture avec ses relations (1h car peut être modifiée)
         $facture = cache()->remember('facture_' . $factureId, 3600, function() use ($factureId) {
-            return Facture::select([
-                'Idfacture', 'Nfacture', 'DtFacture', 'TotFacture', 'TotalPEC', 
-                'TotalfactPatient', 'TotReglPatient', 'ReglementPEC', 'ISTP',
-                'FkidMedecinInitiateur', 'IDPatient', 'Type', 'ModeReglement',
-                'Areglepar', 'DtReglement', 'TXPEC', 'fkidEtsAssurance'
-            ])
-            ->with([
-                'patient:id,IdentifiantPatient,NomContact,Telephone1,IdentifiantAssurance,Assureur',
-                'medecin:idMedecin,Nom',
-                'details' => function($query) {
-                    $query->select('idDetfacture', 'Actes', 'Quantite', 'PrixFacture', 'fkidfacture')
-                          ->orderBy('idDetfacture');
-                },
-                'assureur:IDAssureur,LibAssurance'
-            ])
-            ->withCount('details')
-            ->findOrFail($factureId);
+            $facture = Facture::where('Idfacture', $factureId)
+                ->with([
+                    'patient' => function($query) {
+                        $query->select('ID', 'IdentifiantPatient', 'NomContact', 'Telephone1', 'IdentifiantAssurance', 'Assureur');
+                    },
+                    'medecin' => function($query) {
+                        $query->select('idMedecin', 'Nom', 'Contact');
+                    },
+                    'details' => function($query) {
+                        $query->select('idDetfacture', 'Actes', 'Quantite', 'PrixFacture', 'fkidfacture')
+                              ->orderBy('idDetfacture');
+                    },
+                    'patient.assureur' => function($query) {
+                        $query->select('IDAssureur', 'LibAssurance');
+                    }
+                ])
+                ->first();
+
+            if (!$facture) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException();
+            }
+
+            return $facture;
         });
+
+        // Vider le cache si les données du patient sont manquantes
+        if (!$facture->patient) {
+            cache()->forget('facture_' . $factureId);
+            // Recharger la facture sans cache
+            $facture = Facture::with([
+                'patient' => function($query) {
+                    $query->select('ID', 'IdentifiantPatient', 'NomContact', 'Telephone1', 'IdentifiantAssurance', 'Assureur');
+                },
+                'medecin' => function($query) {
+                    $query->select('idMedecin', 'Nom', 'Contact');
+                },
+                'details',
+                'patient.assureur'
+            ])->findOrFail($factureId);
+        }
 
         // Pré-calculer et mettre en cache les montants (1h)
         $montants = cache()->remember('facture_montants_' . $factureId, 3600, function() use ($facture) {
@@ -104,7 +126,10 @@ class ConsultationController extends Controller
         $facture->restePEC = $montants['restePEC'];
         $facture->restePatient = $montants['restePatient'];
 
-        return view('consultations.facture-patient', compact('facture', 'cabinet'));
+        // Récupérer l'utilisateur connecté
+        $currentUser = Auth::user();
+
+        return view('consultations.facture-patient', compact('facture', 'cabinet', 'currentUser'));
     }
 
     // Helper simple pour montant en lettres (à remplacer par votre propre logique si besoin)

@@ -37,7 +37,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $fkidtypeTiers
  * @property Carbon|null $DtDernierRDV
  * @property int $fkidcabinet
- * @property int $fkidEtsAssurance
  *
  * @package App\Models
  */
@@ -59,8 +58,7 @@ class Patient extends Model
 		'DtDernFermeture' => 'datetime',
 		'fkidtypeTiers' => 'int',
 		'DtDernierRDV' => 'datetime',
-		'fkidcabinet' => 'int',
-		'fkidEtsAssurance' => 'int'
+		'fkidcabinet' => 'int'
 	];
 
 	protected $fillable = [
@@ -87,8 +85,7 @@ class Patient extends Model
 		'DtDernFermeture',
 		'fkidtypeTiers',
 		'DtDernierRDV',
-		'fkidcabinet',
-		'fkidEtsAssurance'
+		'fkidcabinet'
 	];
 
 	/**
