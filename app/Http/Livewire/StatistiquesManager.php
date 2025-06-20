@@ -28,6 +28,9 @@ class StatistiquesManager extends Component
         'date_fin' => ['except' => '']
     ];
 
+    // Écouter les changements de propriétés pour réinitialiser la pagination
+    protected $updatesQueryString = ['medecin_id', 'date_debut', 'date_fin'];
+
     public function mount()
     {
         $user = Auth::user();
@@ -39,6 +42,22 @@ class StatistiquesManager extends Component
     public function resetFilters()
     {
         $this->reset(['medecin_id', 'date_debut', 'date_fin']);
+        $this->resetPage();
+    }
+
+    // Méthodes pour réinitialiser la pagination quand les filtres changent
+    public function updatedMedecinId()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDateDebut()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDateFin()
+    {
         $this->resetPage();
     }
 
@@ -69,21 +88,38 @@ class StatistiquesManager extends Component
         return $query->orderBy('dateoper', 'desc')->orderBy('cle', 'desc')->paginate(10);
     }
 
+    private function getAllOperationsForStats()
+    {
+        $user = Auth::user();
+        $query = CaisseOperation::where('fkidcabinet', $user->fkidcabinet);
+        if ($this->medecin_id) {
+            $query->where('fkidmedecin', $this->medecin_id);
+        }
+        if ($this->date_debut) {
+            $query->whereDate('dateoper', '>=', $this->date_debut);
+        }
+        if ($this->date_fin) {
+            $query->whereDate('dateoper', '<=', $this->date_fin);
+        }
+        return $query->get();
+    }
+
     public function render()
     {
         $operations = $this->getOperations();
+        $allOperations = $this->getAllOperationsForStats();
         $medecins = Medecin::all();
 
-        // Calcul des totaux généraux
-        $totalRecettes = $operations->sum('entreEspece');
-        $totalDepenses = $operations->sum('retraitEspece');
+        // Calcul des totaux généraux sur toutes les opérations de la période
+        $totalRecettes = $allOperations->sum('entreEspece');
+        $totalDepenses = $allOperations->sum('retraitEspece');
         $solde = $totalRecettes - $totalDepenses;
 
-        // Totaux par mode de paiement
-        $typesPaiement = $operations->pluck('TypePAie')->filter()->unique()->values()->toArray();
-        $totauxGenerauxParMoyenPaiement = collect($typesPaiement)->mapWithKeys(function($type) use ($operations) {
-            $recettes = $operations->where('TypePAie', $type)->where('entreEspece', '>', 0)->sum('MontantOperation');
-            $depenses = $operations->where('TypePAie', $type)->where('retraitEspece', '>', 0)->sum('MontantOperation');
+        // Totaux par mode de paiement sur toutes les opérations
+        $typesPaiement = $allOperations->pluck('TypePAie')->filter()->unique()->values()->toArray();
+        $totauxGenerauxParMoyenPaiement = collect($typesPaiement)->mapWithKeys(function($type) use ($allOperations) {
+            $recettes = $allOperations->where('TypePAie', $type)->where('entreEspece', '>', 0)->sum('MontantOperation');
+            $depenses = $allOperations->where('TypePAie', $type)->where('retraitEspece', '>', 0)->sum('MontantOperation');
             return [$type => [
                 'recettes' => $recettes,
                 'depenses' => $depenses,
@@ -91,10 +127,10 @@ class StatistiquesManager extends Component
             ]];
         })->toArray();
 
-        // Totaux par médecin
+        // Totaux par médecin sur toutes les opérations
         $medecinsMap = $medecins->keyBy('idMedecin');
-        $totauxParMedecin = collect($medecinsMap)->mapWithKeys(function($medecin) use ($operations, $typesPaiement) {
-            $medecinOperations = $operations->where('fkidmedecin', $medecin->idMedecin);
+        $totauxParMedecin = collect($medecinsMap)->mapWithKeys(function($medecin) use ($allOperations, $typesPaiement) {
+            $medecinOperations = $allOperations->where('fkidmedecin', $medecin->idMedecin);
             $recettes = $medecinOperations->where('entreEspece', '>', 0)->sum('MontantOperation');
             $depenses = $medecinOperations->where('retraitEspece', '>', 0)->sum('MontantOperation');
             $modesPaiement = collect($typesPaiement)->mapWithKeys(function($type) use ($medecinOperations) {
@@ -113,7 +149,7 @@ class StatistiquesManager extends Component
                 'solde' => $recettes - $depenses,
                 'modes_paiement' => $modesPaiement
             ]];
-        })->toArray();
+        })->filter(fn($totals) => $totals['recettes'] > 0 || $totals['depenses'] > 0)->toArray();
 
         return view('livewire.statistiques-manager', compact(
             'operations',

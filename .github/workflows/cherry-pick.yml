@@ -18,6 +18,7 @@ on:
           - 'cabinettayba'
           - 'cabinetmedipole'
           - 'cabinetorient'
+          - 'mounir'
           - 'Sélection personnalisée'
       
       custom_repos:
@@ -52,7 +53,7 @@ jobs:
       run: |
         case "${{ github.event.inputs.target_repos }}" in
           "Tous les dépôts")
-            echo 'target_list=["cabinetzemzem","cabinettayba","cabinetmedipole","cabinetorient"]' >> $GITHUB_OUTPUT
+            echo 'target_list=["cabinetzemzem","cabinettayba","cabinetmedipole","cabinetorient","mounir"]' >> $GITHUB_OUTPUT
             ;;
           "Sélection personnalisée")
             # Convertir la liste en format JSON
