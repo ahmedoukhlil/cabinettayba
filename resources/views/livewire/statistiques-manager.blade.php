@@ -124,53 +124,64 @@
             </div>
             <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
                 <div class="p-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-[#1e3a8a]/10 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <dt class="text-sm font-semibold text-[#1e3a8a] mb-2">Total des recettes</dt>
-                            <dd class="text-3xl font-bold text-[#1e3a8a]">{{ number_format($totalRecettes, 0, ',', ' ') }} MRU</dd>
-                        </div>
-                        <div class="bg-gradient-to-br from-[#1e3a8a]/10 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <dt class="text-sm font-semibold text-[#1e3a8a] mb-2">Total des dépenses</dt>
-                            <dd class="text-3xl font-bold text-[#1e3a8a]">{{ number_format($totalDepenses, 0, ',', ' ') }} MRU</dd>
-                        </div>
-                        <div class="bg-gradient-to-br from-[#1e3a8a]/10 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <dt class="text-sm font-semibold text-[#1e3a8a] mb-2">Bilan</dt>
-                            <dd class="text-3xl font-bold {{ $solde >= 0 ? 'text-[#1e3a8a]' : 'text-red-600' }}">
-                                {{ number_format($solde, 0, ',', ' ') }} MRU
-                            </dd>
-                        </div>
-                    </div>
-
-                    <!-- Ventilation des totaux généraux par mode de paiement -->
-                    @if(count($totauxGenerauxParMoyenPaiement) > 0)
-                        <div class="mt-8">
-                            <h3 class="text-lg font-bold text-[#1e3a8a] mb-6">Ventilation par mode de paiement</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                @foreach($totauxGenerauxParMoyenPaiement as $type => $totaux)
-                                    <div class="bg-white border border-[#1e3a8a]/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                                        <div class="flex items-center justify-between mb-4">
-                                            <div class="text-lg font-bold text-[#1e3a8a]">{{ $type }}</div>
-                                        </div>
-                                        <div class="space-y-3">
-                                            <div class="flex justify-between items-center">
-                                                <span class="text-sm text-[#1e3a8a]">Recettes</span>
-                                                <span class="text-lg font-semibold text-[#1e3a8a]">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</span>
-                                            </div>
-                                            <div class="flex justify-between items-center">
-                                                <span class="text-sm text-[#1e3a8a]">Dépenses</span>
-                                                <span class="text-lg font-semibold text-red-600">{{ number_format($totaux['depenses'], 0, ',', ' ') }} MRU</span>
-                                            </div>
-                                            <div class="flex justify-between items-center pt-3 border-t border-[#1e3a8a]/20">
-                                                <span class="text-sm font-semibold text-[#1e3a8a]">Solde</span>
-                                                <span class="text-lg font-semibold {{ $totaux['solde'] >= 0 ? 'text-[#1e3a8a]' : 'text-red-600' }}">
-                                                    {{ number_format($totaux['solde'], 0, ',', ' ') }} MRU
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                    @if(!$date_debut && !$date_fin)
+                        <!-- Message quand aucune période n'est sélectionnée -->
+                        <div class="text-center py-8">
+                            <div class="text-[#1e3a8a]">
+                                <i class="fas fa-calendar-plus text-4xl mb-4"></i>
+                                <p class="text-lg font-medium">Sélectionnez une période</p>
+                                <p class="mt-2 text-gray-600">Veuillez choisir une date de début et/ou de fin pour voir les statistiques.</p>
                             </div>
                         </div>
+                    @else
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-gradient-to-br from-[#1e3a8a]/10 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                                <dt class="text-sm font-semibold text-[#1e3a8a] mb-2">Total des recettes</dt>
+                                <dd class="text-3xl font-bold text-[#1e3a8a]">{{ number_format($totalRecettes, 0, ',', ' ') }} MRU</dd>
+                            </div>
+                            <div class="bg-gradient-to-br from-[#1e3a8a]/10 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                                <dt class="text-sm font-semibold text-[#1e3a8a] mb-2">Total des dépenses</dt>
+                                <dd class="text-3xl font-bold text-[#1e3a8a]">{{ number_format($totalDepenses, 0, ',', ' ') }} MRU</dd>
+                            </div>
+                            <div class="bg-gradient-to-br from-[#1e3a8a]/10 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                                <dt class="text-sm font-semibold text-[#1e3a8a] mb-2">Bilan</dt>
+                                <dd class="text-3xl font-bold {{ $solde >= 0 ? 'text-[#1e3a8a]' : 'text-red-600' }}">
+                                    {{ number_format($solde, 0, ',', ' ') }} MRU
+                                </dd>
+                            </div>
+                        </div>
+
+                        <!-- Ventilation des totaux généraux par mode de paiement -->
+                        @if(count($totauxGenerauxParMoyenPaiement) > 0)
+                            <div class="mt-8">
+                                <h3 class="text-lg font-bold text-[#1e3a8a] mb-6">Ventilation par mode de paiement</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    @foreach($totauxGenerauxParMoyenPaiement as $type => $totaux)
+                                        <div class="bg-white border border-[#1e3a8a]/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <div class="text-lg font-bold text-[#1e3a8a]">{{ $type }}</div>
+                                            </div>
+                                            <div class="space-y-3">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-sm text-[#1e3a8a]">Recettes</span>
+                                                    <span class="text-lg font-semibold text-[#1e3a8a]">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</span>
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-sm text-[#1e3a8a]">Dépenses</span>
+                                                    <span class="text-lg font-semibold text-red-600">{{ number_format($totaux['depenses'], 0, ',', ' ') }} MRU</span>
+                                                </div>
+                                                <div class="flex justify-between items-center pt-3 border-t border-[#1e3a8a]/20">
+                                                    <span class="text-sm font-semibold text-[#1e3a8a]">Solde</span>
+                                                    <span class="text-lg font-semibold {{ $totaux['solde'] >= 0 ? 'text-[#1e3a8a]' : 'text-red-600' }}">
+                                                        {{ number_format($totaux['solde'], 0, ',', ' ') }} MRU
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
