@@ -12,13 +12,17 @@
         .bloc-patient { margin: 0 0 10px 0; }
         .bloc-patient-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
         .bloc-patient-table td { padding: 2px 8px; font-size: 12px; }
-        .bloc-patient-table .label { font-weight: bold; color: #222; width: 120px; }
+        .bloc-patient-table .label { font-weight: bold; color: #222; width: 80px; }
         .bloc-patient-table .value { color: #222; }
-        .bloc-patient-table .praticien-value { padding-left: 2px !important; }
+        .bloc-patient-table .ref-cell { text-align: right; padding: 2px 4px; }
+        .bloc-patient-table .ref-label { font-weight: bold; padding-right: 3px; display: inline; }
+        .bloc-patient-table .ref-value { display: inline; }
         .details-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
         .details-table th, .details-table td { border: 1px solid #222; font-size: 12px; padding: 6px 8px; }
         .details-table th { background: #f4f6fa; text-align: center; }
         .details-table td { text-align: center; }
+        .details-table th:first-child, .details-table td:first-child { text-align: left; }
+        .details-table th:last-child, .details-table td:last-child { width: 40%; text-align: right; }
         .totaux-table { width: 40%; border-collapse: collapse; margin-top: 0; margin-bottom: 0; margin-left: auto; }
         .totaux-table td { border: 1px solid #222; font-size: 12px; padding: 6px 8px; text-align: right; }
         .montant-lettres { margin-top: 18px; font-size: 12px; clear: both; text-align: left; }
@@ -51,23 +55,45 @@
     <div class="consult-title">REÇU DE CONSULTATION</div>
     <div class="bloc-patient">
         <table class="bloc-patient-table">
-        <tr>
-            <td class="label">N° Fiche :</td>
-                <td class="value">{{ $facture->patient->IdentifiantPatient ?? '' }}</td>
+            <tr>
+                <td class="label">N° Fiche :</td>
+                <td class="value">{{ $facture->patient->IdentifiantPatient ?? 'N/A' }}</td>
+                <td class="ref-cell" colspan="2">
+                    <span class="ref-label">Réf :</span>
+                    <span class="ref-value">{{ $facture->Nfacture ?? 'N/A' }}</span>
+                </td>
+            </tr>
+            <tr>
                 <td class="label">Nom Patient :</td>
-                <td class="value">{{ $facture->patient->Prenom }}</td>
-                <td class="label">Réf :</td>
-                <td class="value">{{ $facture->Nfacture }}</td>
-        </tr>
-        <tr>
+                <td class="value">{{ $facture->patient->NomContact ?? $facture->patient->Prenom ?? 'N/A' }}</td>
+                <td class="ref-cell" colspan="2">
+                    <span class="ref-label">Date :</span>
+                    <span class="ref-value">{{ $facture->DtFacture ? $facture->DtFacture->format('d/m/Y H:i') : 'N/A' }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Téléphone :</td>
+                <td class="value">{{ $facture->patient->Telephone1 ?? 'N/A' }}</td>
+                <td colspan="2"></td>
+            </tr>
+            <tr>
                 <td class="label">Praticien :</td>
-                <td class="value praticien-value">Dr {{ $facture->medecin->Nom }}</td>
-                <td class="label">Date :</td>
-                <td class="value">{{ $facture->DtFacture->format('d/m/Y H:i') }}</td>
-                <td class="label">Tél :</td>
-                <td class="value">{{ $facture->patient->Telephone1 ?? '' }}</td>
-        </tr>
-    </table>
+                <td class="value">{{ $facture->medecin->Nom ?? '' }}</td>
+                <td colspan="2"></td>
+            </tr>
+            @if($facture->patient && $facture->patient->assureur)
+            <tr>
+                <td class="label">Assureur :</td>
+                <td class="value">
+                    {{ $facture->patient->assureur->LibAssurance ?? 'N/A' }}
+                    @if($facture->patient->IdentifiantAssurance)
+                        ({{ $facture->patient->IdentifiantAssurance }})
+                    @endif
+                </td>
+                <td colspan="2"></td>
+            </tr>
+            @endif
+        </table>
     </div>
     <table class="details-table">
         <thead>
