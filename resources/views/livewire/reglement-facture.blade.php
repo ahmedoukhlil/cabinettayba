@@ -232,7 +232,7 @@
                                 </p>
                             @else
                                 <p class="mt-2 text-sm text-gray-500">
-                                    Montant restant à payer : {{ number_format($factureSelectionnee['reste_a_payer'] ?? 0, 2) }} MRU
+                                    Montant restant à payer : <span class="font-semibold text-indigo-600">{{ number_format($factureSelectionnee['reste_a_payer'] ?? 0, 2) }} MRU</span>
                                 </p>
                             @endif
                         </div>

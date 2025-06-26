@@ -127,11 +127,13 @@ class ReglementFacture extends Component
                 'ISTP' => $facture->ISTP ?? 0,
                 'est_reglee' => ((($facture->ISTP > 0 ? ($facture->TotalfactPatient ?? 0) : ($facture->TotFacture ?? 0)) - ($facture->TotReglPatient ?? 0)) <= 0) && ($facture->ISTP > 0 ? (($facture->TotalPEC ?? 0) - ($facture->ReglementPEC ?? 0)) <= 0 : true),
             ];
-            // Si la facture est déjà réglée, on permet d'ajouter un montant positif
-            if ($this->factureSelectionnee['reste_a_payer'] >= $this->factureSelectionnee['part_patient']) {
-                $this->montantReglement = 0;
+            
+            // Autocomplétion automatique du montant avec le reste à payer
+            $resteAPayer = $this->factureSelectionnee['reste_a_payer'] ?? 0;
+            if ($resteAPayer > 0) {
+                $this->montantReglement = $resteAPayer;
             } else {
-                $this->montantReglement = $this->factureSelectionnee['part_patient'] - $this->factureSelectionnee['reste_a_payer'];
+                $this->montantReglement = 0;
             }
 
             // Détection assuré ou non
