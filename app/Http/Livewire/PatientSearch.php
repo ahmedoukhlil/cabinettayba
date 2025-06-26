@@ -13,6 +13,7 @@ class PatientSearch extends Component
     public $patients = [];
     public $selectedPatient = null;
     public $isSearching = false;
+    public $isFocused = false;
 
     protected $listeners = ['clearPatient' => 'clearPatient'];
 
@@ -22,12 +23,20 @@ class PatientSearch extends Component
 
     public function updatedSearch()
     {
-        if (strlen($this->search) < 1) {
+        // Pour les téléphones, ne commencer la recherche qu'après 8 caractères
+        if ($this->searchBy === 'telephone' && strlen($this->search) < 8) {
+            $this->patients = [];
+            return;
+        }
+        
+        // Pour les autres critères, commencer après 1 caractère
+        if ($this->searchBy !== 'telephone' && strlen($this->search) < 1) {
             $this->patients = [];
             return;
         }
 
         $this->isSearching = true;
+        $this->isFocused = true; // Maintenir le focus
 
         try {
             $query = Patient::query();
@@ -92,6 +101,9 @@ class PatientSearch extends Component
         }
 
         $this->isSearching = false;
+        
+        // Maintenir le focus après la recherche
+        $this->dispatchBrowserEvent('maintain-focus');
     }
 
     public function selectPatient($patientId)
@@ -117,8 +129,8 @@ class PatientSearch extends Component
                     'NomAssureur' => $assureur ? $assureur->LibAssurance : ''
                 ];
                 
-                // Effacer la recherche pour fermer la liste déroulante
-                $this->search = '';
+                // Fermer la liste après sélection mais garder le champ ouvert
+                $this->isFocused = false;
                 $this->patients = [];
                 
                 $this->emit('patientSelected', $this->selectedPatient);
@@ -136,6 +148,64 @@ class PatientSearch extends Component
         $this->patients = [];
         $this->selectedPatient = null;
         $this->emit('patientCleared');
+    }
+
+    /**
+     * Sélectionner le premier patient de la liste avec la touche Entrée
+     */
+    public function selectFirstPatient()
+    {
+        if (!empty($this->patients)) {
+            $firstPatient = $this->patients[0];
+            $this->selectPatient($firstPatient['ID']);
+        }
+    }
+
+    /**
+     * Gérer le focus sur le champ de recherche
+     */
+    public function onFocus()
+    {
+        $this->isFocused = true;
+        // Si il y a déjà une recherche, afficher les résultats
+        if (strlen(trim($this->search)) >= 1 && empty($this->patients)) {
+            $this->updatedSearch();
+        }
+    }
+
+    /**
+     * Gérer la perte de focus sur le champ de recherche
+     */
+    public function onBlur()
+    {
+        // Fermer la liste quand on clique ailleurs
+        $this->dispatchBrowserEvent('delay-blur');
+    }
+
+    /**
+     * Fermer la liste après un délai
+     */
+    public function closeResults()
+    {
+        $this->isFocused = false;
+        $this->patients = [];
+    }
+
+    /**
+     * Maintenir la liste ouverte
+     */
+    public function keepOpen()
+    {
+        $this->isFocused = true;
+    }
+
+    /**
+     * Fermer explicitement la liste
+     */
+    public function closeList()
+    {
+        $this->isFocused = false;
+        $this->patients = [];
     }
 
     public function render()

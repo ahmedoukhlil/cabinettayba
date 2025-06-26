@@ -10,9 +10,14 @@
                 <input type="text" 
                        class="form-control" 
                        placeholder="Rechercher un patient..."
-                       wire:model.debounce.1000ms="search"
+                       wire:model.debounce.3000ms="search"
                        wire:loading.attr="disabled"
-                       wire:target="search">
+                       wire:target="search"
+                       wire:keydown.enter="selectFirstPatient"
+                       wire:focus="onFocus"
+                       wire:blur="onBlur"
+                       autocomplete="off"
+                       id="patient-search-input">
             </div>
             @if($selectedPatient)
                 <button type="button" 
@@ -43,8 +48,8 @@
     @endif
 
     <!-- Résultats de recherche -->
-    @if(strlen(trim($search)) >= 1)
-        <div class="fixed z-50 mt-1 w-full max-w-2xl bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+    @if((strlen(trim($search)) >= 1 || $isSearching) && $isFocused)
+        <div class="fixed z-50 mt-1 w-full max-w-2xl bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto patient-search-results">
             @if($isSearching)
                 <div class="px-4 py-3 text-sm text-gray-500 text-center">
                     <div class="flex items-center justify-center">
@@ -55,52 +60,96 @@
                         Recherche en cours...
                     </div>
                 </div>
-            @else
-                @if(!empty($patients))
-                    <div class="px-3 py-2 text-xs text-gray-500 border-b border-gray-100">
-                        {{ count($patients) }} résultat(s) trouvé(s)
+            @elseif($searchBy === 'telephone' && strlen(trim($search)) > 0 && strlen(trim($search)) < 8)
+                <div class="px-4 py-3 text-sm text-gray-500 text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-phone text-gray-400 text-2xl mb-2"></i>
+                        <span>Tapez au moins 8 chiffres pour rechercher</span>
+                        <span class="text-xs mt-1">Vous avez tapé {{ strlen(trim($search)) }} caractère(s)</span>
                     </div>
-                    @foreach($patients as $patient)
-                        <div class="px-4 py-2 hover:bg-primary-light cursor-pointer border-b border-gray-100 last:border-b-0" 
-                             wire:click="selectPatient({{ $patient['ID'] }})">
-                            <div class="flex flex-col">
-                                <div class="flex items-center">
-                                    <i class="fas fa-user-circle text-gray-400 mr-2"></i>
-                                    <span class="font-medium text-gray-900">{{ $patient['Prenom'] }}</span>
-                                </div>
-                                <div class="ml-6 mt-1 space-y-1">
-                                    @if($patient['IdentifiantPatient'])
-                                        <div class="flex items-center text-sm text-gray-500">
-                                            <i class="fas fa-id-card w-4 mr-2"></i>
-                                            <span>N° Fiche: {{ $patient['IdentifiantPatient'] }}</span>
-                                        </div>
-                                    @endif
-                                    @if($patient['Telephone1'])
-                                        <div class="flex items-center text-sm text-gray-500">
-                                            <i class="fas fa-phone w-4 mr-2"></i>
-                                            <span>Tel: {{ $patient['Telephone1'] }}</span>
-                                        </div>
-                                    @endif
-                                    @if($patient['Telephone2'])
-                                        <div class="flex items-center text-sm text-gray-500">
-                                            <i class="fas fa-phone w-4 mr-2"></i>
-                                            <span>Tel 2: {{ $patient['Telephone2'] }}</span>
-                                        </div>
-                                    @endif
-                                </div>
+                </div>
+            @elseif(!empty($patients))
+                <div class="px-3 py-2 text-xs text-gray-500 border-b border-gray-100">
+                    {{ count($patients) }} résultat(s) trouvé(s)
+                </div>
+                @foreach($patients as $patient)
+                    <div class="px-4 py-2 hover:bg-primary-light cursor-pointer border-b border-gray-100 last:border-b-0" 
+                         wire:click="selectPatient({{ $patient['ID'] }})">
+                        <div class="flex flex-col">
+                            <div class="flex items-center">
+                                <i class="fas fa-user-circle text-gray-400 mr-2"></i>
+                                <span class="font-medium text-gray-900">{{ $patient['Prenom'] }}</span>
+                            </div>
+                            <div class="ml-6 mt-1 space-y-1">
+                                @if($patient['IdentifiantPatient'])
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-id-card w-4 mr-2"></i>
+                                        <span>N° Fiche: {{ $patient['IdentifiantPatient'] }}</span>
+                                    </div>
+                                @endif
+                                @if($patient['Telephone1'])
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-phone w-4 mr-2"></i>
+                                        <span>Tel: {{ $patient['Telephone1'] }}</span>
+                                    </div>
+                                @endif
+                                @if($patient['Telephone2'])
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-phone w-4 mr-2"></i>
+                                        <span>Tel 2: {{ $patient['Telephone2'] }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
-                    @endforeach
-                @else
-                    <div class="px-4 py-3 text-sm text-gray-500 text-center">
-                        <div class="flex flex-col items-center">
-                            <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
-                            <span>Aucun patient trouvé</span>
-                            <span class="text-xs mt-1">Essayez avec d'autres critères de recherche</span>
-                        </div>
                     </div>
-                @endif
+                @endforeach
+            @elseif(strlen(trim($search)) >= ($searchBy === 'telephone' ? 8 : 1))
+                <div class="px-4 py-3 text-sm text-gray-500 text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
+                        <span>Aucun patient trouvé</span>
+                        <span class="text-xs mt-1">Essayez avec d'autres critères de recherche</span>
+                    </div>
+                </div>
             @endif
         </div>
     @endif
-</div> 
+</div>
+
+<script>
+document.addEventListener('livewire:load', function () {
+    let blurTimeout;
+    let searchInput = document.getElementById('patient-search-input');
+    
+    // Maintenir le focus après les mises à jour Livewire
+    Livewire.on('maintain-focus', () => {
+        if (searchInput) {
+            searchInput.focus();
+            // Placer le curseur à la fin du texte
+            const length = searchInput.value.length;
+            searchInput.setSelectionRange(length, length);
+        }
+    });
+    
+    Livewire.on('delay-blur', () => {
+        // Annuler le timeout précédent s'il existe
+        if (blurTimeout) {
+            clearTimeout(blurTimeout);
+        }
+        
+        // Créer un nouveau timeout pour fermer la liste après 200ms
+        blurTimeout = setTimeout(() => {
+            @this.call('closeResults');
+        }, 200);
+    });
+    
+    // Empêcher la fermeture lors des clics dans la liste des résultats
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.patient-search-results')) {
+            if (blurTimeout) {
+                clearTimeout(blurTimeout);
+            }
+        }
+    });
+});
+</script> 
