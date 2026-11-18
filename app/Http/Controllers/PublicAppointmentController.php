@@ -183,9 +183,14 @@ class PublicAppointmentController extends Controller
             ->orderBy('Nom')
             ->pluck('idMedecin');
         $horizon = max(1, (int) config('appointments.booking_horizon_days'));
+        $dailyLimit = max(1, (int) config('appointments.daily_limit', 20));
 
         for ($offset = 0; $offset <= $horizon; $offset++) {
             $date = now()->startOfDay()->addDays($offset)->toDateString();
+
+            if ($this->dailyBookingCount($cabinetId, $date) >= $dailyLimit) {
+                continue;
+            }
 
             foreach ($medecinIds as $medecinId) {
                 foreach ($this->availableSlots($cabinetId, (int) $medecinId, $date) as $slot) {
@@ -203,10 +208,31 @@ class PublicAppointmentController extends Controller
         return null;
     }
 
+    private function dailyBookingCount(int $cabinetId, string $date): int
+    {
+        $scheduled = Rendezvou::where('fkidcabinet', $cabinetId)
+            ->whereDate('dtPrevuRDV', $date)
+            ->where(function ($query) {
+                $query->whereNull('rdvConfirmer')
+                    ->orWhere('rdvConfirmer', '!=', 'annulé');
+            })
+            ->count();
+
+        // Une demande confirmée possède déjà un rendez-vous et ne doit pas
+        // être comptée deux fois. Seules les demandes en attente s'ajoutent.
+        $pending = PublicAppointmentRequest::where('fkidcabinet', $cabinetId)
+            ->whereDate('date_souhaitee', $date)
+            ->where('status', 'pending')
+            ->count();
+
+        return $scheduled + $pending;
+    }
+
     private function slotMatchesPeriod(string $slot, string $period): bool
     {
         if ($period === 'morning') {
-            return $slot < config('appointments.morning_end_time');
+            return $slot >= config('appointments.morning_start_time')
+                && $slot < config('appointments.evening_start_time');
         }
 
         return $slot >= config('appointments.evening_start_time');

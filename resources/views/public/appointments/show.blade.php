@@ -18,7 +18,7 @@
         ];
         $state = $states[$appointmentRequest->status] ?? $states['pending'];
         $requestedTime = substr($appointmentRequest->heure_souhaitee, 0, 5);
-        $period = $requestedTime < config('appointments.morning_end_time') ? 'الفترة الصباحية' : 'الفترة المسائية';
+        $period = $requestedTime < config('appointments.evening_start_time') ? 'الفترة الصباحية' : 'الفترة المسائية';
     @endphp
 
     <span class="inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $state['class'] }}">{{ $state['label'] }}</span>

@@ -8,8 +8,14 @@
     <title>@yield('title', 'Réservation') - Cabinet Tayba</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900">
-    @php($publicCabinet = $cabinet ?? optional($appointmentRequest ?? null)->cabinet)
+<body class="min-h-screen bg-slate-50 text-slate-900" style="font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif">
+    @php
+        $publicCabinet = $cabinet ?? optional($appointmentRequest ?? null)->cabinet;
+        $isRtl = trim($__env->yieldContent('dir', 'ltr')) === 'rtl';
+        $publicCabinetName = $isRtl
+            ? (optional($publicCabinet)->NomCabAr ?: optional($publicCabinet)->NomCabFr ?: 'عيادة طيبة')
+            : (optional($publicCabinet)->NomCabFr ?: 'Cabinet Tayba');
+    @endphp
     <header class="border-b border-blue-100 bg-white">
         <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
             <a href="{{ route('public.appointment.create') }}" class="flex items-center gap-3 text-[#1e3a8a]">
@@ -19,7 +25,7 @@
                     </svg>
                 </span>
                 <span>
-                    <strong class="block text-lg">{{ optional($publicCabinet)->NomCabFr ?: 'Cabinet Tayba' }}</strong>
+                    <strong class="block text-lg">{{ $publicCabinetName }}</strong>
                     <span class="block text-xs text-slate-500">@yield('header_subtitle', 'Réservation en ligne')</span>
                 </span>
             </a>
@@ -35,7 +41,7 @@
 
     <footer class="border-t border-slate-200 bg-white">
         <div class="mx-auto max-w-5xl px-4 py-6 text-center text-sm text-slate-500 sm:px-6">
-            © {{ date('Y') }} {{ optional($publicCabinet)->NomCabFr ?: 'Cabinet Tayba' }} — @yield('privacy_text', 'Vos informations sont utilisées uniquement pour traiter votre demande.')
+            © {{ date('Y') }} {{ $publicCabinetName }} — @yield('privacy_text', 'Vos informations sont utilisées uniquement pour traiter votre demande.')
         </div>
     </footer>
     @stack('scripts')
