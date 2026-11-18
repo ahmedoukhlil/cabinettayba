@@ -1,115 +1,67 @@
-<div>
+<div class="relative">
     <div class="flex">
-        <select wire:model.live="searchBy" class="rounded-l-md border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-            <option value="telephone" selected>Téléphone</option>
+        <label for="patient-search-type" class="sr-only">Critère de recherche</label>
+        <select id="patient-search-type" wire:model="searchBy" class="rounded-l-lg border-r-0 border-gray-300 bg-gray-50 text-sm text-gray-600 focus:border-primary focus:ring-primary">
+            <option value="telephone">Téléphone</option>
             <option value="nom">Nom</option>
             <option value="identifiant">N° Fiche</option>
         </select>
         <div class="relative flex-1">
-            <div class="flex">
-                <input type="text" 
-                       class="form-control" 
-                       placeholder="Rechercher un patient..."
-                       wire:model.debounce.3000ms="search"
-                       wire:loading.attr="disabled"
-                       wire:target="search"
-                       wire:keydown.enter="selectFirstPatient"
-                       wire:focus="onFocus"
-                       wire:blur="onBlur"
-                       autocomplete="off"
-                       id="patient-search-input">
+            <label for="patient-search-input" class="sr-only">Rechercher un patient</label>
+            <input id="patient-search-input" type="search" wire:model.debounce.300ms="search"
+                wire:keydown.enter="selectFirstPatient" wire:focus="onFocus" wire:blur="onBlur"
+                autocomplete="off" placeholder="Rechercher un patient…"
+                class="w-full rounded-r-lg border-gray-300 pr-10 text-sm focus:border-primary focus:ring-primary">
+
+            <div wire:loading wire:target="search" class="absolute inset-y-0 right-3 flex items-center" aria-label="Recherche en cours">
+                <span class="spinner spinner-dark"></span>
             </div>
-            @if($selectedPatient)
-                <button type="button" 
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                        wire:click="clearPatient">
+
+            @if($selectedPatient && !$isSearching)
+                <button type="button" wire:click="clearPatient" class="absolute inset-y-0 right-2 rounded p-2 text-gray-400 hover:text-primary" aria-label="Effacer la sélection">
                     <i class="fas fa-times"></i>
                 </button>
-            @endif
-            @if($isSearching)
-                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
             @endif
         </div>
     </div>
 
-    <!-- Patient sélectionné -->
     @if($selectedPatient)
-        <div class="mt-2 p-2 bg-primary-light rounded border border-primary">
-            <div class="flex items-center justify-between">
-                <span class="font-medium text-primary">{{ $selectedPatient['Prenom'] }}</span>
-                <span class="text-sm text-primary ml-2">Tél: {{ $selectedPatient['Telephone1'] }}</span>
-            </div>
+        <div class="mt-2 flex items-center justify-between rounded-lg border border-primary/20 bg-primary-light px-3 py-2 text-sm">
+            <span class="font-semibold text-primary"><i class="fas fa-user-check mr-2"></i>{{ trim(($selectedPatient['Prenom'] ?? '') . ' ' . ($selectedPatient['NomPatient'] ?? '')) }}</span>
+            <span class="text-gray-600">{{ $selectedPatient['Telephone1'] ?? '' }}</span>
         </div>
     @endif
 
-    <!-- Résultats de recherche -->
     @if((strlen(trim($search)) >= 1 || $isSearching) && $isFocused)
-        <div class="fixed z-50 mt-1 w-full max-w-2xl bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto patient-search-results">
+        <div class="patient-search-results absolute left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-xl">
             @if($isSearching)
-                <div class="px-4 py-3 text-sm text-gray-500 text-center">
-                    <div class="flex items-center justify-center">
-                        <svg class="animate-spin h-5 w-5 text-primary mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Recherche en cours...
-                    </div>
-                </div>
+                <div class="flex items-center justify-center gap-2 px-4 py-4 text-sm text-gray-500"><span class="spinner spinner-dark"></span> Recherche en cours…</div>
             @elseif($searchBy === 'telephone' && strlen(trim($search)) > 0 && strlen(trim($search)) < 8)
-                <div class="px-4 py-3 text-sm text-gray-500 text-center">
-                    <div class="flex flex-col items-center">
-                        <i class="fas fa-phone text-gray-400 text-2xl mb-2"></i>
-                        <span>Tapez au moins 8 chiffres pour rechercher</span>
-                        <span class="text-xs mt-1">Vous avez tapé {{ strlen(trim($search)) }} caractère(s)</span>
-                    </div>
+                <div class="px-4 py-4 text-center text-sm text-gray-500">
+                    <i class="fas fa-phone mb-2 block text-xl text-gray-300"></i>
+                    Saisissez au moins 8 chiffres.
                 </div>
             @elseif(!empty($patients))
-                <div class="px-3 py-2 text-xs text-gray-500 border-b border-gray-100">
-                    {{ count($patients) }} résultat(s) trouvé(s)
-                </div>
+                <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">{{ count($patients) }} résultat(s)</div>
                 @foreach($patients as $patient)
-                    <div class="px-4 py-2 hover:bg-primary-light cursor-pointer border-b border-gray-100 last:border-b-0" 
-                         wire:click="selectPatient({{ $patient['ID'] }})">
-                        <div class="flex flex-col">
-                            <div class="flex items-center">
-                                <i class="fas fa-user-circle text-gray-400 mr-2"></i>
-                                <span class="font-medium text-gray-900">{{ $patient['Prenom'] }}</span>
-                            </div>
-                            <div class="ml-6 mt-1 space-y-1">
-                                @if($patient['IdentifiantPatient'])
-                                    <div class="flex items-center text-sm text-gray-500">
-                                        <i class="fas fa-id-card w-4 mr-2"></i>
-                                        <span>N° Fiche: {{ $patient['IdentifiantPatient'] }}</span>
-                                    </div>
-                                @endif
-                                @if($patient['Telephone1'])
-                                    <div class="flex items-center text-sm text-gray-500">
-                                        <i class="fas fa-phone w-4 mr-2"></i>
-                                        <span>Tel: {{ $patient['Telephone1'] }}</span>
-                                    </div>
-                                @endif
-                                @if($patient['Telephone2'])
-                                    <div class="flex items-center text-sm text-gray-500">
-                                        <i class="fas fa-phone w-4 mr-2"></i>
-                                        <span>Tel 2: {{ $patient['Telephone2'] }}</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                    <button type="button" wire:click="selectPatient({{ $patient['ID'] }})"
+                        class="block w-full border-b border-gray-100 px-4 py-3 text-left last:border-0 hover:bg-primary-light focus:bg-primary-light focus:outline-none">
+                        <span class="flex items-start gap-3">
+                            <span class="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500"><i class="fas fa-user"></i></span>
+                            <span class="min-w-0">
+                                <strong class="block truncate text-sm text-gray-900">{{ trim(($patient['Prenom'] ?? '') . ' ' . ($patient['NomPatient'] ?? '')) }}</strong>
+                                <span class="mt-1 block text-xs text-gray-500">
+                                    N° {{ $patient['IdentifiantPatient'] ?: '—' }}
+                                    @if($patient['Telephone1']) · {{ $patient['Telephone1'] }} @endif
+                                </span>
+                            </span>
+                        </span>
+                    </button>
                 @endforeach
             @elseif(strlen(trim($search)) >= ($searchBy === 'telephone' ? 8 : 1))
-                <div class="px-4 py-3 text-sm text-gray-500 text-center">
-                    <div class="flex flex-col items-center">
-                        <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
-                        <span>Aucun patient trouvé</span>
-                        <span class="text-xs mt-1">Essayez avec d'autres critères de recherche</span>
-                    </div>
+                <div class="px-4 py-5 text-center text-sm text-gray-500">
+                    <i class="fas fa-search mb-2 block text-xl text-gray-300"></i>
+                    Aucun patient trouvé.
                 </div>
             @endif
         </div>
@@ -119,37 +71,21 @@
 <script>
 document.addEventListener('livewire:load', function () {
     let blurTimeout;
-    let searchInput = document.getElementById('patient-search-input');
-    
-    // Maintenir le focus après les mises à jour Livewire
+
     Livewire.on('maintain-focus', () => {
-        if (searchInput) {
-            searchInput.focus();
-            // Placer le curseur à la fin du texte
-            const length = searchInput.value.length;
-            searchInput.setSelectionRange(length, length);
-        }
+        const input = document.getElementById('patient-search-input');
+        if (!input) return;
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
     });
-    
+
     Livewire.on('delay-blur', () => {
-        // Annuler le timeout précédent s'il existe
-        if (blurTimeout) {
-            clearTimeout(blurTimeout);
-        }
-        
-        // Créer un nouveau timeout pour fermer la liste après 200ms
-        blurTimeout = setTimeout(() => {
-            @this.call('closeResults');
-        }, 200);
+        clearTimeout(blurTimeout);
+        blurTimeout = setTimeout(() => @this.call('closeResults'), 200);
     });
-    
-    // Empêcher la fermeture lors des clics dans la liste des résultats
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.patient-search-results')) {
-            if (blurTimeout) {
-                clearTimeout(blurTimeout);
-            }
-        }
+
+    document.addEventListener('mousedown', event => {
+        if (event.target.closest('.patient-search-results')) clearTimeout(blurTimeout);
     });
 });
-</script> 
+</script>

@@ -28,6 +28,8 @@ class AccueilPatient extends Component
     public $showCaisseOperations = false;
     public $showUsersModal = false;
     public $showStatistiques = false;
+    public $showPatientMenu = false;
+    public $showCabinetMenu = false;
 
     // États des actions et données
     public $action = null;
@@ -131,7 +133,29 @@ class AccueilPatient extends Component
         $this->action = $action;
         $this->showCaisseOperations = false;
         $this->showStatistiques = false;
+        $this->showPatientMenu = true;
         $this->emit('actionChanged', $action);
+    }
+
+    public function clearAction()
+    {
+        $this->action = null;
+    }
+
+    public function togglePatientMenu()
+    {
+        if (!$this->selectedPatient) {
+            return;
+        }
+
+        $this->showPatientMenu = !$this->showPatientMenu;
+        $this->showCabinetMenu = false;
+    }
+
+    public function toggleCabinetMenu()
+    {
+        $this->showCabinetMenu = !$this->showCabinetMenu;
+        $this->showPatientMenu = false;
     }
 
     public function setPatient($patient)
@@ -139,6 +163,7 @@ class AccueilPatient extends Component
         $this->selectedPatient = $patient;
         $this->action = null;
         $this->resetState();
+        $this->showPatientMenu = (bool) $patient;
     }
 
     // Gestionnaires d'événements
@@ -188,6 +213,13 @@ class AccueilPatient extends Component
         $this->resetState();
         $this->showCaisseOperations = true;
         $this->showStatistiques = false;
+        $this->showPatientMenu = false;
+        $this->showCabinetMenu = false;
+    }
+
+    public function closeCaisseOperations()
+    {
+        $this->showCaisseOperations = false;
     }
 
     public function ouvrirAssureurModal()
@@ -246,6 +278,13 @@ class AccueilPatient extends Component
     {
         $this->resetState();
         $this->showStatistiques = true;
+        $this->showPatientMenu = false;
+        $this->showCabinetMenu = false;
+    }
+
+    public function closeStatistiques()
+    {
+        $this->showStatistiques = false;
     }
 
     public function render()

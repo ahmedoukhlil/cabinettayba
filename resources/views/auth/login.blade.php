@@ -1,105 +1,106 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connexion - Cabinet Tayba</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Connexion — Cabinet Tayba</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh; margin: 0; padding: 1rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f8fafc 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        .login-card {
+            width: 100%; max-width: 25rem; background: #fff; border-radius: 1.25rem;
+            box-shadow: 0 20px 60px rgba(30, 58, 138, .12); overflow: hidden;
+        }
+        .login-header { background: var(--color-primary, #1e3a8a); padding: 2rem 1.5rem 1.75rem; text-align: center; }
+        .login-logo {
+            width: 4.5rem; height: 4.5rem; margin: 0 auto .875rem; border-radius: 1rem;
+            background: #fff; color: var(--color-primary, #1e3a8a); display: flex;
+            align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+        }
+        .login-header h1 { color: #fff; font-size: 1.375rem; font-weight: 700; margin: 0 0 .25rem; }
+        .login-header p { color: rgba(255,255,255,.72); font-size: .75rem; margin: 0; }
+        .login-body { padding: 1.75rem; }
+        .field-label { display: block; color: #4b5563; font-size: .75rem; font-weight: 600; margin-bottom: .375rem; }
+        .field-wrap { position: relative; margin-bottom: 1rem; }
+        .field-wrap > i { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
+        .field-wrap input {
+            width: 100%; padding: .75rem 2.5rem; border: 1.5px solid #e5e7eb;
+            border-radius: .625rem; background: #f9fafb; color: #111827; font-size: 1rem; outline: none;
+        }
+        .field-wrap input:focus { background: #fff; border-color: var(--color-primary, #1e3a8a); box-shadow: 0 0 0 3px rgba(30,58,138,.1); }
+        .toggle-password {
+            position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+            color: #9ca3af; padding: .375rem; border: 0; background: transparent; cursor: pointer;
+        }
+        .login-footer { margin-top: 1.25rem; text-align: center; color: #9ca3af; font-size: .75rem; }
+        @media (min-width: 480px) { .login-body { padding: 2rem; } }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center">
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full space-y-8">
-            <div class="text-center">
-                <div class="flex items-center justify-center mb-4">
-                    <span class="h-14 w-14 mr-3 rounded-full bg-blue-100 text-[#1e3a8a] inline-flex items-center justify-center" aria-hidden="true">
-                        <i class="fas fa-tooth text-2xl"></i>
-                    </span>
-                    <span class="text-3xl sm:text-4xl font-bold text-[#1e3a8a] tracking-wide">CABINET TAYBA</span>
+<body>
+    <main class="login-card">
+        <header class="login-header">
+            <div class="login-logo" aria-hidden="true"><i class="fas fa-tooth text-3xl"></i></div>
+            <h1>Cabinet Tayba</h1>
+            <p>Accès sécurisé à votre espace professionnel</p>
+        </header>
+
+        <div class="login-body">
+            @if($errors->any())
+                <div class="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert" aria-live="assertive">
+                    <i class="fas fa-exclamation-circle mr-2" aria-hidden="true"></i>{{ $errors->first() }}
                 </div>
-                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-                    Connexion
-                </h2>
-            </div>
+            @endif
 
-            <!-- Carte de connexion -->
-            <div class="bg-white rounded-2xl shadow-xl p-8">
-                @if($errors->any())
-                    <div class="mb-6 bg-red-50 border-l-4 border-red-600 p-4" role="alert" aria-live="assertive">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-circle text-red-600" aria-hidden="true"></i>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-red-800">
-                                    {{ $errors->first() }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                @endif
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
+                <label for="login" class="field-label">Identifiant</label>
+                <div class="field-wrap">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <input id="login" type="text" name="login" value="{{ old('login') }}" required autofocus autocomplete="username" placeholder="Votre identifiant">
+                </div>
 
-                <form method="POST" action="{{ route('login') }}" class="space-y-6">
-                    @csrf
-                    
-                    <!-- Champ Identifiant -->
-                    <div>
-                        <label for="login" class="block text-sm font-medium text-gray-700 mb-1">Identifiant</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-user text-gray-400"></i>
-                            </div>
-                            <input id="login" type="text" name="login" value="{{ old('login') }}" required autofocus autocomplete="username"
-                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
-                                placeholder="Entrez votre identifiant">
-                        </div>
-                    </div>
-
-                    <!-- Champ Mot de passe -->
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-lock text-gray-400"></i>
-                            </div>
-                            <input id="password" type="password" name="password" required autocomplete="current-password"
-                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
-                                placeholder="Entrez votre mot de passe">
-                        </div>
-                    </div>
-
-                    <!-- Options de connexion -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input id="remember" type="checkbox" name="remember"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded">
-                            <label for="remember" class="ml-2 block text-sm text-gray-700">
-                                Se souvenir de moi
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Bouton de connexion -->
-                    <button type="submit"
-                        class="w-full flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Se connecter
+                <label for="password" class="field-label">Mot de passe</label>
+                <div class="field-wrap">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Votre mot de passe">
+                    <button type="button" class="toggle-password" aria-label="Afficher le mot de passe" onclick="togglePassword(this)">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
                     </button>
+                </div>
 
-                    <a href="{{ route('public.appointment.create') }}" class="flex w-full items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-base font-medium text-blue-800 transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
-                        Prendre un rendez-vous
-                    </a>
-                </form>
-            </div>
+                <label class="mb-5 flex items-center gap-2 text-xs text-gray-600">
+                    <input type="checkbox" name="remember" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
+                    <span>Se souvenir de moi</span>
+                </label>
 
-            <!-- Footer -->
-            <div class="text-center mt-8">
-                <p class="text-sm text-gray-600">
-                    &copy; {{ date('Y') }} Cabinet Tayba. Tous droits réservés.
-                </p>
-            </div>
+                <button type="submit" class="btn-primary w-full justify-center py-3">
+                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Se connecter
+                </button>
+                <a href="{{ route('public.appointment.create') }}" class="btn-secondary mt-3 w-full justify-center py-3">
+                    <i class="fas fa-calendar-plus" aria-hidden="true"></i> Prendre rendez-vous
+                </a>
+            </form>
+
+            <p class="login-footer">© {{ date('Y') }} Cabinet Tayba</p>
         </div>
-    </div>
+    </main>
+
+    <script>
+        function togglePassword(button) {
+            const input = document.getElementById('password');
+            const icon = button.querySelector('i');
+            const visible = input.type === 'text';
+            input.type = visible ? 'password' : 'text';
+            icon.className = visible ? 'fas fa-eye' : 'fas fa-eye-slash';
+            button.setAttribute('aria-label', visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+        }
+    </script>
 </body>
 </html>

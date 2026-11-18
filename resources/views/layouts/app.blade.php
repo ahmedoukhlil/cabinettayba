@@ -3,43 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Cabinet Tayba')</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{{ asset('js/app.js') }}?v={{ filemtime(public_path('js/app.js')) }}" defer></script>
     @livewireStyles
-    <style>
-        .text-primary { color: #1e3a8a !important; }
-        .bg-primary { background-color: #1e3a8a !important; }
-        .border-primary { border-color: #1e3a8a !important; }
-        .hover\:bg-primary:hover { background-color: #1e3a8a !important; }
-        .hover\:text-primary:hover { color: #1e3a8a !important; }
-        .bg-primary-light { background-color: #e6eaf2 !important; }
-        .text-primary-light { color: #e6eaf2 !important; }
-        .text-primary-dark { color: #152a5c !important; }
-        .hover\:text-white:hover { color: #fff !important; }
-        .focus\:ring-primary:focus { outline: 2px solid transparent; box-shadow: 0 0 0 2px #1e3a8a; }
-        
-        [wire\:loading] { cursor: progress; }
-        .nav-link { color: #4b5563; padding: .5rem 1rem; border-radius: .5rem; font-weight: 500; border: 1px solid #e5e7eb; }
-        .nav-link:hover, .nav-link:focus { color: #2563eb; background: #eff6ff; outline: 2px solid transparent; }
-        .nav-link.active { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
-    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-900 antialiased">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg border-b border-gray-100">
+    <nav class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <div class="flex items-center">
-                        <a href="{{ route('dashboard') }}" class="flex items-center">
-                            <span class="h-10 w-10 mr-3 rounded-full bg-primary-light text-primary inline-flex items-center justify-center" aria-hidden="true">
+                        <a href="{{ route('accueil.patient') }}" class="flex items-center" aria-label="Accueil Cabinet Tayba">
+                            <span class="h-10 w-10 mr-3 rounded-xl bg-primary-light text-primary inline-flex items-center justify-center" aria-hidden="true">
                                 <i class="fas fa-tooth text-xl"></i>
                             </span>
-                            <span class="text-xl font-bold text-[#1e3a8a]">Cabinet Tayba</span>
+                            <span class="text-lg sm:text-xl font-bold text-primary">Cabinet Tayba</span>
                         </a>
                     </div>
                     <!-- Menu desktop -->
@@ -101,13 +84,58 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="py-4 sm:py-8">
-        <div class="w-full bg-white sm:rounded-xl shadow-sm border-y sm:border border-gray-100 p-3 sm:p-6 mb-8">
-            @yield('content')
-        </div>
+    <main class="py-4">
+        @yield('content')
     </main>
 
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
     @livewireScripts
+
+    <script>
+        window.showToast = function(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('toast-hide');
+                setTimeout(() => toast.remove(), 220);
+            }, duration);
+        };
+
+        document.addEventListener('livewire:load', function() {
+            Livewire.on('toast', payload => window.showToast(payload.message, payload.type || 'info'));
+        });
+
+        window.confirmAction = function(title, message, onConfirm) {
+            document.getElementById('_confirm_dialog')?.remove();
+            const overlay = document.createElement('div');
+            overlay.id = '_confirm_dialog';
+            overlay.className = 'confirm-dialog-overlay';
+            overlay.innerHTML = `
+                <div class="confirm-dialog-box" role="dialog" aria-modal="true" aria-labelledby="_cd_title">
+                    <h3 id="_cd_title">${title}</h3>
+                    ${message ? `<p>${message}</p>` : ''}
+                    <div class="confirm-dialog-actions">
+                        <button id="_cd_cancel" class="btn-secondary text-sm">Annuler</button>
+                        <button id="_cd_ok" class="btn-danger text-sm">Confirmer</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            const close = () => overlay.remove();
+            overlay.querySelector('#_cd_cancel').addEventListener('click', close);
+            overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+            overlay.querySelector('#_cd_ok').addEventListener('click', () => {
+                close();
+                if (typeof onConfirm === 'function') onConfirm();
+            });
+            overlay.querySelector('#_cd_cancel').focus();
+        };
+    </script>
 
     <!-- Script pour le menu mobile -->
     <script>
