@@ -5,25 +5,11 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Patient;
-use App\Models\Medecin;
-use App\Models\Assureur;
-use App\Models\RefTypePaiement;
-use App\Models\Acte;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use App\Models\TypeUser;
-use App\Models\User;
 
 class AccueilPatient extends Component
 {
     use WithPagination;
-
-    // Constantes pour les clés de cache
-    const CACHE_TTL = 3600; // 1 heure
-    const CACHE_KEY_DOCTORS = 'active_doctors';
-    const CACHE_KEY_ASSUREURS = 'assureurs';
-    const CACHE_KEY_PAYMENT_TYPES = 'types_paiement';
-    const CACHE_KEY_ACTES = 'active_actes';
 
     // États des modales
     public $showCreateModal = false;
@@ -54,19 +40,12 @@ class AccueilPatient extends Component
     public $editingPatient;
     public $patientToDelete;
 
-    // Données mises en cache
-    public $medecins;
-    public $assureurs;
-    public $typesPaiement;
-    public $actes;
-
     protected $listeners = [
         'patientSelected' => 'setPatient',
         'patientCreated' => 'handlePatientCreated',
         'closeCreateModal' => 'closeCreateModal',
         'assureurCreated' => 'handleAssureurCreated',
         'acteCreated' => 'handleActeCreated',
-        'refreshData' => 'refreshCachedData',
         'openModal' => 'handleOpenModal'
     ];
 
@@ -77,8 +56,6 @@ class AccueilPatient extends Component
         }
 
         $this->initializeRoles();
-        $this->loadCachedData();
-        $this->preloadActes();
 
         if (request()->has('patient_id')) {
             $patient = Patient::find(request()->patient_id);
@@ -98,38 +75,6 @@ class AccueilPatient extends Component
 
         $this->canManageRdv = $this->isDocteurProprietaire || $this->isSecretaire || $this->isDocteur;
         $this->canViewAllRdv = $this->isDocteurProprietaire || $this->isSecretaire;
-    }
-
-    private function loadCachedData()
-    {
-        $this->medecins = Cache::remember(self::CACHE_KEY_DOCTORS, self::CACHE_TTL, function () {
-            $query = User::whereHas('typeuser', function ($query) {
-                $query->whereIn('Libelle', ['Docteur Propriétaire', 'Docteur']);
-            })->where('ismasquer', 0);
-
-            if ($this->isDocteur) {
-                $query->where('Iduser', Auth::id());
-            }
-
-            return $query->get();
-        });
-
-        $this->assureurs = Cache::remember(self::CACHE_KEY_ASSUREURS, self::CACHE_TTL, function () {
-            return Assureur::all();
-        });
-
-        $this->typesPaiement = Cache::remember(self::CACHE_KEY_PAYMENT_TYPES, self::CACHE_TTL, function () {
-            return RefTypePaiement::all();
-        });
-    }
-
-    private function preloadActes()
-    {
-        return Cache::remember(self::CACHE_KEY_ACTES, self::CACHE_TTL, function () {
-            return Acte::where('Masquer', 0)
-                      ->orderBy('nordre')
-                      ->get();
-        });
     }
 
     public function handleOpenModal($modalName)
@@ -153,16 +98,6 @@ class AccueilPatient extends Component
     public function fermerListeActesModal()
     {
         $this->showListeActesModal = false;
-    }
-
-    public function refreshCachedData()
-    {
-        Cache::forget(self::CACHE_KEY_DOCTORS);
-        Cache::forget(self::CACHE_KEY_ASSUREURS);
-        Cache::forget(self::CACHE_KEY_PAYMENT_TYPES);
-        Cache::forget(self::CACHE_KEY_ACTES);
-        $this->loadCachedData();
-        $this->preloadActes();
     }
 
     public function resetState()
@@ -219,13 +154,11 @@ class AccueilPatient extends Component
 
     public function handleAssureurCreated()
     {
-        $this->refreshCachedData();
         $this->showAssureurModal = false;
     }
 
     public function handleActeCreated()
     {
-        $this->refreshCachedData();
         $this->showActeModal = false;
     }
 
@@ -319,4 +252,4 @@ class AccueilPatient extends Component
     {
         return view('livewire.accueil-patient');
     }
-} 
+}
