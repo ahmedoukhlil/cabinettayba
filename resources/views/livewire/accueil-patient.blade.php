@@ -31,10 +31,10 @@
     </div>
 
     @if($isDocteurProprietaire || $isDocteur || $isSecretaire)
-        <div class="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-8 bg-gray-50 z-10 py-2 md:py-4 justify-center items-center">
+        <div class="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-8 bg-gray-50 z-10 py-2 md:py-4 justify-center items-center" role="group" aria-label="Actions principales">
             {{-- Consultation --}}
-            <button wire:click="{{ $selectedPatient ? 'setAction(\'consultation\')' : '' }}"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
+            <button type="button" wire:click="setAction('consultation')" @if(!$selectedPatient) disabled aria-disabled="true" @endif
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white disabled:hover:bg-gray-100 disabled:hover:text-gray-400 transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
                 <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
                     <i class="fas fa-stethoscope text-primary text-xl md:text-2xl"></i>
                 </span>
@@ -49,21 +49,31 @@
                 <span class="font-semibold">Caisse Paie</span>
             </button>
             {{-- Facture/Devis --}}
-            <button wire:click="{{ $selectedPatient ? 'setAction(\'reglement\')' : '' }}"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
+            <button type="button" wire:click="setAction('reglement')" @if(!$selectedPatient) disabled aria-disabled="true" @endif
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white disabled:hover:bg-gray-100 disabled:hover:text-gray-400 transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
                 <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
                     <i class="fas fa-file-invoice-dollar text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">Facture/Devis</span>
             </button>
             {{-- RDV Patient --}}
-            <button wire:click="{{ $selectedPatient ? 'setAction(\'rendezvous\')' : '' }}"
-                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
+            <button type="button" wire:click="setAction('rendezvous')" @if(!$selectedPatient) disabled aria-disabled="true" @endif
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white disabled:hover:bg-gray-100 disabled:hover:text-gray-400 transition text-base md:text-lg {{ $selectedPatient ? '' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' }}">
                 <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 transition-all duration-200 bg-white text-primary">
                     <i class="fas fa-calendar-plus text-primary text-xl md:text-2xl"></i>
                 </span>
                 <span class="font-semibold">RDV Patient</span>
             </button>
+            {{-- Liste de soins --}}
+            @if($isDocteurProprietaire || $isSecretaire)
+            <a href="{{ route('appointment-requests.index') }}"
+                class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
+                <span class="inline-flex items-center justify-center rounded-full p-1 md:p-2 bg-white text-primary" aria-hidden="true">
+                    <i class="fas fa-calendar-check text-primary text-xl md:text-2xl"></i>
+                </span>
+                <span class="font-semibold">Demandes en ligne</span>
+            </a>
+            @endif
             {{-- Liste de soins --}}
             <button wire:click="ouvrirListeActesModal"
                 class="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 w-full sm:w-48 md:w-56 border-2 border-primary bg-white text-primary rounded-xl shadow hover:bg-primary hover:text-white transition text-base md:text-lg">
@@ -110,12 +120,12 @@
 
     {{-- Modal création patient --}}
     @if($showCreateModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3" role="dialog" aria-modal="true" aria-labelledby="create-patient-title">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-0 relative animate-fade-in">
                 <!-- Header du modal -->
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-primary">Gestion des patients</h2>
-                    <button wire:click="closeCreateModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
+                    <h2 id="create-patient-title" class="text-xl font-bold text-primary">Gestion des patients</h2>
+                    <button type="button" wire:click="closeCreateModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-md" aria-label="Fermer la gestion des patients">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -129,7 +139,7 @@
 
     {{-- Modal création RDV pour tous patients --}}
     @if($showCreateRdvModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Création d'un rendez-vous">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 transition-opacity" aria-hidden="true">
                     <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -150,11 +160,11 @@
     @endif
 
     @if($showGestionPatientsModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3" role="dialog" aria-modal="true" aria-labelledby="patients-management-title">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl p-0 relative animate-fade-in">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-primary">Gestion des patients</h2>
-                    <button wire:click="closeGestionPatientsModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
+                    <h2 id="patients-management-title" class="text-xl font-bold text-primary">Gestion des patients</h2>
+                    <button type="button" wire:click="closeGestionPatientsModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-md" aria-label="Fermer la gestion des patients">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -171,7 +181,7 @@
             <div class="flex-1">
                 <div class="flex items-center">
                     <span class="text-lg font-semibold">{{ $selectedPatient['Prenom'] ?? '' }}</span>
-                    <button wire:click="setPatient(null)" class="ml-2 text-primary hover:text-primary-dark">
+                    <button type="button" wire:click="setPatient(null)" class="ml-2 p-2 rounded-md text-primary hover:text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Désélectionner le patient">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -211,20 +221,20 @@
     @endif
 
     @if($showAssureurModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3" role="dialog" aria-modal="true" aria-label="Gestion des assurances">
             <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-0 relative animate-fade-in">
-                <button wire:click="fermerAssureurModal" class="absolute top-4 right-4 text-gray-500 hover:text-primary text-2xl font-bold z-10">&times;</button>
+                <button type="button" wire:click="fermerAssureurModal" class="absolute top-4 right-4 p-2 text-gray-500 hover:text-primary text-2xl font-bold z-10 focus:outline-none focus:ring-2 focus:ring-primary rounded-md" aria-label="Fermer la gestion des assurances">&times;</button>
                 <livewire:assureur-manager wire:key="assureur-manager-modal" />
             </div>
         </div>
     @endif
 
     @if($showListeActesModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl p-0 relative animate-fade-in" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-95">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3" role="dialog" aria-modal="true" aria-labelledby="care-list-title">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-7xl p-0 relative animate-fade-in">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-primary">Liste des soins</h2>
-                    <button wire:click="fermerListeActesModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
+                    <h2 id="care-list-title" class="text-xl font-bold text-primary">Liste des soins</h2>
+                    <button type="button" wire:click="fermerListeActesModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-md" aria-label="Fermer la liste des soins">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -237,11 +247,11 @@
 
     {{-- Modal utilisateurs --}}
     @if($showUsersModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3" role="dialog" aria-modal="true" aria-labelledby="users-management-title">
             <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-0 relative animate-fade-in">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-primary-light rounded-t-2xl">
-                    <h2 class="text-xl font-bold text-primary">Gestion des utilisateurs</h2>
-                    <button wire:click="closeUsersModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2">
+                    <h2 id="users-management-title" class="text-xl font-bold text-primary">Gestion des utilisateurs</h2>
+                    <button type="button" wire:click="closeUsersModal" class="text-gray-500 hover:text-primary text-2xl flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded-md" aria-label="Fermer la gestion des utilisateurs">
                         <i class="fas fa-times"></i> <span class="text-base font-medium">Fermer</span>
                     </button>
                 </div>
@@ -258,25 +268,3 @@
         </div>
     @endif
 </div>
-
-@push('scripts')
-<script>
-    document.addEventListener('livewire:load', function () {
-        Livewire.on('openModal', (modalName) => {
-            // console.log('Opening modal:', modalName);
-        });
-    });
-
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('modal', () => ({
-            show: false,
-            open() {
-                this.show = true;
-            },
-            close() {
-                this.show = false;
-            }
-        }));
-    });
-</script>
-@endpush 

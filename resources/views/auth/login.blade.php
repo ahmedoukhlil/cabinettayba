@@ -8,12 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center">
     <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
             <div class="text-center">
                 <div class="flex items-center justify-center mb-4">
-                    <span class="text-4xl font-bold text-primary tracking-wide">CABINET TAYBA</span>
+                    <span class="h-14 w-14 mr-3 rounded-full bg-blue-100 text-[#1e3a8a] inline-flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-tooth text-2xl"></i>
+                    </span>
+                    <span class="text-3xl sm:text-4xl font-bold text-[#1e3a8a] tracking-wide">CABINET TAYBA</span>
                 </div>
                 <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
                     Connexion
@@ -23,13 +26,13 @@
             <!-- Carte de connexion -->
             <div class="bg-white rounded-2xl shadow-xl p-8">
                 @if($errors->any())
-                    <div class="mb-6 bg-primary-light border-l-4 border-primary p-4">
+                    <div class="mb-6 bg-red-50 border-l-4 border-red-600 p-4" role="alert" aria-live="assertive">
                         <div class="flex">
                             <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-circle text-primary"></i>
+                                <i class="fas fa-exclamation-circle text-red-600" aria-hidden="true"></i>
                             </div>
                             <div class="ml-3">
-                                <p class="text-sm text-primary">
+                                <p class="text-sm text-red-800">
                                     {{ $errors->first() }}
                                 </p>
                             </div>
@@ -47,8 +50,8 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-user text-gray-400"></i>
                             </div>
-                            <input id="login" type="text" name="login" value="{{ old('login') }}" required autofocus
-                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            <input id="login" type="text" name="login" value="{{ old('login') }}" required autofocus autocomplete="username"
+                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
                                 placeholder="Entrez votre identifiant">
                         </div>
                     </div>
@@ -60,8 +63,8 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-gray-400"></i>
                             </div>
-                            <input id="password" type="password" name="password" required
-                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                            <input id="password" type="password" name="password" required autocomplete="current-password"
+                                class="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors"
                                 placeholder="Entrez votre mot de passe">
                         </div>
                     </div>
@@ -70,7 +73,7 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <input id="remember" type="checkbox" name="remember"
-                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded">
                             <label for="remember" class="ml-2 block text-sm text-gray-700">
                                 Se souvenir de moi
                             </label>
@@ -83,6 +86,10 @@
                         <i class="fas fa-sign-in-alt mr-2"></i>
                         Se connecter
                     </button>
+
+                    <a href="{{ route('public.appointment.create') }}" class="flex w-full items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-base font-medium text-blue-800 transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+                        Prendre un rendez-vous
+                    </a>
                 </form>
             </div>
 

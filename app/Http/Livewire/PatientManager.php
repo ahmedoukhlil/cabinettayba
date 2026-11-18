@@ -49,6 +49,7 @@ class PatientManager extends Component
     {
         return [
             'nom' => 'required|min:2|regex:/^[\p{L}\s-]+$/u',
+            'prenom' => 'nullable|min:2|regex:/^[\p{L}\s-]+$/u',
             'nni' => [
                 'nullable',
                 function($attribute, $value, $fail) {
@@ -109,6 +110,11 @@ class PatientManager extends Component
             $this->sortField = $field;
             $this->sortDirection = 'asc';
         }
+    }
+
+    public function updatedShowInactive()
+    {
+        $this->resetPage();
     }
 
     public function resetForm()
@@ -181,7 +187,7 @@ class PatientManager extends Component
         try {
             $data = [
                 'Nom' => $this->nom,
-                'Prenom' => $this->nom,
+                'Prenom' => $this->prenom,
                 'NNI' => $this->nni,
                 'DtNaissance' => $this->dateNaissance,
                 'Genre' => $this->genre,
@@ -191,7 +197,7 @@ class PatientManager extends Component
                 'IdentifiantAssurance' => $this->isAssured ? $this->identifiantAssurance : '',
                 'Assureur' => $this->isAssured ? $this->assureur : 1,
                 'MatriculeFonct' => $this->matriculeFonct,
-                'NomContact' => $this->nom,
+                'NomContact' => $this->nomContact ?: trim($this->prenom . ' ' . $this->nom),
                 'ClasserSous' => $this->classerSous,
                 'choix' => !$this->isActive,
                 'Dtajout' => now(),
@@ -240,6 +246,9 @@ class PatientManager extends Component
     public function render()
     {
         $query = Patient::query()
+            ->when(!$this->showInactive, function($query) {
+                $query->where('choix', false);
+            })
             ->when($this->search, function($query) {
                 $query->where(function($q) {
                     switch($this->searchBy) {
@@ -307,4 +316,4 @@ class PatientManager extends Component
         $this->selectedPatientId = null;
         $this->paymentHistory = [];
     }
-} 
+}

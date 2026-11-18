@@ -1,20 +1,21 @@
 <div class="space-y-6 max-w-3xl mx-auto p-4">
     <!-- En-tête avec recherche et boutons -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-        <div class="flex-1 max-w-lg">
+        <div class="flex-1 w-full max-w-lg">
             <div class="relative">
-                <div class="flex space-x-2">
-                    <select wire:model="searchBy" class="rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label for="patient-search" class="sr-only">Rechercher un patient</label>
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                    <select wire:model="searchBy" aria-label="Critère de recherche" class="rounded-lg sm:rounded-r-none border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="all">Tout</option>
                         <option value="name">Nom/Prénom</option>
                         <option value="nni">NNI</option>
                         <option value="phone">Téléphone</option>
                     </select>
-                    <input type="text" wire:model.debounce.300ms="search" placeholder="Rechercher un patient..." class="flex-1 pl-4 pr-4 py-2 rounded-r-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input id="patient-search" type="search" wire:model.debounce.300ms="search" placeholder="Rechercher un patient..." class="flex-1 pl-4 pr-4 py-2 rounded-lg sm:rounded-l-none border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
         </div>
-        <div class="flex items-center space-x-4">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
             <label class="flex items-center space-x-2 text-sm text-gray-600">
                 <input type="checkbox" wire:model="showInactive" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                 <span>Afficher les patients inactifs</span>
@@ -27,7 +28,7 @@
 
     <!-- Messages de notification -->
     @if (session()->has('message'))
-        <div class="rounded-lg bg-green-50 p-4">
+        <div class="rounded-lg bg-green-50 p-4" role="status" aria-live="polite">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <i class="fas fa-check-circle text-green-400"></i>
@@ -40,7 +41,7 @@
     @endif
 
     @if (session()->has('error'))
-        <div class="rounded-lg bg-red-50 p-4">
+        <div class="rounded-lg bg-red-50 p-4" role="alert" aria-live="assertive">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <i class="fas fa-exclamation-circle text-red-400"></i>
@@ -53,13 +54,13 @@
     @endif
 
     <!-- Tableau des patients -->
-    <div class="bg-white rounded-lg shadow overflow-hidden w-full">
-        <div>
-            <table class="w-full min-w-full divide-y divide-gray-200">
+    <div class="bg-white rounded-lg shadow w-full">
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[760px] divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th scope="col" class="px-3 py-2 w-1/12 text-center">N° Fiche</th>
-                        <th scope="col" class="px-3 py-2 w-1/4">Nom</th>
+                        <th scope="col" class="px-3 py-2 w-1/4">Patient</th>
                         <th scope="col" class="px-3 py-2 w-1/6">Téléphone</th>
                         <th scope="col" class="px-3 py-2 w-1/12 text-center">Genre</th>
                         <th scope="col" class="px-3 py-2 w-1/4">Assurance</th>
@@ -70,7 +71,7 @@
                     @forelse($patients as $patient)
                         <tr class="hover:bg-gray-50">
                             <td class="px-3 py-2 w-1/12 text-center">{{ $patient->IdentifiantPatient }}</td>
-                            <td class="px-3 py-2 w-1/4">{{ $patient->Prenom }}</td>
+                            <td class="px-3 py-2 w-1/4 font-medium text-gray-900">{{ trim(($patient->Prenom ?? '') . ' ' . ($patient->Nom ?? '')) }}</td>
                             <td class="px-3 py-2 w-1/6">{{ $patient->Telephone1 }}@if($patient->Telephone2)<div class="text-xs text-gray-500">{{ $patient->Telephone2 }}</div>@endif</td>
                             <td class="px-3 py-2 w-1/12 text-center">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ in_array($patient->Genre, ['H','M']) ? 'bg-blue-100 text-blue-800' : ($patient->Genre === 'F' ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-500') }}">
@@ -101,13 +102,13 @@
                             </td>
                             <td class="px-3 py-2 w-1/12 text-center">
                                 <div class="flex items-center justify-center space-x-3">
-                                    <button wire:click="showPaymentHistory({{ $patient->ID }})" class="text-green-600 hover:text-green-900" title="Historique des paiements">
+                                    <button type="button" wire:click="showPaymentHistory({{ $patient->ID }})" class="p-2 rounded-md text-green-600 hover:text-green-900 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500" title="Historique des paiements" aria-label="Afficher l'historique des paiements de {{ trim(($patient->Prenom ?? '') . ' ' . ($patient->Nom ?? '')) }}">
                                         <i class="fas fa-money-bill-wave"></i>
                                     </button>
-                                    <button wire:click="toggleStatus({{ $patient->ID }})" class="text-{{ $patient->choix ? 'green' : 'red' }}-600 hover:text-{{ $patient->choix ? 'green' : 'red' }}-900" title="{{ $patient->choix ? 'Activer' : 'Désactiver' }}">
+                                    <button type="button" wire:click="toggleStatus({{ $patient->ID }})" class="p-2 rounded-md text-{{ $patient->choix ? 'green' : 'red' }}-600 hover:text-{{ $patient->choix ? 'green' : 'red' }}-900 focus:outline-none focus:ring-2 focus:ring-blue-500" title="{{ $patient->choix ? 'Activer' : 'Désactiver' }}" aria-label="{{ $patient->choix ? 'Activer' : 'Désactiver' }} ce patient">
                                         <i class="fas fa-{{ $patient->choix ? 'check' : 'times' }}"></i>
                                     </button>
-                                    <button wire:click="edit({{ $patient->ID }})" class="text-blue-600 hover:text-blue-900" title="Modifier">
+                                    <button type="button" wire:click="edit({{ $patient->ID }})" class="p-2 rounded-md text-blue-600 hover:text-blue-900 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Modifier" aria-label="Modifier ce patient">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </div>
@@ -130,7 +131,7 @@
 
     <!-- Modal de création/édition -->
     @if($showModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="patient-modal-title">
         <div class="flex items-stretch justify-center min-h-screen px-0 pt-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 transition-opacity" aria-hidden="true">
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -140,7 +141,7 @@
                 <form wire:submit.prevent="save">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="mb-4">
-                            <h3 class="text-lg font-medium text-gray-900">
+                            <h3 id="patient-modal-title" class="text-lg font-medium text-gray-900">
                                 {{ $patientId ? 'Modifier le patient' : 'Nouveau patient' }}
                             </h3>
                         </div>
@@ -162,6 +163,12 @@
                                         <input type="text" wire:model.defer="nom" id="nom" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Entrez le nom du patient">
                                         @error('nom') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
+                                    <input type="text" wire:model.defer="prenom" id="prenom" autocomplete="given-name" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Entrez le prénom du patient">
+                                    @error('prenom') <span class="text-red-500 text-xs" role="alert">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -248,8 +255,9 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Enregistrer
+                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            <span wire:loading.remove wire:target="save">Enregistrer</span>
+                            <span wire:loading wire:target="save">Enregistrement…</span>
                         </button>
                         <button type="button" wire:click="closeModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Annuler
@@ -263,7 +271,7 @@
 
     <!-- Modal d'historique des paiements -->
     @if($showPaymentHistoryModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="payment-history-title">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 transition-opacity" aria-hidden="true">
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -273,7 +281,7 @@
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            <h3 id="payment-history-title" class="text-lg leading-6 font-medium text-gray-900 mb-4">
                                 Historique des paiements
                             </h3>
                             
@@ -332,4 +340,4 @@
         </div>
     </div>
     @endif
-</div> 
+</div>

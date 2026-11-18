@@ -35,7 +35,8 @@ class AuthController extends Controller
 
         if ($user && $this->checkPassword($credentials['password'], $user->password)) {
             // Authentification réussie
-            Auth::login($user);
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
             return redirect()->route('accueil.patient');
         }
 

@@ -11,6 +11,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReglementFactureController;
 use App\Http\Livewire\StatistiquesManager;
 use App\Http\Controllers\CaisseController;
+use App\Http\Controllers\AppointmentRequestController;
+use App\Http\Controllers\PublicAppointmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +23,21 @@ use App\Http\Controllers\CaisseController;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+// Réservation publique (aucune authentification requise)
+Route::get('/reservation', [PublicAppointmentController::class, 'create'])
+    ->middleware('throttle:60,1')
+    ->name('public.appointment.create');
+Route::get('/reservation/creneaux', [PublicAppointmentController::class, 'availability'])
+    ->middleware('throttle:60,1')
+    ->name('public.appointment.availability');
+Route::post('/reservation', [PublicAppointmentController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('public.appointment.store');
+Route::get('/reservation-suivi/{reference}/{token}', [PublicAppointmentController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])
+    ->name('public.appointment.show');
 
 // Authentification
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -56,6 +73,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/rendez-vous/create', function () {
             return view('rendez-vous.create');
         })->name('rendez-vous.create');
+
+        Route::post('/demandes-rendez-vous/{appointmentRequest}/confirmer', [AppointmentRequestController::class, 'confirm'])
+            ->name('appointment-requests.confirm');
+        Route::post('/demandes-rendez-vous/{appointmentRequest}/refuser', [AppointmentRequestController::class, 'reject'])
+            ->name('appointment-requests.reject');
+    });
+
+    Route::middleware(['permission:rendez-vous.view'])->group(function () {
+        Route::get('/demandes-rendez-vous', [AppointmentRequestController::class, 'index'])
+            ->name('appointment-requests.index');
     });
 
     // Routes pour les patients (Secrétaire et Propriétaire)

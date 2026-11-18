@@ -68,15 +68,16 @@ class Rendezvou extends Model
     /**
      * Génère le prochain numéro d'ordre pour la date donnée
      */
-    public static function generateNextOrderNumber($date)
+    public static function generateNextOrderNumber($date, $cabinetId = null)
     {
         if (is_string($date)) {
             $date = \Carbon\Carbon::parse($date);
         }
+        $cabinetId = $cabinetId ?? optional(Auth::user())->fkidcabinet;
         $lastOrder = self::whereDate('dtPrevuRDV', $date->format('Y-m-d'))
-            ->where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->where('fkidcabinet', $cabinetId)
             ->max('OrdreRDV');
 
         return ($lastOrder ?? 0) + 1;
     }
-} 
+}

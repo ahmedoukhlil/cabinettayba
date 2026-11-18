@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dental House</title>
+    <title>@yield('title', 'Cabinet Tayba')</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -16,13 +16,15 @@
         .hover\:bg-primary:hover { background-color: #1e3a8a !important; }
         .hover\:text-primary:hover { color: #1e3a8a !important; }
         .bg-primary-light { background-color: #e6eaf2 !important; }
+        .text-primary-light { color: #e6eaf2 !important; }
         .text-primary-dark { color: #152a5c !important; }
         .hover\:text-white:hover { color: #fff !important; }
+        .focus\:ring-primary:focus { outline: 2px solid transparent; box-shadow: 0 0 0 2px #1e3a8a; }
         
-        /* Masquer les spinners globaux de Livewire */
-        [wire\:loading], [wire\:loading\.delay], [wire\:loading\.inline-block], [wire\:loading\.inline] {
-            display: none !important;
-        }
+        [wire\:loading] { cursor: progress; }
+        .nav-link { color: #4b5563; padding: .5rem 1rem; border-radius: .5rem; font-weight: 500; border: 1px solid #e5e7eb; }
+        .nav-link:hover, .nav-link:focus { color: #2563eb; background: #eff6ff; outline: 2px solid transparent; }
+        .nav-link.active { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -34,8 +36,10 @@
                 <div class="flex items-center space-x-8">
                     <div class="flex items-center">
                         <a href="{{ route('dashboard') }}" class="flex items-center">
-                            <img src="{{ asset('dentalhouselogo.jpg') }}" alt="Dental House Logo" class="h-10 w-10 mr-3">
-                            <span class="text-xl font-bold text-[#1e3a8a]">Dental House</span>
+                            <span class="h-10 w-10 mr-3 rounded-full bg-primary-light text-primary inline-flex items-center justify-center" aria-hidden="true">
+                                <i class="fas fa-tooth text-xl"></i>
+                            </span>
+                            <span class="text-xl font-bold text-[#1e3a8a]">Cabinet Tayba</span>
                         </a>
                     </div>
                     <!-- Menu desktop -->
@@ -46,8 +50,8 @@
 
                 <!-- Bouton menu mobile -->
                 <div class="flex items-center md:hidden">
-                    <button type="button" class="mobile-menu-button inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
-                        <i class="fas fa-bars"></i>
+                    <button type="button" class="mobile-menu-button inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="mobile-menu">
+                        <i class="fas fa-bars" aria-hidden="true"></i>
                     </button>
                 </div>
 
@@ -55,11 +59,11 @@
                 <div class="hidden md:flex items-center space-x-4">
                     @if(auth()->check())
                         <div class="relative group">
-                            <button class="flex items-center space-x-3 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-gray-200">
+                            <button class="flex items-center space-x-3 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-gray-200" aria-haspopup="true" aria-label="Menu du compte utilisateur">
                                 <span class="font-medium">{{ auth()->user()->NomComplet ?? auth()->user()->name ?? 'Utilisateur' }}</span>
                                 <i class="fas fa-chevron-down text-sm group-hover:text-blue-600 transition-colors duration-200"></i>
                             </button>
-                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 group-hover:opacity-100 transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100 z-50">
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-all duration-200 transform origin-top-right scale-95 group-hover:scale-100 group-focus-within:scale-100 z-50">
                                 <div class="py-1">
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="block">
                                         @csrf
@@ -80,7 +84,7 @@
         </div>
 
         <!-- Menu mobile -->
-        <div class="mobile-menu hidden md:hidden">
+        <div id="mobile-menu" class="mobile-menu hidden md:hidden">
             <div class="px-2 pt-2 pb-3 space-y-2">
                
                 
@@ -97,29 +101,13 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex flex-col items-center justify-center py-8">
-        <div class="w-full bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+    <main class="py-4 sm:py-8">
+        <div class="w-full bg-white sm:rounded-xl shadow-sm border-y sm:border border-gray-100 p-3 sm:p-6 mb-8">
             @yield('content')
         </div>
     </main>
 
     @livewireScripts
-
-    <!-- Styles for nav-link -->
-    <style>
-        .nav-link {
-            @apply text-gray-600 hover:text-blue-600 px-4 py-2 rounded-lg transition-all duration-200 font-medium hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-gray-200;
-        }
-        .nav-link.active {
-            @apply text-blue-600 bg-blue-50 ring-2 ring-blue-500 ring-offset-2 border-blue-200;
-        }
-        .mobile-nav-link {
-            @apply text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 border border-gray-200;
-        }
-        .mobile-nav-link.active {
-            @apply text-blue-600 bg-blue-50 font-medium border-blue-200;
-        }
-    </style>
 
     <!-- Script pour le menu mobile -->
     <script>
@@ -127,8 +115,12 @@
             const btn = document.querySelector('.mobile-menu-button');
             const menu = document.querySelector('.mobile-menu');
 
+            if (!btn || !menu) return;
+
             btn.addEventListener('click', () => {
-                menu.classList.toggle('hidden');
+                const isOpen = !menu.classList.toggle('hidden');
+                btn.setAttribute('aria-expanded', String(isOpen));
+                btn.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
             });
         });
     </script>
