@@ -8,5 +8,5 @@ return [
     'morning_start_time' => env('PUBLIC_BOOKING_MORNING_START_TIME', '09:00'),
     'evening_start_time' => env('PUBLIC_BOOKING_EVENING_START_TIME', '17:00'),
     'slot_duration_minutes' => (int) env('PUBLIC_BOOKING_SLOT_DURATION', 30),
-    'daily_limit' => (int) env('PUBLIC_BOOKING_DAILY_LIMIT', 20),
+    'period_limit' => (int) env('PUBLIC_BOOKING_PERIOD_LIMIT', 20),
 ];

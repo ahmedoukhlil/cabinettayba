@@ -183,12 +183,12 @@ class PublicAppointmentController extends Controller
             ->orderBy('Nom')
             ->pluck('idMedecin');
         $horizon = max(1, (int) config('appointments.booking_horizon_days'));
-        $dailyLimit = max(1, (int) config('appointments.daily_limit', 20));
+        $periodLimit = max(1, (int) config('appointments.period_limit', 20));
 
         for ($offset = 0; $offset <= $horizon; $offset++) {
             $date = now()->startOfDay()->addDays($offset)->toDateString();
 
-            if ($this->dailyBookingCount($cabinetId, $date) >= $dailyLimit) {
+            if ($this->periodBookingCount($cabinetId, $date, $period) >= $periodLimit) {
                 continue;
             }
 
@@ -208,24 +208,34 @@ class PublicAppointmentController extends Controller
         return null;
     }
 
-    private function dailyBookingCount(int $cabinetId, string $date): int
+    private function periodBookingCount(int $cabinetId, string $date, string $period): int
     {
-        $scheduled = Rendezvou::where('fkidcabinet', $cabinetId)
+        $scheduledQuery = Rendezvou::where('fkidcabinet', $cabinetId)
             ->whereDate('dtPrevuRDV', $date)
             ->where(function ($query) {
                 $query->whereNull('rdvConfirmer')
                     ->orWhere('rdvConfirmer', '!=', 'annulé');
-            })
-            ->count();
+            });
 
         // Une demande confirmée possède déjà un rendez-vous et ne doit pas
         // être comptée deux fois. Seules les demandes en attente s'ajoutent.
-        $pending = PublicAppointmentRequest::where('fkidcabinet', $cabinetId)
+        $pendingQuery = PublicAppointmentRequest::where('fkidcabinet', $cabinetId)
             ->whereDate('date_souhaitee', $date)
-            ->where('status', 'pending')
-            ->count();
+            ->where('status', 'pending');
 
-        return $scheduled + $pending;
+        if ($period === 'morning') {
+            $scheduledQuery
+                ->whereTime('HeureRdv', '>=', config('appointments.morning_start_time'))
+                ->whereTime('HeureRdv', '<', config('appointments.evening_start_time'));
+            $pendingQuery
+                ->whereTime('heure_souhaitee', '>=', config('appointments.morning_start_time'))
+                ->whereTime('heure_souhaitee', '<', config('appointments.evening_start_time'));
+        } else {
+            $scheduledQuery->whereTime('HeureRdv', '>=', config('appointments.evening_start_time'));
+            $pendingQuery->whereTime('heure_souhaitee', '>=', config('appointments.evening_start_time'));
+        }
+
+        return $scheduledQuery->count() + $pendingQuery->count();
     }
 
     private function slotMatchesPeriod(string $slot, string $period): bool
