@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="@yield('lang', 'fr')" dir="@yield('dir', 'ltr')">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,11 +20,11 @@
                 </span>
                 <span>
                     <strong class="block text-lg">{{ optional($publicCabinet)->NomCabFr ?: 'Cabinet Tayba' }}</strong>
-                    <span class="block text-xs text-slate-500">Réservation en ligne</span>
+                    <span class="block text-xs text-slate-500">@yield('header_subtitle', 'Réservation en ligne')</span>
                 </span>
             </a>
             <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">
-                Espace professionnel
+                @yield('professional_label', 'Espace professionnel')
             </a>
         </div>
     </header>
@@ -35,7 +35,7 @@
 
     <footer class="border-t border-slate-200 bg-white">
         <div class="mx-auto max-w-5xl px-4 py-6 text-center text-sm text-slate-500 sm:px-6">
-            © {{ date('Y') }} {{ optional($publicCabinet)->NomCabFr ?: 'Cabinet Tayba' }} — Vos informations sont utilisées uniquement pour traiter votre demande.
+            © {{ date('Y') }} {{ optional($publicCabinet)->NomCabFr ?: 'Cabinet Tayba' }} — @yield('privacy_text', 'Vos informations sont utilisées uniquement pour traiter votre demande.')
         </div>
     </footer>
     @stack('scripts')

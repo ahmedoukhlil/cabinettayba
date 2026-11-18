@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Acte;
 use App\Models\Infocabinet;
 use App\Models\Medecin;
 use App\Models\PublicAppointmentRequest;
@@ -24,14 +23,6 @@ class PublicAppointmentController extends Controller
             'medecins' => Medecin::where('fkidcabinet', $cabinetId)
                 ->orderBy('Nom')
                 ->get(['idMedecin', 'Nom']),
-            'actes' => Acte::where('Masquer', 0)
-                ->whereNotNull('Acte')
-                ->orderBy('nordre')
-                ->get(['ID', 'Acte'])
-                ->unique('Acte')
-                ->values(),
-            'minDate' => now()->toDateString(),
-            'maxDate' => now()->addDays(config('appointments.booking_horizon_days'))->toDateString(),
         ]);
     }
 
@@ -62,71 +53,69 @@ class PublicAppointmentController extends Controller
         $cabinetId = $this->cabinetId();
         $validated = $request->validate([
             'nom' => ['required', 'string', 'min:2', 'max:120'],
-            'prenom' => ['nullable', 'string', 'max:120'],
             'telephone' => [
                 'required',
                 'string',
                 'max:30',
                 'regex:/^(?=(?:\D*\d){8,15}\D*$)[+0-9 .()\-]+$/',
             ],
-            'medecin_id' => [
-                'required',
-                'integer',
-                Rule::exists('medecins', 'idMedecin')->where(fn ($query) => $query->where('fkidcabinet', $cabinetId)),
-            ],
-            'acte_id' => ['nullable', 'integer', Rule::exists('actes', 'ID')->where(fn ($query) => $query->where('Masquer', 0))],
-            'date' => [
-                'required',
-                'date_format:Y-m-d',
-                'after_or_equal:today',
-                'before_or_equal:' . now()->addDays(config('appointments.booking_horizon_days'))->toDateString(),
-            ],
-            'heure' => ['required', 'date_format:H:i'],
-            'message' => ['nullable', 'string', 'max:1000'],
-            'consent' => ['accepted'],
+            'periode' => ['required', Rule::in(['morning', 'evening'])],
             'website' => ['nullable', 'max:0'],
         ], [
-            'consent.accepted' => 'Vous devez accepter le traitement des informations nécessaires à la réservation.',
-            'telephone.regex' => 'Saisissez un numéro de téléphone valide contenant entre 8 et 15 chiffres.',
+            'nom.required' => 'يرجى إدخال الاسم الكامل.',
+            'nom.min' => 'يجب أن يحتوي الاسم على حرفين على الأقل.',
+            'telephone.required' => 'يرجى إدخال رقم الهاتف.',
+            'telephone.regex' => 'يرجى إدخال رقم هاتف صحيح يحتوي على 8 إلى 15 رقماً.',
+            'periode.required' => 'يرجى اختيار الفترة المناسبة.',
+            'periode.in' => 'الفترة المختارة غير صالحة.',
         ]);
-
-        $medecinId = (int) $validated['medecin_id'];
-        $availableSlots = $this->availableSlots($cabinetId, $medecinId, $validated['date']);
-        if (!in_array($validated['heure'], $availableSlots, true)) {
-            return back()->withErrors([
-                'heure' => 'Ce créneau n’est plus disponible. Veuillez en choisir un autre.',
-            ])->withInput();
-        }
 
         $telephone = preg_replace('/[^0-9+]/', '', $validated['telephone']);
         $token = Str::random(64);
-        $reference = $this->generateReference();
-        $slotKey = hash('sha256', implode('|', [
-            $cabinetId,
-            $medecinId,
-            $validated['date'],
-            $validated['heure'],
-        ]));
+        $periodLabel = $validated['periode'] === 'morning' ? 'الفترة الصباحية' : 'الفترة المسائية';
+        $reference = null;
 
-        try {
-            PublicAppointmentRequest::create([
-                'fkidcabinet' => $cabinetId,
-                'fkidmedecin' => $medecinId,
-                'fkidacte' => $validated['acte_id'] ?? null,
-                'nom' => trim($validated['nom']),
-                'prenom' => trim($validated['prenom'] ?? ''),
-                'telephone' => $telephone,
-                'date_souhaitee' => $validated['date'],
-                'heure_souhaitee' => $validated['heure'],
-                'message' => $validated['message'] ?? null,
-                'status' => 'pending',
-                'reference' => $reference,
-                'tracking_token_hash' => hash('sha256', $token),
-                'slot_key' => $slotKey,
-            ]);
-        } catch (QueryException $exception) {
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $slot = $this->firstAvailableSlot($cabinetId, $validated['periode']);
+            if (!$slot) {
+                return back()->withErrors([
+                    'periode' => 'لا يوجد موعد متاح في هذه الفترة حالياً. يرجى اختيار الفترة الأخرى أو الاتصال بالعيادة.',
+                ])->withInput();
+            }
+
+            $reference = $this->generateReference();
+            $slotKey = hash('sha256', implode('|', [
+                $cabinetId,
+                $slot['medecin_id'],
+                $slot['date'],
+                $slot['heure'],
+            ]));
+
+            try {
+                PublicAppointmentRequest::create([
+                    'fkidcabinet' => $cabinetId,
+                    'fkidmedecin' => $slot['medecin_id'],
+                    'fkidacte' => null,
+                    'nom' => trim($validated['nom']),
+                    'prenom' => '',
+                    'telephone' => $telephone,
+                    'date_souhaitee' => $slot['date'],
+                    'heure_souhaitee' => $slot['heure'],
+                    'message' => 'الفترة المطلوبة: ' . $periodLabel,
+                    'status' => 'pending',
+                    'reference' => $reference,
+                    'tracking_token_hash' => hash('sha256', $token),
+                    'slot_key' => $slotKey,
+                ]);
+                break;
+            } catch (QueryException $exception) {
+                $reference = null;
+            }
+        }
+
+        if (!$reference) {
             return back()->withErrors([
-                'heure' => 'Ce créneau vient d’être réservé. Veuillez en choisir un autre.',
+                'periode' => 'تعذر حجز الموعد الآن. يرجى المحاولة مرة أخرى بعد قليل.',
             ])->withInput();
         }
 
@@ -186,6 +175,41 @@ class PublicAppointmentController extends Controller
         }
 
         return $slots;
+    }
+
+    private function firstAvailableSlot(int $cabinetId, string $period): ?array
+    {
+        $medecinIds = Medecin::where('fkidcabinet', $cabinetId)
+            ->orderBy('Nom')
+            ->pluck('idMedecin');
+        $horizon = max(1, (int) config('appointments.booking_horizon_days'));
+
+        for ($offset = 0; $offset <= $horizon; $offset++) {
+            $date = now()->startOfDay()->addDays($offset)->toDateString();
+
+            foreach ($medecinIds as $medecinId) {
+                foreach ($this->availableSlots($cabinetId, (int) $medecinId, $date) as $slot) {
+                    if ($this->slotMatchesPeriod($slot, $period)) {
+                        return [
+                            'medecin_id' => (int) $medecinId,
+                            'date' => $date,
+                            'heure' => $slot,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function slotMatchesPeriod(string $slot, string $period): bool
+    {
+        if ($period === 'morning') {
+            return $slot < config('appointments.morning_end_time');
+        }
+
+        return $slot >= config('appointments.evening_start_time');
     }
 
     private function cabinetId(): int
