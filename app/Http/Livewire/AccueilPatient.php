@@ -26,6 +26,7 @@ class AccueilPatient extends Component
     public $showCreateActeModal = false;
     public $showListeActesModal = false;
     public $showCaisseOperations = false;
+    public $showAppointmentRequests = false;
     public $showUsersModal = false;
     public $showStatistiques = false;
     public $showPatientMenu = false;
@@ -119,6 +120,7 @@ class AccueilPatient extends Component
             'showCreateActeModal',
             'showListeActesModal',
             'showCaisseOperations',
+            'showAppointmentRequests',
             'action',
             'editingPatient',
             'patientToDelete'
@@ -220,6 +222,19 @@ class AccueilPatient extends Component
     public function closeCaisseOperations()
     {
         $this->showCaisseOperations = false;
+    }
+
+    public function openAppointmentRequests()
+    {
+        $this->resetState();
+        $this->showAppointmentRequests = true;
+        $this->showPatientMenu = false;
+        $this->showCabinetMenu = false;
+    }
+
+    public function closeAppointmentRequests()
+    {
+        $this->showAppointmentRequests = false;
     }
 
     public function ouvrirAssureurModal()

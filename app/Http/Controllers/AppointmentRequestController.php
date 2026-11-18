@@ -27,7 +27,11 @@ class AppointmentRequestController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('appointments.requests.index', compact('requests', 'status'));
+        $view = $request->boolean('embedded')
+            ? 'appointments.requests.embedded'
+            : 'appointments.requests.index';
+
+        return view($view, compact('requests', 'status'));
     }
 
     public function confirm(PublicAppointmentRequest $appointmentRequest)

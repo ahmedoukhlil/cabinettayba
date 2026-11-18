@@ -42,9 +42,9 @@
             </button>
 
             @if($isDocteurProprietaire || $isSecretaire)
-                <a href="{{ route('appointment-requests.index') }}" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+                <button type="button" wire:click="openAppointmentRequests" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
                     <i class="fas fa-calendar-check" aria-hidden="true"></i> Demandes en ligne
-                </a>
+                </button>
             @endif
 
             @if($isDocteurProprietaire)
@@ -136,6 +136,32 @@
                     <button wire:click="closeCaisseOperations" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
                 </header>
                 <div class="modal-body !p-0"><livewire:caisse-operations-manager wire:key="caisse-operations" /></div>
+            </section>
+        </div>
+    @endif
+
+    @if($showAppointmentRequests)
+        <div class="modal-overlay" wire:click.self="closeAppointmentRequests">
+            <section class="modal-box max-w-7xl max-h-[92vh]" role="dialog" aria-modal="true" aria-labelledby="appointment-requests-title">
+                <header class="modal-header">
+                    <div>
+                        <h2 id="appointment-requests-title"><i class="fas fa-calendar-check mr-2"></i>Demandes en ligne</h2>
+                        <p>Validation des rendez-vous demandés depuis l’interface publique</p>
+                    </div>
+                    <button type="button" wire:click="closeAppointmentRequests" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
+                </header>
+                <div class="modal-body !p-0" x-data="{ loaded: false }">
+                    <div x-show="!loaded" class="absolute inset-0 z-10 flex items-center justify-center bg-white">
+                        <span class="spinner spinner-dark" aria-hidden="true"></span>
+                        <span class="ml-3 text-sm font-medium text-gray-600">Chargement des demandes…</span>
+                    </div>
+                    <iframe
+                        src="{{ route('appointment-requests.index', ['embedded' => 1]) }}"
+                        title="Demandes de rendez-vous en ligne"
+                        class="h-[76vh] w-full border-0 bg-gray-50"
+                        @load="loaded = true">
+                    </iframe>
+                </div>
             </section>
         </div>
     @endif
