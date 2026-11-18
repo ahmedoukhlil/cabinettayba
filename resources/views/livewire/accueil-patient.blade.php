@@ -130,12 +130,12 @@
 
     @if($showCaisseOperations)
         <div class="modal-overlay" wire:click.self="closeCaisseOperations">
-            <section class="modal-box max-w-7xl" role="dialog" aria-modal="true" aria-labelledby="cash-title">
+            <section class="modal-box max-w-6xl max-h-[90vh]" role="dialog" aria-modal="true" aria-labelledby="cash-title">
                 <header class="modal-header">
                     <div><h2 id="cash-title"><i class="fas fa-cash-register mr-2"></i>Caisse Paie</h2><p>Opérations et situation journalière</p></div>
                     <button wire:click="closeCaisseOperations" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
                 </header>
-                <div class="modal-body"><livewire:caisse-operations-manager wire:key="caisse-operations" /></div>
+                <div class="modal-body !p-0"><livewire:caisse-operations-manager wire:key="caisse-operations" /></div>
             </section>
         </div>
     @endif

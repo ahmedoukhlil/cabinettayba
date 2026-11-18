@@ -1,215 +1,180 @@
-<div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Filtres -->
-        <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-            <div class="px-8 py-6">
-                <h2 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fas fa-filter mr-3"></i>
-                    Filtres
-                </h2>
+<div class="p-4 md:p-6 space-y-6">
+
+    {{-- Filtres --}}
+    <div class="bg-primary rounded-xl p-4 on-dark">
+        <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wide mb-3">
+            <i class="fas fa-filter mr-1"></i> Filtres
+        </h3>
+        <div class="grid grid-cols-1 gap-4 items-end md:grid-cols-3">
+            @if($isDocteur)
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-1">Médecin</label>
+                <input type="text" value="{{ Auth::user()->NomComplet ?? Auth::user()->name ?? '' }}" disabled class="form-input bg-gray-100 cursor-not-allowed">
             </div>
-            <div class="p-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    @if($isDocteurProprietaire)
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-white mb-2">Médecin</label>
-                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
-                                <option value="">Tous les médecins</option>
-                                @foreach($medecins as $medecin)
-                                    <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-white mb-2">Date</label>
-                            <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
-                        </div>
-                    @elseif($isDocteur)
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-white mb-2">Médecin</label>
-                            <input type="text" value="{{ Auth::user()->NomComplet ?? Auth::user()->name ?? '' }}" class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" disabled>
-                        </div>
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-white mb-2">Date</label>
-                            <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
-                        </div>
-                    @elseif($isSecretaire)
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-white mb-2">Médecin</label>
-                            <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors">
-                                <option value="">Tous les médecins</option>
-                                @foreach($medecins as $medecin)
-                                    <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-white mb-2">Date du jour</label>
-                            <input type="date" value="{{ now()->toDateString() }}" class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" disabled>
-                        </div>
-                    @endif
-                </div>
+            @else
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-1">Médecin</label>
+                <select wire:model="medecin_id" class="form-select">
+                    <option value="">Tous les médecins</option>
+                    @foreach($medecins as $medecin)
+                    <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-1">Date</label>
+                @if($isSecretaire)
+                    <input type="date" value="{{ now()->toDateString() }}" disabled class="form-input bg-gray-100 cursor-not-allowed">
+                @else
+                    <input type="date" wire:model="date_debut" class="form-input">
+                @endif
+            </div>
+
+            <div class="flex items-end">
+                <button wire:click="resetFilters" class="btn-secondary w-full">
+                    <i class="fas fa-undo mr-1"></i> Réinitialiser
+                </button>
             </div>
         </div>
-
-        @if($operations->count() > 0)
-            <!-- Totaux généraux -->
-            <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6 flex justify-between items-center">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-chart-line mr-3"></i>
-                        Totaux généraux
-                    </h2>
-                    <a href="{{ route('caisse.etat-journalier', ['date' => $date_debut]) }}" target="_blank" class="bg-white text-cyan-700 px-4 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
-                        <i class="fas fa-print mr-2"></i>
-                        Imprimer l'état de caisse
-                    </a>
-                </div>
-                <div class="p-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <dt class="text-sm font-semibold text-gray-600 mb-2">Total des recettes</dt>
-                            <dd class="text-3xl font-bold text-gray-900">{{ number_format($totalRecettes, 0, ',', ' ') }} MRU</dd>
-                        </div>
-                        <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <dt class="text-sm font-semibold text-gray-600 mb-2">Total des dépenses</dt>
-                            <dd class="text-3xl font-bold text-gray-900">{{ number_format($totalDepenses, 0, ',', ' ') }} MRU</dd>
-                        </div>
-                        <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <dt class="text-sm font-semibold text-gray-600 mb-2">Bilan</dt>
-                            <dd class="text-3xl font-bold {{ $solde >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                {{ number_format($solde, 0, ',', ' ') }} MRU
-                            </dd>
-                        </div>
-                    </div>
-
-                    <!-- Ventilation des totaux généraux par mode de paiement -->
-                    <div class="mt-8">
-                        <h3 class="text-lg font-bold text-gray-800 mb-6">Ventilation par mode de paiement</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach($totauxGenerauxParMoyenPaiement as $type => $totaux)
-                                <div class="bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <div class="text-lg font-bold text-green-700">{{ $type }}</div>
-                                    </div>
-                                    <div class="space-y-3">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-sm text-gray-600">Recettes</span>
-                                            <span class="text-lg font-semibold text-green-600">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-sm text-gray-600">Dépenses</span>
-                                            <span class="text-lg font-semibold text-red-600">{{ number_format($totaux['depenses'], 0, ',', ' ') }} MRU</span>
-                                        </div>
-                                        <div class="flex justify-between items-center pt-3 border-t border-gray-200">
-                                            <span class="text-sm font-semibold text-gray-700">Solde</span>
-                                            <span class="text-lg font-semibold {{ $totaux['solde'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                                {{ number_format($totaux['solde'], 0, ',', ' ') }} MRU
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Totaux par médecin -->
-            <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl mb-8">
-                <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
-                    <h2 class="text-2xl font-bold text-white flex items-center">
-                        <i class="fas fa-user-md mr-3"></i>
-                        Totaux par médecin
-                    </h2>
-                </div>
-                <div class="p-8">
-                    <div class="space-y-8">
-                        @foreach($totauxParMedecin as $medecinId => $totaux)
-                            <div class="bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                                <h3 class="text-xl font-bold text-gray-800 mb-4">Dr. {{ $totaux['nom'] }}</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-4 shadow-sm">
-                                        <dt class="text-sm font-semibold text-gray-600 mb-2">Recettes</dt>
-                                        <dd class="text-2xl font-bold text-green-600">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</dd>
-                                    </div>
-                                    <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-4 shadow-sm">
-                                        <dt class="text-sm font-semibold text-gray-600 mb-2">Dépenses</dt>
-                                        <dd class="text-2xl font-bold text-red-600">{{ number_format($totaux['depenses'], 0, ',', ' ') }} MRU</dd>
-                                    </div>
-                                    <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-4 shadow-sm">
-                                        <dt class="text-sm font-semibold text-gray-600 mb-2">Solde</dt>
-                                        <dd class="text-2xl font-bold {{ $totaux['solde'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ number_format($totaux['solde'], 0, ',', ' ') }} MRU
-                                        </dd>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <!-- Liste des opérations -->
-            <div class="bg-gradient-to-r from-cyan-500 to-cyan-700 px-8 py-6">
-                <h2 class="text-2xl font-bold text-white flex items-center">
-                    <i class="fas fa-list mr-3"></i>
-                    Liste des opérations
-                </h2>
-            </div>
-            <div class="p-8">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Médecin</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opération</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Moyen de paiement</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($operations as $operation)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ \Carbon\Carbon::parse($operation->dateoper)->format('d/m/Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $operation->medecin->Nom ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $operation->tiers->Nom ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $operation->designation }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm {{ $operation->entreEspece ? 'text-green-600' : 'text-red-600' }}">
-                                        {{ number_format($operation->MontantOperation, 0, ',', ' ') }} MRU
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $operation->TypePAie ?? 'CASH' }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                <div class="px-6 py-4 border-t border-gray-200">
-                    {{ $operations->links() }}
-                </div>
-            </div>
-        @else
-            <div class="bg-white shadow-2xl rounded-2xl overflow-hidden transform transition-all duration-300 hover:shadow-3xl">
-                <div class="p-8 text-center">
-                    <div class="text-gray-500">
-                        <i class="fas fa-info-circle text-4xl mb-4"></i>
-                        <p class="text-lg font-medium">Aucune opération trouvée</p>
-                        <p class="mt-2">Veuillez ajuster vos filtres pour voir les opérations.</p>
-                    </div>
-                </div>
-            </div>
-        @endif
     </div>
-</div> 
+
+    @if($operations->count() > 0)
+
+    {{-- Totaux généraux --}}
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="bg-primary px-6 py-4 flex justify-between items-center">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fas fa-chart-line"></i> Totaux généraux
+            </h3>
+            <a href="{{ route('caisse.etat-journalier', ['date' => $date_debut]) }}" target="_blank"
+               class="text-sm text-white/80 hover:text-white border border-white/30 px-3 py-1 rounded-lg hover:bg-white/10 transition-colors">
+                <i class="fas fa-print mr-1"></i> Imprimer l'état
+            </a>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-primary-light rounded-xl p-5">
+                    <dt class="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Total des recettes</dt>
+                    <dd class="text-2xl font-bold text-primary">{{ number_format($totalRecettes, 0, ',', ' ') }} MRU</dd>
+                </div>
+                <div class="bg-red-50 rounded-xl p-5">
+                    <dt class="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">Total des dépenses</dt>
+                    <dd class="text-2xl font-bold text-red-600">{{ number_format($totalDepenses, 0, ',', ' ') }} MRU</dd>
+                </div>
+                <div class="{{ $solde >= 0 ? 'bg-green-50' : 'bg-red-50' }} rounded-xl p-5">
+                    <dt class="text-xs font-semibold {{ $solde >= 0 ? 'text-green-700' : 'text-red-700' }} uppercase tracking-wide mb-1">Bilan</dt>
+                    <dd class="text-2xl font-bold {{ $solde >= 0 ? 'text-green-700' : 'text-red-600' }}">{{ number_format($solde, 0, ',', ' ') }} MRU</dd>
+                </div>
+            </div>
+
+            {{-- Ventilation par mode de paiement --}}
+            <h4 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Ventilation par mode de paiement</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($totauxGenerauxParMoyenPaiement as $type => $totaux)
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <div class="text-sm font-bold text-primary mb-3">{{ $type }}</div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Recettes</span>
+                            <span class="font-semibold text-primary">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Dépenses</span>
+                            <span class="font-semibold text-red-600">{{ number_format($totaux['depenses'], 0, ',', ' ') }} MRU</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-gray-100">
+                            <span class="font-semibold text-gray-700">Solde</span>
+                            <span class="font-bold {{ $totaux['solde'] >= 0 ? 'text-green-700' : 'text-red-600' }}">{{ number_format($totaux['solde'], 0, ',', ' ') }} MRU</span>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- Totaux par médecin --}}
+    @if(count($totauxParMedecin) > 0)
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="bg-primary px-6 py-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fas fa-user-md"></i> Totaux par médecin
+            </h3>
+        </div>
+        <div class="p-6 space-y-4">
+            @foreach($totauxParMedecin as $medecinId => $totaux)
+            <div class="border border-gray-200 rounded-xl p-4">
+                <h4 class="text-sm font-bold text-primary mb-3">Dr. {{ $totaux['nom'] }}</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-primary-light rounded-lg p-4">
+                        <dt class="text-xs text-primary font-semibold uppercase mb-1">Recettes</dt>
+                        <dd class="text-xl font-bold text-primary">{{ number_format($totaux['recettes'], 0, ',', ' ') }} MRU</dd>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <dt class="text-xs text-red-700 font-semibold uppercase mb-1">Dépenses</dt>
+                        <dd class="text-xl font-bold text-red-600">{{ number_format($totaux['depenses'], 0, ',', ' ') }} MRU</dd>
+                    </div>
+                    <div class="{{ $totaux['solde'] >= 0 ? 'bg-green-50' : 'bg-red-50' }} rounded-lg p-4">
+                        <dt class="text-xs {{ $totaux['solde'] >= 0 ? 'text-green-700' : 'text-red-700' }} font-semibold uppercase mb-1">Solde</dt>
+                        <dd class="text-xl font-bold {{ $totaux['solde'] >= 0 ? 'text-green-700' : 'text-red-600' }}">{{ number_format($totaux['solde'], 0, ',', ' ') }} MRU</dd>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Liste des opérations --}}
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="bg-primary px-6 py-4 flex justify-between items-center">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fas fa-list"></i> Liste des opérations
+            </h3>
+            <span class="text-white/70 text-sm">
+                <i class="fas fa-calendar mr-1"></i>
+                {{ \Carbon\Carbon::parse($date_debut)->format('d/m/Y') }}
+            </span>
+        </div>
+        <div class="overflow-x-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Médecin</th>
+                        <th>Patient</th>
+                        <th>Opération</th>
+                        <th>Montant</th>
+                        <th>Mode</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($operations as $operation)
+                    <tr>
+                        <td class="whitespace-nowrap">{{ \Carbon\Carbon::parse($operation->dateoper)->format('d/m/Y') }}</td>
+                        <td>{{ $operation->medecin->Nom ?? '—' }}</td>
+                        <td>{{ $operation->tiers->Nom ?? '—' }}</td>
+                        <td>{{ $operation->designation }}</td>
+                        <td class="font-semibold {{ $operation->entreEspece ? 'text-primary' : 'text-red-600' }} whitespace-nowrap">
+                            {{ number_format($operation->MontantOperation, 0, ',', ' ') }} MRU
+                        </td>
+                        <td><span class="badge badge-neutral">{{ $operation->TypePAie ?? 'CASH' }}</span></td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100">{{ $operations->links() }}</div>
+    </div>
+
+    @else
+    <div class="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-500">
+        <i class="fas fa-cash-register text-3xl mb-3 block text-primary/40"></i>
+        <p class="font-medium">Aucune opération trouvée</p>
+        <p class="text-sm mt-1">Sélectionnez une date pour voir les opérations.</p>
+    </div>
+    @endif
+
+</div>
