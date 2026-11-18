@@ -101,13 +101,16 @@ class CaisseOperationsManager extends Component
         $totauxGenerauxParMoyenPaiement = (clone $this->operationsQuery())
             ->whereNotNull('TypePAie')
             ->select('TypePAie')
-            ->selectRaw('COALESCE(SUM(entreEspece), 0) as recettes')
-            ->selectRaw('COALESCE(SUM(retraitEspece), 0) as depenses')
+            // Placer COALESCE dans SUM permet à MySQL/MariaDB de reconnaître
+            // sans ambiguïté chaque expression comme une agrégation avec
+            // ONLY_FULL_GROUP_BY activé.
+            ->selectRaw('SUM(COALESCE(entreEspece, 0)) as total_entrees')
+            ->selectRaw('SUM(COALESCE(retraitEspece, 0)) as total_retraits')
             ->groupBy('TypePAie')
             ->get()
             ->mapWithKeys(function ($row) {
-                $recettes = (float) $row->recettes;
-                $depenses = (float) $row->depenses;
+                $recettes = (float) $row->total_entrees;
+                $depenses = (float) $row->total_retraits;
 
                 return [$row->TypePAie => [
                     'recettes' => $recettes,
@@ -119,8 +122,8 @@ class CaisseOperationsManager extends Component
 
         $totauxParMedecinEtMode = (clone $this->operationsQuery())
             ->select(['fkidmedecin', 'TypePAie'])
-            ->selectRaw('COALESCE(SUM(entreEspece), 0) as recettes')
-            ->selectRaw('COALESCE(SUM(retraitEspece), 0) as depenses')
+            ->selectRaw('SUM(COALESCE(entreEspece, 0)) as total_entrees')
+            ->selectRaw('SUM(COALESCE(retraitEspece, 0)) as total_retraits')
             ->groupBy('fkidmedecin', 'TypePAie')
             ->get();
 
@@ -132,12 +135,12 @@ class CaisseOperationsManager extends Component
         $totauxParMedecin = $totauxParMedecinEtMode
             ->groupBy('fkidmedecin')
             ->map(function ($rows, $medecinId) use ($medecinsMap) {
-                $recettes = (float) $rows->sum('recettes');
-                $depenses = (float) $rows->sum('depenses');
+                $recettes = (float) $rows->sum('total_entrees');
+                $depenses = (float) $rows->sum('total_retraits');
                 $modesPaiement = $rows->filter(fn ($row) => $row->TypePAie)
                     ->mapWithKeys(function ($row) {
-                        $recettes = (float) $row->recettes;
-                        $depenses = (float) $row->depenses;
+                        $recettes = (float) $row->total_entrees;
+                        $depenses = (float) $row->total_retraits;
 
                         return [$row->TypePAie => [
                             'recettes' => $recettes,
