@@ -31,6 +31,10 @@ class PublicReservationViewTest extends TestCase
             $table->string('Nom')->nullable();
             $table->unsignedInteger('fkidcabinet');
         });
+        DB::table('medecins')->insert([
+            'Nom' => 'Dr Test',
+            'fkidcabinet' => 1,
+        ]);
     }
 
     public function test_public_reservation_page_renders_with_the_pwa_configuration(): void
@@ -38,6 +42,8 @@ class PublicReservationViewTest extends TestCase
         $this->get(route('public.appointment.create'))
             ->assertOk()
             ->assertSee('window.PWA_CONFIG', false)
-            ->assertSee('manifest-patient.webmanifest', false);
+            ->assertSee('manifest-patient.webmanifest', false)
+            ->assertSee('د. Dr Test', false)
+            ->assertDontSee("idMedecin)&gt;", false);
     }
 }

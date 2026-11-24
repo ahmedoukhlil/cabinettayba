@@ -65,7 +65,9 @@
                                 class="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-base focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100">
                             <option value="">اختر الطبيب</option>
                             @foreach($medecins as $medecin)
-                                <option value="{{ $medecin->idMedecin }}" @selected((string) old('medecin_id') === (string) $medecin->idMedecin)>
+                                <option value="{{ $medecin->idMedecin }}"
+                                        dir="auto"
+                                        @if((string) old('medecin_id') === (string) $medecin->idMedecin) selected @endif>
                                     د. {{ $medecin->Nom }}
                                 </option>
                             @endforeach
