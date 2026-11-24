@@ -13,13 +13,16 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="{{ asset('js/app.js') }}?v={{ filemtime(public_path('js/app.js')) }}" defer></script>
-    <script>
-        window.PWA_CONFIG = @json([
+    @php
+        $staffPwaConfig = [
             'locale' => 'fr',
             'vapidPublicKey' => config('webpush.vapid.public_key'),
             'subscribeUrl' => auth()->check() ? route('pwa.notifications.store') : null,
             'subscriptionId' => auth()->check() ? 'staff:' . auth()->id() : null,
-        ]);
+        ];
+    @endphp
+    <script>
+        window.PWA_CONFIG = @json($staffPwaConfig);
     </script>
     <script src="{{ asset('js/pwa.js') }}" defer></script>
     <style>

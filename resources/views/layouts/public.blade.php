@@ -13,13 +13,16 @@
     <link rel="apple-touch-icon" href="{{ asset('icons/pwa-192.png') }}">
     <title>@yield('title', 'Réservation') - Cabinet Tayba</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        window.PWA_CONFIG = @json([
+    @php
+        $publicPwaConfig = [
             'locale' => trim($__env->yieldContent('lang', 'fr')),
             'vapidPublicKey' => config('webpush.vapid.public_key'),
             'subscribeUrl' => trim($__env->yieldContent('pwa_subscribe_url')) ?: null,
             'subscriptionId' => trim($__env->yieldContent('pwa_subscription_id')) ?: null,
-        ]);
+        ];
+    @endphp
+    <script>
+        window.PWA_CONFIG = @json($publicPwaConfig);
     </script>
     <script src="{{ asset('js/pwa.js') }}" defer></script>
 </head>
