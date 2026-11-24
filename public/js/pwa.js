@@ -1,8 +1,8 @@
 (() => {
   const config = window.PWA_CONFIG || {};
   const labels = config.locale === 'ar'
-    ? { install: 'تثبيت التطبيق', enable: 'تفعيل الإشعارات', disable: 'إيقاف الإشعارات', enabled: 'تم تفعيل الإشعارات', denied: 'يجب السماح بالإشعارات من إعدادات المتصفح.', error: 'تعذر تفعيل الإشعارات.' }
-    : { install: 'Installer l’application', enable: 'Activer les notifications', disable: 'Désactiver les notifications', enabled: 'Notifications activées', denied: 'Autorisez les notifications dans les réglages du navigateur.', error: 'Impossible d’activer les notifications.' };
+    ? { install: 'تثبيت التطبيق', enable: 'تفعيل الإشعارات', disable: 'إيقاف الإشعارات', enabled: 'تم تفعيل الإشعارات', denied: 'يجب السماح بالإشعارات من إعدادات المتصفح.', error: 'تعذر تفعيل الإشعارات.', promptTitle: 'فعّل إشعارات المواعيد', promptBody: 'اسمح بالإشعارات لتلقي طلبات المواعيد وتحديثاتها.', later: 'لاحقاً' }
+    : { install: 'Installer l’application', enable: 'Activer les notifications', disable: 'Désactiver les notifications', enabled: 'Notifications activées', denied: 'Autorisez les notifications dans les réglages du navigateur.', error: 'Impossible d’activer les notifications.', promptTitle: 'Autoriser les notifications', promptBody: 'Recevez les nouvelles demandes de rendez-vous et leurs mises à jour.', later: 'Plus tard' };
   let installPrompt = null;
   let registration = null;
   const subscriptionStorageKey = config.subscriptionId ? `tayba-push:${config.subscriptionId}` : null;
@@ -44,6 +44,37 @@
     button.textContent = enabled ? labels.disable : labels.enable;
   });
 
+  const hideNotificationOnboarding = () => document.getElementById('pwa-notification-onboarding')?.remove();
+
+  const showNotificationOnboarding = () => {
+    if (!config.subscribeUrl || !config.vapidPublicKey || Notification.permission === 'denied') return;
+    if (subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1') return;
+    if (document.getElementById('pwa-notification-onboarding')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'pwa-notification-onboarding';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(15,23,42,.62)';
+    panel.innerHTML = `
+      <div style="width:min(100%,26rem);border-radius:1rem;background:#fff;padding:1.5rem;box-shadow:0 24px 60px rgba(15,23,42,.3);text-align:${config.locale === 'ar' ? 'right' : 'left'}" dir="${config.locale === 'ar' ? 'rtl' : 'ltr'}">
+        <div style="font-size:2rem;line-height:1" aria-hidden="true">🔔</div>
+        <h2 style="margin:.8rem 0 .4rem;color:#0f172a;font-size:1.25rem;font-weight:800">${labels.promptTitle}</h2>
+        <p style="margin:0;color:#475569;line-height:1.55">${labels.promptBody}</p>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem;flex-wrap:wrap">
+          <button type="button" data-notification-later style="border:1px solid #cbd5e1;border-radius:.7rem;background:#fff;color:#334155;padding:.7rem 1rem;font-weight:700;cursor:pointer">${labels.later}</button>
+          <button type="button" data-notification-allow style="border:0;border-radius:.7rem;background:#1e3a8a;color:#fff;padding:.7rem 1rem;font-weight:700;cursor:pointer">${labels.enable}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(panel);
+    panel.querySelector('[data-notification-later]').addEventListener('click', hideNotificationOnboarding);
+    panel.querySelector('[data-notification-allow]').addEventListener('click', event => {
+      hideNotificationOnboarding();
+      notificationButtons[0]?.click();
+      event.currentTarget.disabled = true;
+    });
+  };
+
   const initialise = async () => {
     if (!('serviceWorker' in navigator)) return;
     try {
@@ -51,7 +82,9 @@
       await navigator.serviceWorker.ready;
       if (config.subscribeUrl && config.vapidPublicKey && 'PushManager' in window) {
         const existing = await registration.pushManager.getSubscription();
-        updateNotificationButtons(Boolean(existing && subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1'));
+        const enabled = Boolean(existing && subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1');
+        updateNotificationButtons(enabled);
+        if (standalone && !enabled) window.setTimeout(showNotificationOnboarding, 500);
       }
     } catch (error) {
       console.error('PWA registration failed', error);
@@ -64,7 +97,10 @@
     if (!standalone) installButtons.forEach(button => { button.hidden = false; button.textContent = labels.install; });
   });
 
-  window.addEventListener('appinstalled', () => installButtons.forEach(button => { button.hidden = true; }));
+  window.addEventListener('appinstalled', () => {
+    installButtons.forEach(button => { button.hidden = true; });
+    window.setTimeout(showNotificationOnboarding, 300);
+  });
 
   if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
     installButtons.forEach(button => { button.hidden = false; button.textContent = labels.install; });

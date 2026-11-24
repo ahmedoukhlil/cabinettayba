@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tayba-pwa-v2';
+const CACHE_NAME = 'tayba-pwa-v3';
 const STATIC_ASSETS = [
   '/offline.html',
   '/icons/pwa-logo-192.png',
