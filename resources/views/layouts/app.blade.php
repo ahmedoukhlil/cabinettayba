@@ -25,7 +25,7 @@
     <script>
         window.PWA_CONFIG = @json($staffPwaConfig);
     </script>
-    <script src="{{ asset('js/pwa.js') }}" defer></script>
+    <script src="{{ asset('js/pwa.js') }}?v={{ filemtime(public_path('js/pwa.js')) }}" defer></script>
     <style>
         .pwa-actions{position:fixed;right:1rem;bottom:1rem;z-index:60;display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
         .pwa-action{border:0;border-radius:.75rem;background:#1e3a8a;color:#fff;padding:.7rem 1rem;font-weight:700;box-shadow:0 8px 20px rgba(15,23,42,.2);cursor:pointer}

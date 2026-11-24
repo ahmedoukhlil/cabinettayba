@@ -25,7 +25,7 @@
     <script>
         window.PWA_CONFIG = @json($publicPwaConfig);
     </script>
-    <script src="{{ asset('js/pwa.js') }}" defer></script>
+    <script src="{{ asset('js/pwa.js') }}?v={{ filemtime(public_path('js/pwa.js')) }}" defer></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900" style="font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif">
     @php
