@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="{{ asset('manifest-staff.webmanifest') }}">
-    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('icons/pwa-logo-48.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('icons/pwa-logo-192.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('pwa-icons/pwa-logo-48.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa-icons/pwa-logo-192.png') }}">
     <title>@yield('title', 'Cabinet Tayba')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
