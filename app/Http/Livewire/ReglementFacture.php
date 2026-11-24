@@ -11,7 +11,6 @@ use App\Models\RefTypePaiement;
 use Illuminate\Support\Facades\DB;
 use App\Models\Detailfacturepatient;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Cache;
 use App\Models\Facturepatient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -35,12 +34,8 @@ class ReglementFacture extends Component
     public $quantite = 1;
     public $seance;
     public $factureIdForActe = null;
-    public $actes = [];
-    public $searchActe = '';
-    public $filteredActes = [];
     public $acteSelectionne = false;
     public $showReglementModal = false;
-    protected $facturesEnAttente;
     protected $currentPage = 1;
     public $showMedecinModal = false;
     public $selectedMedecinId = null;
@@ -75,7 +70,6 @@ class ReglementFacture extends Component
     {
         $this->showMedecinModal = false;
         $this->modesPaiement = RefTypePaiement::all();
-        $this->actes = \App\Models\Acte::all();
         $this->seance = 'Dent';
         if ($selectedPatient) {
             if (is_object($selectedPatient)) {
@@ -84,7 +78,6 @@ class ReglementFacture extends Component
             $this->selectedPatient = $selectedPatient;
             $this->loadFactures();
         }
-        $this->loadFacturesEnAttente();
     }
 
     public function handlePatientSelected($patient)
@@ -263,13 +256,6 @@ class ReglementFacture extends Component
         }
     }
 
-    public function updatedSearchActe($value)
-    {
-        if (!$this->acteSelectionne) {
-            $this->filteredActes = \App\Models\Acte::where('Acte', 'like', '%' . $value . '%')->get();
-        }
-    }
-
     public function selectActe($id = null)
     {
         if (!$id) {
@@ -421,17 +407,6 @@ class ReglementFacture extends Component
         }
     }
 
-    public function loadFacturesEnAttente()
-    {
-        $this->facturesEnAttente = Cache::remember('factures_en_attente', 300, function() {
-            return Facture::with(['patient:id,ID,Nom,Prenom', 'medecin:idMedecin,Nom'])
-                ->where('estfacturer', 0)
-                ->select(['Idfacture', 'Nfacture', 'IDPatient', 'FkidMedecinInitiateur', 'DtFacture'])
-                ->orderBy('DtFacture', 'desc')
-                ->get();
-        });
-    }
-
     public function openMedecinModal()
     {
         $user = auth()->user();
@@ -526,8 +501,7 @@ class ReglementFacture extends Component
         return view('livewire.reglement-facture', [
             'isDocteur' => $isDocteur,
             'isDocteurProprietaire' => $isDocteurProprietaire,
-            'facturesEnAttente' => $this->facturesEnAttente,
             'factures' => $this->getFacturesProperty()
         ]);
     }
-} 
+}
