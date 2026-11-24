@@ -114,4 +114,41 @@ class AppointmentConfirmationTest extends TestCase
         ]);
         $this->assertNotNull($request->fresh()->appointment_id);
     }
+
+    public function test_pending_request_can_be_rescheduled_before_confirmation(): void
+    {
+        $user = new TUser();
+        $user->forceFill(['Iduser' => 7, 'IdClasseUser' => 3, 'fkidcabinet' => 1]);
+        $user->exists = true;
+        $this->actingAs($user);
+
+        $appointmentRequest = PublicAppointmentRequest::create([
+            'fkidcabinet' => 1,
+            'fkidmedecin' => 5,
+            'nom' => 'Patient Test',
+            'prenom' => '',
+            'telephone' => '22334455',
+            'date_souhaitee' => now()->addDay()->toDateString(),
+            'heure_souhaitee' => '09:00:00',
+            'status' => 'pending',
+            'reference' => 'TYB-RESCHEDULE-1',
+            'tracking_token_hash' => hash('sha256', 'token'),
+        ]);
+
+        $newDate = now()->next('Monday')->addWeek()->toDateString();
+
+        $this->post(route('appointment-requests.reschedule', $appointmentRequest), [
+            'date_souhaitee' => $newDate,
+            'heure_souhaitee' => '10:30',
+        ])->assertRedirect(route('appointment-requests.show', $appointmentRequest));
+
+        $this->assertDatabaseHas('public_appointment_requests', [
+            'id' => $appointmentRequest->getKey(),
+            'heure_souhaitee' => '10:30:00',
+            'status' => 'pending',
+        ]);
+        $rescheduledRequest = $appointmentRequest->fresh();
+        $this->assertSame($newDate, $rescheduledRequest->date_souhaitee->toDateString());
+        $this->assertNotNull($rescheduledRequest->slot_key);
+    }
 }

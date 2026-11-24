@@ -33,7 +33,7 @@
     <dl class="mt-8 grid gap-4 rounded-xl bg-slate-50 p-5 text-right sm:grid-cols-2">
         <div><dt class="text-xs font-semibold text-slate-500">رقم الطلب</dt><dd class="mt-1 font-bold text-slate-900" dir="ltr">{{ $appointmentRequest->reference }}</dd></div>
         <div><dt class="text-xs font-semibold text-slate-500">الفترة المطلوبة</dt><dd class="mt-1 text-slate-900">{{ $period }}</dd></div>
-        @if($appointmentRequest->status === 'confirmed')
+        @if($appointmentRequest->status !== 'rejected')
             <div><dt class="text-xs font-semibold text-slate-500">تاريخ الموعد</dt><dd class="mt-1 text-slate-900">{{ $appointmentRequest->date_souhaitee->format('d/m/Y') }} — {{ $requestedTime }}</dd></div>
             <div><dt class="text-xs font-semibold text-slate-500">الطبيب</dt><dd class="mt-1 text-slate-900">د. {{ optional($appointmentRequest->medecin)->Nom }}</dd></div>
         @endif

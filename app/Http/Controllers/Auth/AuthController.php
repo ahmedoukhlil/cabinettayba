@@ -37,7 +37,7 @@ class AuthController extends Controller
             // Authentification réussie
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
-            return redirect()->route('accueil.patient');
+            return redirect()->intended(route('accueil.patient'));
         }
 
         // Authentification échouée

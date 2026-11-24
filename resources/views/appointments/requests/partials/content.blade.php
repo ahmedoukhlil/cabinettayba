@@ -56,7 +56,7 @@
                             </td>
                             <td>
                                 <span class="font-medium text-gray-900">{{ trim($item->prenom . ' ' . $item->nom) }}</span>
-                                <span class="mt-1 block text-xs text-gray-400">{{ $item->reference }}</span>
+                                <a href="{{ route('appointment-requests.show', $item) }}" class="mt-1 block text-xs font-semibold text-primary hover:underline">{{ $item->reference }}</a>
                             </td>
                             <td class="whitespace-nowrap"><a href="tel:{{ $item->telephone }}" class="font-medium text-primary hover:underline">{{ $item->telephone }}</a></td>
                             <td>Dr {{ optional($item->medecin)->Nom ?: '—' }}</td>

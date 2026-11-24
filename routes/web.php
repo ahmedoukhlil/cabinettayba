@@ -91,15 +91,19 @@ Route::middleware(['auth'])->group(function () {
             return view('rendez-vous.create');
         })->name('rendez-vous.create');
 
-        Route::post('/demandes-rendez-vous/{appointmentRequest}/confirmer', [AppointmentRequestController::class, 'confirm'])
-            ->name('appointment-requests.confirm');
-        Route::post('/demandes-rendez-vous/{appointmentRequest}/refuser', [AppointmentRequestController::class, 'reject'])
-            ->name('appointment-requests.reject');
     });
 
     Route::middleware(['permission:rendez-vous.view'])->group(function () {
         Route::get('/demandes-rendez-vous', [AppointmentRequestController::class, 'index'])
             ->name('appointment-requests.index');
+        Route::get('/demandes-rendez-vous/{appointmentRequest}', [AppointmentRequestController::class, 'show'])
+            ->name('appointment-requests.show');
+        Route::post('/demandes-rendez-vous/{appointmentRequest}/confirmer', [AppointmentRequestController::class, 'confirm'])
+            ->name('appointment-requests.confirm');
+        Route::post('/demandes-rendez-vous/{appointmentRequest}/refuser', [AppointmentRequestController::class, 'reject'])
+            ->name('appointment-requests.reject');
+        Route::post('/demandes-rendez-vous/{appointmentRequest}/reprogrammer', [AppointmentRequestController::class, 'reschedule'])
+            ->name('appointment-requests.reschedule');
     });
 
     // Routes pour les patients (Secrétaire et Propriétaire)

@@ -29,7 +29,7 @@ class WebPushService
         $this->send($subscriptions, [
             'title' => 'Nouvelle demande de rendez-vous',
             'body' => 'Une nouvelle demande attend votre validation.',
-            'url' => route('appointment-requests.index', [], false),
+            'url' => route('appointment-requests.show', $appointmentRequest, false),
             'tag' => 'appointment-request-' . $appointmentRequest->getKey(),
             'dir' => 'ltr',
         ]);
@@ -48,6 +48,24 @@ class WebPushService
             'body' => $confirmed
                 ? 'تم تأكيد موعدك في عيادة طيبة. اضغط لعرض التفاصيل.'
                 : 'تعذر تأكيد الموعد المطلوب. اضغط لعرض التفاصيل.',
+            'tag' => 'patient-appointment-' . $appointmentRequest->getKey(),
+            'dir' => 'rtl',
+        ]);
+    }
+
+    public function notifyPatientRescheduled(PublicAppointmentRequest $appointmentRequest): void
+    {
+        $subscriptions = PushSubscriptionModel::where(
+            'public_appointment_request_id',
+            $appointmentRequest->getKey()
+        )->get();
+
+        $date = $appointmentRequest->date_souhaitee->format('d/m/Y');
+        $time = substr($appointmentRequest->heure_souhaitee, 0, 5);
+
+        $this->send($subscriptions, [
+            'title' => 'تمت إعادة جدولة موعدك',
+            'body' => "الموعد الجديد: {$date} - {$time}. اضغط لعرض التفاصيل.",
             'tag' => 'patient-appointment-' . $appointmentRequest->getKey(),
             'dir' => 'rtl',
         ]);
@@ -78,8 +96,8 @@ class WebPushService
 
             foreach ($subscriptions as $storedSubscription) {
                 $subscriptionPayload = $payload;
-                $subscriptionPayload['url'] = $storedSubscription->target_url
-                    ?: ($payload['url'] ?? '/');
+                $subscriptionPayload['url'] = $payload['url']
+                    ?? ($storedSubscription->target_url ?: '/');
 
                 $webPush->queueNotification(
                     Subscription::create([
