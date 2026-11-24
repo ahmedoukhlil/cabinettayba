@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Patient;
+use App\Models\PublicAppointmentRequest;
 use Illuminate\Support\Facades\Auth;
 
 class AccueilPatient extends Component
@@ -39,6 +40,7 @@ class AccueilPatient extends Component
     public $isSecretaire = false;
     public $canManageRdv = false;
     public $canViewAllRdv = false;
+    public $pendingAppointmentRequestsCount = 0;
     public $selectedPatient = null;
     public $editingPatient;
     public $patientToDelete;
@@ -59,6 +61,7 @@ class AccueilPatient extends Component
         }
 
         $this->initializeRoles();
+        $this->refreshPendingAppointmentRequestsCount();
 
         if (request()->has('patient_id')) {
             $patient = Patient::find(request()->patient_id);
@@ -78,6 +81,23 @@ class AccueilPatient extends Component
 
         $this->canManageRdv = $this->isDocteurProprietaire || $this->isSecretaire || $this->isDocteur;
         $this->canViewAllRdv = $this->isDocteurProprietaire || $this->isSecretaire;
+    }
+
+    public function refreshPendingAppointmentRequestsCount()
+    {
+        if (!Auth::check()) {
+            $this->pendingAppointmentRequestsCount = 0;
+            return;
+        }
+
+        $query = PublicAppointmentRequest::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->where('status', 'pending');
+
+        if ($this->isDocteur && !$this->isDocteurProprietaire) {
+            $query->where('fkidmedecin', Auth::user()->fkidmedecin);
+        }
+
+        $this->pendingAppointmentRequestsCount = $query->count();
     }
 
     public function handleOpenModal($modalName)
@@ -226,6 +246,7 @@ class AccueilPatient extends Component
 
     public function openAppointmentRequests()
     {
+        $this->refreshPendingAppointmentRequestsCount();
         $this->resetState();
         $this->showAppointmentRequests = true;
         $this->showPatientMenu = false;

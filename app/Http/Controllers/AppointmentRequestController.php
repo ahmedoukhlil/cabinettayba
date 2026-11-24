@@ -27,9 +27,15 @@ class AppointmentRequestController extends Controller
             $status = 'pending';
         }
 
-        $requests = PublicAppointmentRequest::with(['medecin', 'acte'])
+        $requestsQuery = PublicAppointmentRequest::with(['medecin', 'acte'])
             ->where('fkidcabinet', Auth::user()->fkidcabinet)
-            ->where('status', $status)
+            ->where('status', $status);
+
+        if ((int) Auth::user()->IdClasseUser === 2) {
+            $requestsQuery->where('fkidmedecin', Auth::user()->fkidmedecin);
+        }
+
+        $requests = $requestsQuery
             ->orderBy('date_souhaitee')
             ->orderBy('heure_souhaitee')
             ->paginate(20)
@@ -45,6 +51,7 @@ class AppointmentRequestController extends Controller
     public function show(PublicAppointmentRequest $appointmentRequest)
     {
         $this->ensureSameCabinet($appointmentRequest);
+        abort_unless($this->canView($appointmentRequest), 403);
         $appointmentRequest->load(['medecin', 'acte']);
         $canManage = $this->canManage($appointmentRequest);
 
@@ -282,6 +289,15 @@ class AppointmentRequestController extends Controller
     }
 
     private function canManage(PublicAppointmentRequest $appointmentRequest): bool
+    {
+        $user = Auth::user();
+
+        return in_array((int) $user->IdClasseUser, [1, 3], true)
+            || ((int) $user->IdClasseUser === 2
+                && (int) $user->fkidmedecin === (int) $appointmentRequest->fkidmedecin);
+    }
+
+    private function canView(PublicAppointmentRequest $appointmentRequest): bool
     {
         $user = Auth::user();
 

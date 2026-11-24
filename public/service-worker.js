@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tayba-pwa-v4';
+const CACHE_NAME = 'tayba-pwa-v5';
 const STATIC_ASSETS = [
   '/offline.html',
   '/pwa-icons/pwa-logo-192.png',
@@ -43,22 +43,35 @@ self.addEventListener('push', event => {
   let payload = {};
   try { payload = event.data ? event.data.json() : {}; } catch (_) {}
 
-  event.waitUntil(self.registration.showNotification(payload.title || 'Cabinet Tayba', {
-    body: payload.body || 'Vous avez une nouvelle notification.',
-    icon: '/pwa-icons/pwa-logo-192.png',
-    badge: '/pwa-icons/pwa-logo-192.png',
-    tag: payload.tag || 'tayba-notification',
-    dir: payload.dir || 'auto',
-    data: { url: payload.url || '/' },
-    vibrate: [150, 80, 150]
-  }));
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(payload.title || 'Cabinet Tayba', {
+      body: payload.body || 'Vous avez une nouvelle notification.',
+      icon: '/pwa-icons/pwa-logo-192.png',
+      badge: '/pwa-icons/pwa-logo-192.png',
+      tag: payload.tag || 'tayba-notification',
+      dir: payload.dir || 'auto',
+      data: { url: payload.url || '/' },
+      vibrate: [150, 80, 150]
+    }),
+    typeof self.registration.setAppBadge === 'function' && payload.badgeCount
+      ? self.registration.setAppBadge(payload.badgeCount)
+      : Promise.resolve()
+  ]));
 });
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const target = new URL(event.notification.data?.url || '/', self.location.origin).href;
-  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-    const existing = clients.find(client => client.url === target);
-    return existing ? existing.focus() : self.clients.openWindow(target);
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async clients => {
+    const exactClient = clients.find(client => client.url === target);
+    if (exactClient) return exactClient.focus();
+
+    const appClient = clients.find(client => new URL(client.url).origin === self.location.origin);
+    if (appClient && 'navigate' in appClient) {
+      await appClient.navigate(target);
+      return appClient.focus();
+    }
+
+    return self.clients.openWindow(target);
   }));
 });

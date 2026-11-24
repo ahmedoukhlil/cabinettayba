@@ -26,12 +26,16 @@ class WebPushService
             ->pluck('Iduser');
 
         $subscriptions = PushSubscriptionModel::whereIn('user_id', $userIds)->get();
+        $pendingCount = PublicAppointmentRequest::where('fkidcabinet', $appointmentRequest->fkidcabinet)
+            ->where('status', 'pending')
+            ->count();
         $this->send($subscriptions, [
             'title' => 'Nouvelle demande de rendez-vous',
             'body' => 'Une nouvelle demande attend votre validation.',
             'url' => route('appointment-requests.show', $appointmentRequest, false),
             'tag' => 'appointment-request-' . $appointmentRequest->getKey(),
             'dir' => 'ltr',
+            'badgeCount' => $pendingCount,
         ]);
     }
 

@@ -1,4 +1,4 @@
-<div class="mx-auto mt-4 w-full max-w-7xl px-3 sm:px-4 md:mt-8 md:px-6 lg:px-8">
+<div wire:poll.15s="refreshPendingAppointmentRequestsCount" class="mx-auto mt-4 w-full max-w-7xl px-3 sm:px-4 md:mt-8 md:px-6 lg:px-8">
     @php
         $patientData = is_array($selectedPatient) ? $selectedPatient : ($selectedPatient ? $selectedPatient->toArray() : []);
         $patientName = trim(($patientData['Prenom'] ?? '') . ' ' . ($patientData['NomPatient'] ?? $patientData['Nom'] ?? ''));
@@ -41,9 +41,14 @@
                 <i class="fas fa-cash-register" aria-hidden="true"></i> Caisse Paie
             </button>
 
-            @if($isDocteurProprietaire || $isSecretaire)
-                <button type="button" wire:click="openAppointmentRequests" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
+            @if($isDocteurProprietaire || $isSecretaire || $isDocteur)
+                <button type="button" wire:click="openAppointmentRequests" class="nav-button btn-secondary relative min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
                     <i class="fas fa-calendar-check" aria-hidden="true"></i> Demandes en ligne
+                    @if($pendingAppointmentRequestsCount > 0)
+                        <span class="absolute -right-2 -top-2 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-extrabold text-white shadow ring-2 ring-white" aria-label="{{ $pendingAppointmentRequestsCount }} demandes en attente">
+                            {{ $pendingAppointmentRequestsCount > 99 ? '99+' : $pendingAppointmentRequestsCount }}
+                        </span>
+                    @endif
                 </button>
             @endif
 
