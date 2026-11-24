@@ -164,3 +164,22 @@ git push origin instance/nom-du-cabinet
 ## Support
 
 Pour toute question ou problème, veuillez contacter l'administrateur système.
+
+## PWA et notifications de rendez-vous
+
+L’agenda du personnel et la réservation patient sont installables comme applications Web. Les notifications Web Push préviennent le personnel d’une nouvelle demande et le patient lorsque sa demande est confirmée ou refusée.
+
+Après le déploiement :
+
+```bash
+php artisan migrate
+php artisan pwa:vapid-keys
+```
+
+Copier les trois valeurs affichées par la seconde commande dans le fichier `.env`, puis vider le cache de configuration :
+
+```bash
+php artisan config:clear
+```
+
+La PWA et les notifications nécessitent HTTPS en production. Chaque utilisateur doit ensuite appuyer une fois sur « Activer les notifications » et accepter l’autorisation du navigateur. Les patients activent les notifications depuis leur page privée de suivi de demande.

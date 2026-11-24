@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use App\Models\PublicAppointmentRequest;
 use App\Models\Rendezvou;
+use App\Services\WebPushService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,13 @@ use Illuminate\Support\Facades\DB;
 
 class AppointmentRequestController extends Controller
 {
+    private WebPushService $webPush;
+
+    public function __construct(WebPushService $webPush)
+    {
+        $this->webPush = $webPush;
+    }
+
     public function index(Request $request)
     {
         $status = $request->get('status', 'pending');
@@ -62,12 +70,22 @@ class AppointmentRequestController extends Controller
                     throw new \RuntimeException('Le créneau est déjà occupé dans le planning.');
                 }
 
-                $patient = Patient::where('fkidcabinet', $request->fkidcabinet)
-                    ->where(function ($query) use ($request) {
-                        $query->where('Telephone1', $request->telephone)
-                            ->orWhere('Telephone2', $request->telephone);
-                    })
-                    ->first();
+                $patient = null;
+
+                if ($request->patient_id) {
+                    $patient = Patient::where('fkidcabinet', $request->fkidcabinet)
+                        ->whereKey($request->patient_id)
+                        ->first();
+                }
+
+                if (!$patient) {
+                    $patient = Patient::where('fkidcabinet', $request->fkidcabinet)
+                        ->where(function ($query) use ($request) {
+                            $query->where('Telephone1', $request->telephone)
+                                ->orWhere('Telephone2', $request->telephone);
+                        })
+                        ->first();
+                }
 
                 if (!$patient) {
                     $nextPatientNumber = (Patient::where('fkidcabinet', $request->fkidcabinet)
@@ -99,6 +117,7 @@ class AppointmentRequestController extends Controller
                     'HeureRdv' => $dateTime,
                     'ActePrevu' => optional($request->acte)->Acte ?? 'Consultation',
                     'rdvConfirmer' => 'confirmé',
+                    'HeureConfRDV' => now(),
                     'DtAjRdv' => now(),
                     'user' => (string) Auth::id(),
                     'fkidcabinet' => $request->fkidcabinet,
@@ -116,6 +135,9 @@ class AppointmentRequestController extends Controller
         } catch (\RuntimeException $exception) {
             return back()->with('error', $exception->getMessage());
         }
+
+        $appointmentRequest->refresh();
+        $this->webPush->notifyPatientStatus($appointmentRequest);
 
         return back()->with('message', 'La demande a été confirmée et ajoutée au planning.');
     }
@@ -136,6 +158,9 @@ class AppointmentRequestController extends Controller
         if (!$updated) {
             return back()->with('error', 'Cette demande a déjà été traitée.');
         }
+
+        $appointmentRequest->refresh();
+        $this->webPush->notifyPatientStatus($appointmentRequest);
 
         return back()->with('message', 'La demande a été refusée et le créneau a été libéré.');
     }

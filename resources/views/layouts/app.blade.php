@@ -4,10 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="{{ asset('manifest-staff.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/pwa-192.png') }}">
     <title>@yield('title', 'Cabinet Tayba')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="{{ asset('js/app.js') }}?v={{ filemtime(public_path('js/app.js')) }}" defer></script>
+    <script>
+        window.PWA_CONFIG = @json([
+            'locale' => 'fr',
+            'vapidPublicKey' => config('webpush.vapid.public_key'),
+            'subscribeUrl' => auth()->check() ? route('pwa.notifications.store') : null,
+            'subscriptionId' => auth()->check() ? 'staff:' . auth()->id() : null,
+        ]);
+    </script>
+    <script src="{{ asset('js/pwa.js') }}" defer></script>
+    <style>
+        .pwa-actions{position:fixed;right:1rem;bottom:1rem;z-index:60;display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
+        .pwa-action{border:0;border-radius:.75rem;background:#1e3a8a;color:#fff;padding:.7rem 1rem;font-weight:700;box-shadow:0 8px 20px rgba(15,23,42,.2);cursor:pointer}
+        .pwa-action[data-enabled="true"]{background:#475569}.pwa-action:disabled{opacity:.6;cursor:wait}
+    </style>
     @livewireStyles
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-900 antialiased">
@@ -89,6 +108,13 @@
     </main>
 
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="pwa-actions" aria-label="Application mobile">
+        <button type="button" class="pwa-action" data-pwa-install hidden>Installer l’application</button>
+        @auth
+            <button type="button" class="pwa-action" data-pwa-notifications hidden>Activer les notifications</button>
+        @endauth
+    </div>
 
     @livewireScripts
 

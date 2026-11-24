@@ -7,6 +7,11 @@
 @section('header_subtitle', 'حجز موعد عبر الإنترنت')
 @section('professional_label', 'فضاء العيادة')
 @section('privacy_text', 'تُستخدم معلوماتكم فقط لمعالجة طلب الموعد.')
+@section('pwa_subscribe_url', route('public.appointment.notifications.store', [
+    'reference' => $appointmentRequest->reference,
+    'token' => request()->route('token'),
+]))
+@section('pwa_subscription_id', 'appointment:' . $appointmentRequest->getKey())
 
 @section('content')
 <div class="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl ring-1 ring-slate-200 sm:p-10" style="font-family: Tahoma, Arial, sans-serif">
@@ -35,6 +40,7 @@
     </dl>
 
     <p class="mt-6 text-sm text-slate-500">احتفظ برقم الطلب لمتابعة الحجز.</p>
+    <p class="mt-2 text-sm text-slate-500">فعّل الإشعارات لتصلك نتيجة التأكيد حتى عند إغلاق التطبيق.</p>
     <a href="{{ route('public.appointment.create') }}" class="mt-6 inline-flex rounded-lg bg-[#1e3a8a] px-5 py-3 font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">إرسال طلب جديد</a>
 </div>
 @endsection

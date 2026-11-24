@@ -1,0 +1,20 @@
+{
+  "id": "/cabinet-pwa",
+  "name": "Cabinet Tayba - Agenda",
+  "short_name": "Tayba Agenda",
+  "description": "Agenda et confirmation des rendez-vous du Cabinet Tayba",
+  "lang": "fr",
+  "start_url": "/accueil-patient?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    { "src": "/icons/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Agenda", "short_name": "Agenda", "url": "/rendez-vous", "icons": [{ "src": "/icons/pwa-192.png", "sizes": "192x192" }] },
+    { "name": "Demandes en ligne", "short_name": "Demandes", "url": "/demandes-rendez-vous", "icons": [{ "src": "/icons/pwa-192.png", "sizes": "192x192" }] }
+  ]
+}

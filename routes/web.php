@@ -13,6 +13,7 @@ use App\Http\Livewire\StatistiquesManager;
 use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\AppointmentRequestController;
 use App\Http\Controllers\PublicAppointmentController;
+use App\Http\Controllers\PushSubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,9 @@ Route::get('/reservation', [PublicAppointmentController::class, 'create'])
 Route::get('/reservation/creneaux', [PublicAppointmentController::class, 'availability'])
     ->middleware('throttle:60,1')
     ->name('public.appointment.availability');
+Route::post('/reservation/patient', [PublicAppointmentController::class, 'lookupPatient'])
+    ->middleware('throttle:10,1')
+    ->name('public.appointment.patient.lookup');
 Route::post('/reservation', [PublicAppointmentController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('public.appointment.store');
@@ -38,6 +42,14 @@ Route::get('/reservation-suivi/{reference}/{token}', [PublicAppointmentControlle
     ->middleware('throttle:60,1')
     ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])
     ->name('public.appointment.show');
+Route::post('/reservation-suivi/{reference}/{token}/notifications', [PushSubscriptionController::class, 'storeForAppointment'])
+    ->middleware('throttle:10,1')
+    ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])
+    ->name('public.appointment.notifications.store');
+Route::delete('/reservation-suivi/{reference}/{token}/notifications', [PushSubscriptionController::class, 'destroyForAppointment'])
+    ->middleware('throttle:10,1')
+    ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])
+    ->name('public.appointment.notifications.destroy');
 
 // Authentification
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -46,6 +58,11 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 // Routes protégées par l'authentification
 Route::middleware(['auth'])->group(function () {
+    Route::post('/pwa/notifications', [PushSubscriptionController::class, 'storeForUser'])
+        ->name('pwa.notifications.store');
+    Route::delete('/pwa/notifications', [PushSubscriptionController::class, 'destroyForUser'])
+        ->name('pwa.notifications.destroy');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/accueil', function () {

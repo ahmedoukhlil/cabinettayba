@@ -38,10 +38,8 @@ class Handler extends ExceptionHandler
             //
         });
 
-        if (!config('app.debug')) {
-            $this->renderable(function (\Throwable $e) {
-                return response()->view('errors.500', [], 500);
-            });
-        }
+        // Laisser Laravel préserver le code HTTP réel (404, 403, 422, 500...)
+        // et utiliser ses pages d'erreur de secours lorsqu'aucune vue dédiée
+        // n'est disponible.
     }
 }

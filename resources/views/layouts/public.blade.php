@@ -3,10 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="@yield('robots', 'index,follow')">
     <meta name="referrer" content="strict-origin">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="{{ asset('manifest-patient.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/pwa-192.png') }}">
     <title>@yield('title', 'Réservation') - Cabinet Tayba</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.PWA_CONFIG = @json([
+            'locale' => trim($__env->yieldContent('lang', 'fr')),
+            'vapidPublicKey' => config('webpush.vapid.public_key'),
+            'subscribeUrl' => trim($__env->yieldContent('pwa_subscribe_url')) ?: null,
+            'subscriptionId' => trim($__env->yieldContent('pwa_subscription_id')) ?: null,
+        ]);
+    </script>
+    <script src="{{ asset('js/pwa.js') }}" defer></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900" style="font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif">
     @php
@@ -44,6 +59,12 @@
             © {{ date('Y') }} {{ $publicCabinetName }} — @yield('privacy_text', 'Vos informations sont utilisées uniquement pour traiter votre demande.')
         </div>
     </footer>
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2" aria-label="تطبيق الهاتف">
+        <button type="button" data-pwa-install hidden class="rounded-xl bg-[#1e3a8a] px-4 py-3 font-semibold text-white shadow-lg">تثبيت التطبيق</button>
+        @hasSection('pwa_subscribe_url')
+            <button type="button" data-pwa-notifications hidden class="rounded-xl bg-[#1e3a8a] px-4 py-3 font-semibold text-white shadow-lg">تفعيل الإشعارات</button>
+        @endif
+    </div>
     @stack('scripts')
 </body>
 </html>
