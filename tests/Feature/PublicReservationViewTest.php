@@ -43,6 +43,7 @@ class PublicReservationViewTest extends TestCase
             ->assertOk()
             ->assertSee('window.PWA_CONFIG', false)
             ->assertSee('manifest-patient.webmanifest', false)
+            ->assertSee('icons/pwa-logo-48.png', false)
             ->assertSee('د. Dr Test', false)
             ->assertDontSee("idMedecin)&gt;", false);
     }
