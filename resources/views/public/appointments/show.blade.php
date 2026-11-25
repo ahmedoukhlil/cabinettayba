@@ -21,6 +21,8 @@
         $states = [
             'pending' => ['label' => 'في انتظار التأكيد', 'title' => 'تم تسجيل طلبك', 'class' => 'bg-amber-100 text-amber-900', 'text' => 'ستراجع العيادة طلبك وتتصل بك لتأكيد الموعد.'],
             'confirmed' => ['label' => 'تم تأكيد الموعد', 'title' => 'موعدك مؤكد', 'class' => 'bg-green-100 text-green-900', 'text' => 'تمت إضافة موعدك إلى برنامج العيادة.'],
+            'arrived' => ['label' => 'تم تسجيل الوصول', 'title' => 'أنت في طابور العيادة', 'class' => 'bg-blue-100 text-blue-900', 'text' => 'تابع عدد المرضى أمامك، وسيتم إشعارك عند اقتراب دورك.'],
+            'in_consultation' => ['label' => 'حان دورك', 'title' => 'الطبيب بانتظارك', 'class' => 'bg-green-100 text-green-900', 'text' => 'يرجى التوجه إلى غرفة الطبيب.'],
             'rejected' => ['label' => 'تعذر تأكيد الموعد', 'title' => 'تعذر تأكيد طلبك', 'class' => 'bg-red-100 text-red-900', 'text' => 'يمكنك إرسال طلب جديد أو الاتصال بالعيادة.'],
         ];
         $state = $states[$appointmentRequest->status] ?? $states['pending'];
@@ -36,7 +38,12 @@
         <span class="inline-flex rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">انتهت صلاحية الرابط</span>
         <h1 class="mt-6 text-3xl font-bold text-slate-900">اطلب موعداً جديداً</h1>
         <p class="mt-3 text-slate-600">
-            {{ $queueState['cancelled'] ? 'تم إلغاء هذا الموعد.' : 'انتهى وقت هذا الموعد ولم تعد تفاصيله متاحة عبر هذا الرابط.' }}
+            {{ match($queueState['closed_status']) {
+                'cancelled' => 'تم إلغاء هذا الموعد.',
+                'completed' => 'تم إنهاء هذا الموعد بنجاح.',
+                'no_show' => 'تم تسجيل عدم الحضور لهذا الموعد.',
+                default => 'انتهى وقت هذا الموعد ولم تعد تفاصيله متاحة عبر هذا الرابط.',
+            } }}
         </p>
         <div class="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-5 text-blue-950">
             للحجز أو المتابعة، يرجى إرسال طلب موعد جديد.
@@ -47,7 +54,7 @@
     <h1 class="mt-6 text-3xl font-bold text-slate-900">{{ $state['title'] }}</h1>
     <p class="mt-3 text-slate-600">{{ $state['text'] }}</p>
 
-    @if($appointmentRequest->status === 'confirmed')
+    @if(in_array($appointmentRequest->status, ['confirmed', 'arrived', 'in_consultation'], true))
         <section class="mt-8 grid gap-4 sm:grid-cols-2" aria-label="معلومات الدور">
             <div class="rounded-2xl bg-[#1e3a8a] p-6 text-white">
                 <p class="text-sm text-blue-100">رقم موعدك</p>

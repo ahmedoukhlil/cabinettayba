@@ -240,6 +240,7 @@ class PublicAppointmentController extends Controller
             'status' => $appointmentRequest->status,
             'expired' => $state['expired'],
             'cancelled' => $state['cancelled'],
+            'closedStatus' => $state['closed_status'],
             'appointmentNumber' => $state['appointment_number'],
             'peopleAhead' => $state['people_ahead'],
             'newRequestUrl' => route('public.appointment.create'),

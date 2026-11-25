@@ -111,6 +111,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('appointment-requests.reject');
         Route::post('/demandes-rendez-vous/{appointmentRequest}/annuler', [AppointmentRequestController::class, 'cancel'])
             ->name('appointment-requests.cancel');
+        Route::post('/demandes-rendez-vous/{appointmentRequest}/file', [AppointmentRequestController::class, 'updateQueueStatus'])
+            ->name('appointment-requests.queue-status');
         Route::post('/demandes-rendez-vous/{appointmentRequest}/reprogrammer', [AppointmentRequestController::class, 'reschedule'])
             ->name('appointment-requests.reschedule');
     });

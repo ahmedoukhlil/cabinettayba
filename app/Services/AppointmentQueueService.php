@@ -14,11 +14,14 @@ class AppointmentQueueService
             ? $request->appointment
             : $request->appointment()->first();
 
-        if ($request->status === 'cancelled') {
-            return $this->emptyState(true);
+        if (in_array($request->status, ['cancelled', 'completed', 'no_show'], true)) {
+            return $this->emptyState(
+                $request->status === 'cancelled',
+                $request->status
+            );
         }
 
-        if ($request->status !== 'confirmed' || !$appointment) {
+        if (!in_array($request->status, ['confirmed', 'arrived', 'in_consultation'], true) || !$appointment) {
             return $this->emptyState();
         }
 
@@ -33,6 +36,7 @@ class AppointmentQueueService
             'confirmed' => true,
             'expired' => $expired,
             'cancelled' => $cancelled,
+            'closed_status' => $cancelled ? 'cancelled' : null,
             'appointment_number' => (int) ($appointment->OrdreRDV ?: $appointment->IDRdv),
             'people_ahead' => $expired ? 0 : $this->peopleAhead($appointment, $appointmentAt),
             'appointment_at' => $appointmentAt,
@@ -42,7 +46,7 @@ class AppointmentQueueService
 
     private function peopleAhead(Rendezvou $appointment, Carbon $appointmentAt): int
     {
-        $query = Rendezvou::where('fkidcabinet', $appointment->fkidcabinet)
+        $appointmentsAhead = Rendezvou::where('fkidcabinet', $appointment->fkidcabinet)
             ->where('fkidMedecin', $appointment->fkidMedecin)
             ->whereDate('dtPrevuRDV', $appointmentAt->toDateString())
             ->where('IDRdv', '!=', $appointment->IDRdv)
@@ -52,24 +56,44 @@ class AppointmentQueueService
             });
 
         if ($appointment->OrdreRDV) {
-            $query->where('OrdreRDV', '<', $appointment->OrdreRDV);
+            $appointmentsAhead->where('OrdreRDV', '<', $appointment->OrdreRDV);
         } else {
-            $query->where('HeureRdv', '<', $appointmentAt);
+            $appointmentsAhead->where('HeureRdv', '<', $appointmentAt);
         }
 
-        if ($appointmentAt->isToday()) {
-            $query->where('HeureRdv', '>=', now());
-        }
+        $appointmentsAhead = $appointmentsAhead->get(['IDRdv', 'HeureRdv']);
+        $workflowStatuses = PublicAppointmentRequest::whereIn(
+            'appointment_id',
+            $appointmentsAhead->pluck('IDRdv')
+        )->pluck('status', 'appointment_id');
+        $activeStatuses = ['confirmed', 'arrived', 'in_consultation'];
+        $terminalStatuses = ['completed', 'no_show', 'cancelled', 'rejected'];
 
-        return $query->count();
+        return $appointmentsAhead->filter(function ($item) use (
+            $workflowStatuses,
+            $activeStatuses,
+            $terminalStatuses,
+            $appointmentAt
+        ) {
+            $status = $workflowStatuses->get($item->IDRdv);
+            if (in_array($status, $terminalStatuses, true)) {
+                return false;
+            }
+            if (in_array($status, $activeStatuses, true)) {
+                return true;
+            }
+
+            return !$appointmentAt->isToday() || Carbon::parse($item->HeureRdv)->greaterThanOrEqualTo(now());
+        })->count();
     }
 
-    private function emptyState(bool $cancelled = false): array
+    private function emptyState(bool $cancelled = false, ?string $closedStatus = null): array
     {
         return [
             'confirmed' => false,
-            'expired' => $cancelled,
+            'expired' => $closedStatus !== null,
             'cancelled' => $cancelled,
+            'closed_status' => $closedStatus,
             'appointment_number' => null,
             'people_ahead' => null,
             'appointment_at' => null,

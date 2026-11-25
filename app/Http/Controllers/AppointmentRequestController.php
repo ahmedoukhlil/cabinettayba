@@ -23,13 +23,18 @@ class AppointmentRequestController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status', 'pending');
-        if (!in_array($status, ['pending', 'confirmed', 'rejected', 'cancelled'], true)) {
+        if (!in_array($status, ['pending', 'confirmed', 'completed', 'no_show', 'rejected', 'cancelled'], true)) {
             $status = 'pending';
         }
 
         $requestsQuery = PublicAppointmentRequest::with(['medecin', 'acte'])
-            ->where('fkidcabinet', Auth::user()->fkidcabinet)
-            ->where('status', $status);
+            ->where('fkidcabinet', Auth::user()->fkidcabinet);
+
+        if ($status === 'confirmed') {
+            $requestsQuery->whereIn('status', ['confirmed', 'arrived', 'in_consultation']);
+        } else {
+            $requestsQuery->where('status', $status);
+        }
 
         if ((int) Auth::user()->IdClasseUser === 2) {
             $requestsQuery->where('fkidmedecin', Auth::user()->fkidmedecin);
@@ -194,8 +199,8 @@ class AppointmentRequestController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if ($request->status !== 'confirmed') {
-                    throw new \RuntimeException('Seul un rendez-vous confirmé peut être annulé.');
+                if (!in_array($request->status, ['confirmed', 'arrived'], true)) {
+                    throw new \RuntimeException('Ce rendez-vous ne peut plus être annulé à cette étape.');
                 }
 
                 $rendezVous = Rendezvou::where('fkidcabinet', $request->fkidcabinet)
@@ -223,6 +228,64 @@ class AppointmentRequestController extends Controller
         $this->webPush->notifyPatientCancelled($appointmentRequest);
 
         return back()->with('message', 'Le rendez-vous a été annulé, le créneau libéré et le patient notifié.');
+    }
+
+    public function updateQueueStatus(Request $request, PublicAppointmentRequest $appointmentRequest)
+    {
+        $this->ensureSameCabinet($appointmentRequest);
+        abort_unless($this->canManage($appointmentRequest), 403);
+        $validated = $request->validate([
+            'queue_status' => ['required', 'in:arrived,in_consultation,completed,no_show'],
+        ]);
+
+        $transitions = [
+            'confirmed' => ['arrived', 'in_consultation', 'no_show'],
+            'arrived' => ['in_consultation', 'no_show'],
+            'in_consultation' => ['completed'],
+        ];
+
+        try {
+            DB::transaction(function () use ($appointmentRequest, $validated, $transitions) {
+                $trackedRequest = PublicAppointmentRequest::whereKey($appointmentRequest->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (!in_array($validated['queue_status'], $transitions[$trackedRequest->status] ?? [], true)) {
+                    throw new \RuntimeException('Cette progression n’est pas autorisée depuis l’état actuel.');
+                }
+
+                $rendezVousExists = Rendezvou::where('fkidcabinet', $trackedRequest->fkidcabinet)
+                    ->whereKey($trackedRequest->appointment_id)
+                    ->exists();
+                if (!$rendezVousExists) {
+                    throw new \RuntimeException('Le rendez-vous lié est introuvable dans l’agenda.');
+                }
+
+                $trackedRequest->update([
+                    'status' => $validated['queue_status'],
+                    'slot_key' => in_array($validated['queue_status'], ['completed', 'no_show'], true)
+                        ? null
+                        : $trackedRequest->slot_key,
+                ]);
+            });
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        $appointmentRequest->refresh();
+        $this->webPush->notifyPatientWorkflowStatus($appointmentRequest);
+        if (in_array($appointmentRequest->status, ['completed', 'no_show'], true)) {
+            $this->webPush->notifyPatientsAfterQueueAdvanced($appointmentRequest);
+        }
+
+        $messages = [
+            'arrived' => 'Le patient a été marqué comme arrivé.',
+            'in_consultation' => 'Le patient a été appelé en consultation.',
+            'completed' => 'Le rendez-vous a été terminé. La file va avancer.',
+            'no_show' => 'Le patient a été marqué absent. La file va avancer.',
+        ];
+
+        return back()->with('message', $messages[$validated['queue_status']]);
     }
 
     public function reschedule(Request $request, PublicAppointmentRequest $appointmentRequest)
@@ -270,7 +333,7 @@ class AppointmentRequestController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if (!in_array($appointment->status, ['pending', 'confirmed'], true)) {
+                if (!in_array($appointment->status, ['pending', 'confirmed', 'arrived'], true)) {
                     throw new \RuntimeException('Cette demande ne peut plus être reprogrammée.');
                 }
 

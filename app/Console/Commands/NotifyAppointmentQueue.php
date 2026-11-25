@@ -18,7 +18,7 @@ class NotifyAppointmentQueue extends Command
     public function handle(AppointmentQueueService $queue, WebPushService $webPush): int
     {
         PublicAppointmentRequest::with('appointment')
-            ->where('status', 'confirmed')
+            ->whereIn('status', ['confirmed', 'arrived', 'in_consultation'])
             ->whereNotNull('appointment_id')
             ->whereHas('appointment', function ($query) {
                 $query->whereDate('dtPrevuRDV', '>=', now()->toDateString());

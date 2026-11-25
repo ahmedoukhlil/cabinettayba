@@ -6,6 +6,7 @@ use App\Models\PublicAppointmentRequest;
 use App\Models\PushSubscription as PushSubscriptionModel;
 use App\Models\TUser;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
@@ -96,6 +97,60 @@ class WebPushService
             'tag' => 'patient-appointment-' . $appointmentRequest->getKey(),
             'dir' => 'rtl',
         ]);
+    }
+
+    public function notifyPatientWorkflowStatus(PublicAppointmentRequest $appointmentRequest): void
+    {
+        $subscriptions = PushSubscriptionModel::where(
+            'public_appointment_request_id',
+            $appointmentRequest->getKey()
+        )->get();
+        $messages = [
+            'arrived' => ['تم تسجيل وصولك', 'أنت الآن ضمن طابور العيادة. تابع عدد المرضى أمامك.'],
+            'in_consultation' => ['حان دورك', 'يرجى التوجه إلى غرفة الطبيب.'],
+            'completed' => ['تم إنهاء الموعد', 'نتمنى لك الشفاء. يمكنك طلب موعد جديد عند الحاجة.'],
+            'no_show' => ['تم تسجيل غيابك', 'يمكنك الضغط هنا لإرسال طلب موعد جديد.'],
+        ];
+        [$title, $body] = $messages[$appointmentRequest->status]
+            ?? ['تحديث الموعد', 'تم تحديث حالة موعدك.'];
+
+        $this->send($subscriptions, [
+            'title' => $title,
+            'body' => $body,
+            'tag' => 'patient-workflow-' . $appointmentRequest->getKey(),
+            'dir' => 'rtl',
+        ]);
+
+        if (in_array($appointmentRequest->status, ['completed', 'no_show'], true)) {
+            PushSubscriptionModel::where(
+                'public_appointment_request_id',
+                $appointmentRequest->getKey()
+            )->delete();
+        }
+    }
+
+    public function notifyPatientsAfterQueueAdvanced(PublicAppointmentRequest $completedRequest): void
+    {
+        PublicAppointmentRequest::with('appointment')
+            ->where('fkidcabinet', $completedRequest->fkidcabinet)
+            ->where('fkidmedecin', $completedRequest->fkidmedecin)
+            ->whereDate('date_souhaitee', $completedRequest->date_souhaitee)
+            ->whereIn('status', ['confirmed', 'arrived', 'in_consultation'])
+            ->where($completedRequest->getKeyName(), '!=', $completedRequest->getKey())
+            ->get()
+            ->each(function (PublicAppointmentRequest $appointmentRequest) {
+                $state = $this->queue->state($appointmentRequest);
+                if ($state['people_ahead'] === null) {
+                    return;
+                }
+
+                $this->notifyPatientQueue($appointmentRequest, (int) $state['people_ahead']);
+                Cache::put(
+                    'appointment-queue:' . $appointmentRequest->getKey(),
+                    (int) $state['people_ahead'],
+                    $state['expires_at']
+                );
+            });
     }
 
     public function notifyPatientRescheduled(PublicAppointmentRequest $appointmentRequest): void

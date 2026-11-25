@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Patient;
 use App\Models\PublicAppointmentRequest;
 use App\Models\TUser;
+use App\Services\AppointmentQueueService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -201,6 +202,36 @@ class AppointmentConfirmationTest extends TestCase
         ]);
     }
 
+    public function test_staff_can_advance_the_real_queue_without_changing_desktop_status(): void
+    {
+        $user = $this->staffUser();
+        $this->actingAs($user);
+        $first = $this->pendingRequest($this->patient(), 'TYB-QUEUE-FIRST', '09:00:00');
+        $second = $this->pendingRequest($this->patient(), 'TYB-QUEUE-SECOND', '09:30:00');
+        $this->post(route('appointment-requests.confirm', $first))->assertRedirect();
+        $this->post(route('appointment-requests.confirm', $second))->assertRedirect();
+        $first->refresh();
+        $second->refresh();
+
+        $queue = app(AppointmentQueueService::class);
+        $this->assertSame(1, $queue->state($second->load('appointment'))['people_ahead']);
+
+        foreach (['arrived', 'in_consultation', 'completed'] as $status) {
+            $this->post(route('appointment-requests.queue-status', $first), [
+                'queue_status' => $status,
+            ])->assertRedirect();
+            $first->refresh();
+            $this->assertSame($status, $first->status);
+        }
+
+        $second->unsetRelation('appointment');
+        $this->assertSame(0, $queue->state($second->load('appointment'))['people_ahead']);
+        $this->assertDatabaseHas('rendezvous', [
+            'IDRdv' => $first->appointment_id,
+            'rdvConfirmer' => 'confirmé',
+        ]);
+    }
+
     private function staffUser(): TUser
     {
         $user = new TUser();
@@ -220,7 +251,11 @@ class AppointmentConfirmationTest extends TestCase
         ]);
     }
 
-    private function pendingRequest(Patient $patient, string $reference): PublicAppointmentRequest
+    private function pendingRequest(
+        Patient $patient,
+        string $reference,
+        string $time = '09:00:00'
+    ): PublicAppointmentRequest
     {
         return PublicAppointmentRequest::create([
             'fkidcabinet' => 1,
@@ -229,7 +264,7 @@ class AppointmentConfirmationTest extends TestCase
             'prenom' => '',
             'telephone' => '22334455',
             'date_souhaitee' => now()->addDay()->toDateString(),
-            'heure_souhaitee' => '09:00:00',
+            'heure_souhaitee' => $time,
             'status' => 'pending',
             'reference' => $reference,
             'tracking_token_hash' => hash('sha256', 'token'),

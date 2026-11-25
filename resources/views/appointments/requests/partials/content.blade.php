@@ -25,7 +25,7 @@
     @endif
 
     <nav class="flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2" aria-label="Filtrer les demandes">
-        @foreach(['pending' => ['En attente', 'fa-clock'], 'confirmed' => ['Confirmées', 'fa-check-circle'], 'rejected' => ['Refusées', 'fa-times-circle'], 'cancelled' => ['Annulées', 'fa-calendar-times']] as $value => [$label, $icon])
+        @foreach(['pending' => ['En attente', 'fa-clock'], 'confirmed' => ['File active', 'fa-users'], 'completed' => ['Terminées', 'fa-check-double'], 'no_show' => ['Absents', 'fa-user-times'], 'rejected' => ['Refusées', 'fa-times-circle'], 'cancelled' => ['Annulées', 'fa-calendar-times']] as $value => [$label, $icon])
             <a href="{{ route('appointment-requests.index', ['status' => $value] + ($embedded ? ['embedded' => 1] : [])) }}"
                class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ $status === $value ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:bg-primary-light hover:text-primary' }}">
                 <i class="fas {{ $icon }}" aria-hidden="true"></i>{{ $label }}
@@ -77,8 +77,22 @@
                                         </form>
                                     </div>
                                 @else
-                                    <a href="{{ route('appointment-requests.show', $item) }}" class="badge {{ $item->status === 'confirmed' ? 'badge-success' : ($item->status === 'cancelled' ? 'bg-gray-200 text-gray-700' : 'badge-error') }} hover:underline">
-                                        {{ ['confirmed' => 'Confirmée', 'rejected' => 'Refusée', 'cancelled' => 'Annulée'][$item->status] ?? $item->status }}
+                                    @php
+                                        $itemStatusLabels = [
+                                            'confirmed' => 'Confirmée', 'arrived' => 'Arrivé',
+                                            'in_consultation' => 'En consultation', 'completed' => 'Terminée',
+                                            'no_show' => 'Absent', 'rejected' => 'Refusée', 'cancelled' => 'Annulée',
+                                        ];
+                                        $itemStatusClasses = [
+                                            'confirmed' => 'badge-success', 'arrived' => 'bg-blue-100 text-blue-800',
+                                            'in_consultation' => 'bg-purple-100 text-purple-800',
+                                            'completed' => 'bg-slate-200 text-slate-800',
+                                            'no_show' => 'bg-orange-100 text-orange-800',
+                                            'rejected' => 'badge-error', 'cancelled' => 'bg-gray-200 text-gray-700',
+                                        ];
+                                    @endphp
+                                    <a href="{{ route('appointment-requests.show', $item) }}" class="badge {{ $itemStatusClasses[$item->status] ?? 'bg-gray-100 text-gray-700' }} hover:underline">
+                                        {{ $itemStatusLabels[$item->status] ?? $item->status }}
                                     </a>
                                 @endif
                             </td>
