@@ -5,6 +5,7 @@
     : { install: 'Installer l’application', enable: 'Activer les notifications', disable: 'Désactiver les notifications', enabled: 'Notifications activées', denied: 'Autorisez les notifications dans les réglages du navigateur.', error: 'Impossible d’activer les notifications.', promptTitle: 'Autoriser les notifications', promptBody: 'Recevez les nouvelles demandes de rendez-vous et leurs mises à jour.', later: 'Plus tard' };
   let installPrompt = null;
   let registration = null;
+  let reloadingForServiceWorkerUpdate = false;
   const subscriptionStorageKey = config.subscriptionId ? `tayba-push:${config.subscriptionId}` : null;
 
   const installButtons = [...document.querySelectorAll('[data-pwa-install]')];
@@ -78,7 +79,17 @@
   const initialise = async () => {
     if (!('serviceWorker' in navigator)) return;
     try {
-      registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloadingForServiceWorkerUpdate) return;
+        reloadingForServiceWorkerUpdate = true;
+        window.location.reload();
+      });
+
+      registration = await navigator.serviceWorker.register('/service-worker.js', {
+        scope: '/',
+        updateViaCache: 'none'
+      });
+      await registration.update();
       await navigator.serviceWorker.ready;
       if (config.subscribeUrl && config.vapidPublicKey && 'PushManager' in window) {
         const existing = await registration.pushManager.getSubscription();
