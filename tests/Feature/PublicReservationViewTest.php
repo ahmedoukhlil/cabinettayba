@@ -48,7 +48,10 @@ class PublicReservationViewTest extends TestCase
             ->assertSee('name="date_souhaitee"', false)
             ->assertSee('id="slots-list"', false)
             ->assertSee('reservation\\/creneaux', false)
+            ->assertSee('id="toast-container"', false)
             ->assertDontSee('cdn.tailwindcss.com', false)
             ->assertDontSee("idMedecin)&gt;", false);
+
+        $this->assertStringNotContainsString('alert(', file_get_contents(public_path('js/pwa.js')));
     }
 }

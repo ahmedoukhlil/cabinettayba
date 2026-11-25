@@ -10,7 +10,9 @@
 
   const installButtons = [...document.querySelectorAll('[data-pwa-install]')];
   const notificationButtons = [...document.querySelectorAll('[data-pwa-notifications]')];
-  const notify = message => window.showToast ? window.showToast(message, 'info') : alert(message);
+  const notify = (message, type = 'info') => {
+    if (window.showToast) window.showToast(message, type);
+  };
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   const base64ToUint8Array = value => {
@@ -127,7 +129,7 @@
   }));
 
   notificationButtons.forEach(button => button.addEventListener('click', async () => {
-    if (!registration) return notify(labels.error);
+    if (!registration) return notify(labels.error, 'error');
     button.disabled = true;
     try {
       const existing = await registration.pushManager.getSubscription();
@@ -143,7 +145,7 @@
       const permission = Notification.permission === 'granted'
         ? 'granted'
         : await Notification.requestPermission();
-      if (permission !== 'granted') return notify(labels.denied);
+      if (permission !== 'granted') return notify(labels.denied, 'warning');
       let subscription = existing;
       let createdSubscription = false;
       if (!subscription) {
@@ -160,10 +162,10 @@
       }
       if (subscriptionStorageKey) localStorage.setItem(subscriptionStorageKey, '1');
       updateNotificationButtons(true);
-      notify(labels.enabled);
+      notify(labels.enabled, 'success');
     } catch (error) {
       console.error(error);
-      notify(labels.error);
+      notify(labels.error, 'error');
     } finally {
       button.disabled = false;
     }

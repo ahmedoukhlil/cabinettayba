@@ -63,12 +63,63 @@
             © {{ date('Y') }} {{ $publicCabinetName }} — @yield('privacy_text', 'Vos informations sont utilisées uniquement pour traiter votre demande.')
         </div>
     </footer>
+    <div id="toast-container" class="public-toast-container" aria-live="polite" aria-atomic="false"></div>
     <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2" aria-label="تطبيق الهاتف">
         <button type="button" data-pwa-install hidden class="rounded-xl bg-[#1e3a8a] px-4 py-3 font-semibold text-white shadow-lg">تثبيت التطبيق</button>
         @hasSection('pwa_subscribe_url')
             <button type="button" data-pwa-notifications hidden class="rounded-xl bg-[#1e3a8a] px-4 py-3 font-semibold text-white shadow-lg">تفعيل الإشعارات</button>
         @endif
     </div>
+    <script>
+        window.showToast = function(message, type = 'info', duration = 4200) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const labels = {
+                success: @json(trim($__env->yieldContent('lang', 'fr')) === 'ar' ? 'تم بنجاح' : 'Succès'),
+                error: @json(trim($__env->yieldContent('lang', 'fr')) === 'ar' ? 'حدث خطأ' : 'Erreur'),
+                warning: @json(trim($__env->yieldContent('lang', 'fr')) === 'ar' ? 'تنبيه' : 'Attention'),
+                info: @json(trim($__env->yieldContent('lang', 'fr')) === 'ar' ? 'معلومة' : 'Information')
+            };
+            const symbols = { success: '✓', error: '!', warning: '!', info: 'i' };
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type} public-toast`;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
+            const icon = document.createElement('span');
+            icon.className = 'public-toast-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = symbols[type] || symbols.info;
+
+            const content = document.createElement('span');
+            content.className = 'public-toast-content';
+            const title = document.createElement('strong');
+            title.textContent = labels[type] || labels.info;
+            const body = document.createElement('span');
+            body.textContent = message;
+            content.append(title, body);
+
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'public-toast-close';
+            close.setAttribute('aria-label', trimDirection() === 'rtl' ? 'إغلاق' : 'Fermer');
+            close.textContent = '×';
+
+            const dismiss = () => {
+                if (!toast.isConnected) return;
+                toast.classList.add('toast-hide');
+                window.setTimeout(() => toast.remove(), 220);
+            };
+            close.addEventListener('click', dismiss);
+            toast.append(icon, content, close);
+            container.appendChild(toast);
+            window.setTimeout(dismiss, duration);
+        };
+
+        function trimDirection() {
+            return document.documentElement.dir || 'ltr';
+        }
+    </script>
     @stack('scripts')
 </body>
 </html>

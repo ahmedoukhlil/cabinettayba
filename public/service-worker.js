@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tayba-pwa-v9';
+const CACHE_NAME = 'tayba-pwa-v10';
 const STATIC_ASSETS = [
   '/offline.html',
   '/pwa-icons/pwa-logo-192.png',
@@ -28,7 +28,7 @@ self.addEventListener('fetch', event => {
   // Livewire runtime from an older release prevents wire:click actions from
   // reaching the server, so these assets must always come from the network.
   if (url.pathname.startsWith('/livewire/')) {
-    event.respondWith(fetch(event.request));
+    event.respondWith(fetch(event.request).catch(() => new Response('', { status: 503, statusText: 'Offline' })));
     return;
   }
 
@@ -38,13 +38,15 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-      if (response.ok && ['style', 'script', 'image', 'font'].includes(event.request.destination)) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-      }
-      return response;
-    }))
+    caches.match(event.request).then(cached => cached || fetch(event.request)
+      .then(response => {
+        if (response.ok && ['style', 'script', 'image', 'font'].includes(event.request.destination)) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => new Response('', { status: 503, statusText: 'Offline' })))
   );
 });
 
