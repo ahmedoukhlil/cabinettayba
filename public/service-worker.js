@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tayba-pwa-v5';
+const CACHE_NAME = 'tayba-pwa-v6';
 const STATIC_ASSETS = [
   '/offline.html',
   '/pwa-icons/pwa-logo-192.png',
@@ -21,7 +21,17 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+  const url = new URL(event.request.url);
+
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // Livewire is upgraded independently from the PWA. Serving a cached
+  // Livewire runtime from an older release prevents wire:click actions from
+  // reaching the server, so these assets must always come from the network.
+  if (url.pathname.startsWith('/livewire/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).catch(() => caches.match('/offline.html')));
