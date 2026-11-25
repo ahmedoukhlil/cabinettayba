@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-3xl mx-auto p-4">
+<div class="w-full space-y-6 p-4">
     <!-- En-tête avec recherche et boutons -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
         <div class="flex-1 w-full max-w-lg">
@@ -17,11 +17,11 @@
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
             <label class="flex items-center space-x-2 text-sm text-gray-600">
-                <input type="checkbox" wire:model.live="showInactive" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                <input type="checkbox" wire:model.live="showInactive" class="form-checkbox h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
                 <span>Afficher les patients inactifs</span>
             </label>
-            <button wire:click="openModal" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
-                Nouveau Patient
+            <button type="button" wire:click="openModal" class="btn-primary whitespace-nowrap">
+                <i class="fas fa-plus" aria-hidden="true"></i> Nouveau patient
             </button>
         </div>
     </div>
@@ -71,7 +71,18 @@
                     @forelse($patients as $patient)
                         <tr class="hover:bg-gray-50">
                             <td class="px-3 py-2 w-1/12 text-center">{{ $patient->IdentifiantPatient }}</td>
-                            <td class="px-3 py-2 w-1/4 font-medium text-gray-900">{{ trim(($patient->Prenom ?? '') . ' ' . ($patient->Nom ?? '')) }}</td>
+                            @php
+                                $firstName = trim($patient->Prenom ?? '');
+                                $lastName = trim($patient->Nom ?? '');
+                                $displayName = $firstName !== '' && mb_strtolower($firstName) === mb_strtolower($lastName)
+                                    ? $firstName
+                                    : trim($firstName . ' ' . $lastName);
+                                $insurerName = trim($patient->assureur->LibAssurance ?? '');
+                                $hasRealInsurance = !empty($patient->IdentifiantAssurance)
+                                    && $patient->assureur
+                                    && !str_contains(mb_strtolower($insurerName), 'sans assurance');
+                            @endphp
+                            <td class="px-3 py-2 w-1/4 font-medium text-gray-900">{{ $displayName ?: 'Patient sans nom' }}</td>
                             <td class="px-3 py-2 w-1/6">{{ $patient->Telephone1 }}@if($patient->Telephone2)<div class="text-xs text-gray-500">{{ $patient->Telephone2 }}</div>@endif</td>
                             <td class="px-3 py-2 w-1/12 text-center">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ in_array($patient->Genre, ['H','M']) ? 'bg-blue-100 text-blue-800' : ($patient->Genre === 'F' ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-500') }}">
@@ -85,10 +96,10 @@
                                 </span>
                             </td>
                             <td class="px-3 py-2 w-1/4">
-                                @if(!empty($patient->IdentifiantAssurance) && $patient->assureur)
+                                @if($hasRealInsurance)
                                     <div class="space-y-1">
                                         <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 border border-green-200 shadow-sm">
-                                            {{ $patient->assureur->LibAssurance }}
+                                            {{ $insurerName }}
                                         </span>
                                         <div class="text-xs text-gray-500">
                                             Taux PEC: {{ number_format($patient->assureur->TauxdePEC * 100, 2) }}%
@@ -102,13 +113,13 @@
                             </td>
                             <td class="px-3 py-2 w-1/12 text-center">
                                 <div class="flex items-center justify-center space-x-3">
-                                    <button type="button" wire:click="showPaymentHistory({{ $patient->ID }})" class="p-2 rounded-md text-green-600 hover:text-green-900 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500" title="Historique des paiements" aria-label="Afficher l'historique des paiements de {{ trim(($patient->Prenom ?? '') . ' ' . ($patient->Nom ?? '')) }}">
+                                    <button type="button" wire:click="showPaymentHistory({{ $patient->ID }})" class="rounded-md p-2 text-primary hover:bg-primary-light hover:text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary" title="Historique des paiements" aria-label="Afficher l'historique des paiements de {{ $displayName }}">
                                         <i class="fas fa-money-bill-wave"></i>
                                     </button>
                                     <button type="button" wire:click="toggleStatus({{ $patient->ID }})" class="p-2 rounded-md text-{{ $patient->choix ? 'green' : 'red' }}-600 hover:text-{{ $patient->choix ? 'green' : 'red' }}-900 focus:outline-none focus:ring-2 focus:ring-blue-500" title="{{ $patient->choix ? 'Activer' : 'Désactiver' }}" aria-label="{{ $patient->choix ? 'Activer' : 'Désactiver' }} ce patient">
                                         <i class="fas fa-{{ $patient->choix ? 'check' : 'times' }}"></i>
                                     </button>
-                                    <button type="button" wire:click="edit({{ $patient->ID }})" class="p-2 rounded-md text-blue-600 hover:text-blue-900 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500" title="Modifier" aria-label="Modifier ce patient">
+                                    <button type="button" wire:click="edit({{ $patient->ID }})" class="rounded-md p-2 text-primary hover:bg-primary-light hover:text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary" title="Modifier" aria-label="Modifier ce patient">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </div>

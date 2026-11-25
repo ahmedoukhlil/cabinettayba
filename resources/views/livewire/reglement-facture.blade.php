@@ -1,7 +1,7 @@
 <div class="space-y-6">
-    <div class="p-6 rounded-xl text-white shadow-lg z-30" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
-        <h2 class="text-2xl font-bold">Facture/DEVIS</h2>
-        <p class="text-white mt-1">Sélectionnez un patient pour gérer ses paiements</p>
+    <div class="z-30 rounded-xl bg-primary p-6 text-white shadow-lg">
+        <h2 class="text-2xl font-bold">Factures / Devis</h2>
+        <p class="mt-1 text-white/80">Gérez les factures, les actes et les règlements du patient.</p>
     </div>
 
     <div class="bg-white rounded-lg shadow-xl overflow-hidden">
@@ -22,12 +22,12 @@
     <!-- Recherche du patient -->
     @if($selectedPatient)
         <div class="mb-6">
-            <div class="p-2 bg-blue-50 rounded border border-blue-200">
-                <span class="font-medium text-blue-800">
+            <div class="rounded border border-primary/20 bg-primary-light p-3">
+                <span class="font-medium text-primary">
                     {{ is_array($selectedPatient) ? ($selectedPatient['Prenom'] ?? '') : $selectedPatient->Prenom }}
                 </span>
                 @if(is_array($selectedPatient) ? ($selectedPatient['Telephone1'] ?? null) : ($selectedPatient->Telephone1 ?? null))
-                    <span class="text-sm text-blue-600 ml-2">Tél: {{ is_array($selectedPatient) ? $selectedPatient['Telephone1'] : $selectedPatient->Telephone1 }}</span>
+                    <span class="ml-2 text-sm text-gray-600">Tél. {{ is_array($selectedPatient) ? $selectedPatient['Telephone1'] : $selectedPatient->Telephone1 }}</span>
                 @endif
             </div>
         </div>
@@ -42,7 +42,7 @@
     <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">Factures du patient</h2>
-            <button wire:click="openMedecinModal" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2">
+            <button type="button" wire:click="openMedecinModal" class="btn-primary">
                 <i class="fas fa-plus"></i> Nouvelle facture
             </button>
         </div>
@@ -66,7 +66,7 @@
                         $resteAPayerPatient = ($isAssure ? ($facture->TotalfactPatient ?? 0) : ($facture->TotFacture ?? 0)) - ($facture->TotReglPatient ?? 0);
                         $resteAPayerPEC = $isAssure ? (($facture->TotalPEC ?? 0) - ($facture->ReglementPEC ?? 0)) : 0;
                     @endphp
-                    <tr @if($factureSelectionnee && $factureSelectionnee['id'] == $facture->Idfacture) class="bg-yellow-50" @endif 
+                    <tr @if($factureSelectionnee && $factureSelectionnee['id'] == $facture->Idfacture) class="bg-primary-light" @endif
                         wire:key="facture-{{ $facture->Idfacture }}"
                         style="cursor:pointer" 
                         wire:click.stop="selectionnerFacture({{ $facture->Idfacture }})">
@@ -98,7 +98,7 @@
                     </tr>
                     @if($factureSelectionnee && $factureSelectionnee['id'] == $facture->Idfacture)
                         <tr wire:key="details-{{ $facture->Idfacture }}">
-                            <td colspan="8" class="bg-yellow-50 px-6 py-4">
+                            <td colspan="8" class="bg-primary-light px-6 py-4">
                                 <div class="mb-2 font-semibold text-gray-700">Actes de la facture :</div>
                                 <div wire:loading.remove wire:target="selectionnerFacture">
                                     <table class="min-w-full mb-2">
@@ -113,7 +113,7 @@
                                         </thead>
                                         <tbody>
                                             @php
-                                                $details = \App\Models\Detailfacturepatient::where('fkidfacture', $facture->Idfacture)->get();
+                                                $details = $facture->details;
                                                 $totalPrix = 0;
                                             @endphp
                                             @foreach($details as $detail)
@@ -141,10 +141,10 @@
                                         </tbody>
                                     </table>
                                     <div class="flex flex-row gap-2 justify-end mt-4">
-                                        <button wire:click.stop="ouvrirReglementFacture({{ $facture->Idfacture }})" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center justify-center">
+                                        <button type="button" wire:click.stop="ouvrirReglementFacture({{ $facture->Idfacture }})" class="btn-primary min-w-[120px] justify-center">
                                             Payer
                                         </button>
-                                        <button wire:click.stop="openAddActeForm({{ $facture->Idfacture }})" class="min-w-[150px] px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded hover:bg-green-700 flex items-center justify-center gap-2">
+                                        <button type="button" wire:click.stop="openAddActeForm({{ $facture->Idfacture }})" class="btn-secondary min-w-[150px] justify-center">
                                             <i class="fas fa-plus"></i> Ajouter un acte
                                         </button>
                                         <a href="{{ route('consultations.facture-patient', $facture->Idfacture) }}" target="_blank" class="min-w-[120px] px-4 py-2 text-sm font-semibold bg-gray-700 text-white rounded hover:bg-gray-800 flex items-center justify-center gap-2">
@@ -153,7 +153,7 @@
                                     </div>
                                 </div>
                                 <div wire:loading wire:target="selectionnerFacture" class="text-center py-4">
-                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-indigo-600"></div>
+                                    <span class="spinner spinner-dark" aria-label="Chargement"></span>
                                 </div>
                             </td>
                         </tr>
@@ -229,7 +229,7 @@
                                 </p>
                             @else
                                 <p class="mt-2 text-sm text-gray-500">
-                                    Montant restant à payer : <span class="font-semibold text-indigo-600">{{ number_format($factureSelectionnee['reste_a_payer'] ?? 0, 2) }} MRU</span>
+                                    Montant restant à payer : <span class="font-semibold text-primary">{{ number_format($factureSelectionnee['reste_a_payer'] ?? 0, 2) }} MRU</span>
                                 </p>
                             @endif
                         </div>

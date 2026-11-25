@@ -53,9 +53,20 @@ class ReglementFacture extends Component
         if ($this->selectedPatient) {
             return Facture::where('IDPatient', $this->selectedPatient['ID'])
                 ->where('fkidCabinet', Auth::user()->fkidcabinet)
-                ->with(['medecin' => function($query) {
-                    $query->select('idMedecin', 'Nom');
-                }])
+                ->with([
+                    'medecin' => function($query) {
+                        $query->select('idMedecin', 'Nom');
+                    },
+                    'details' => function ($query) {
+                        $query->select(
+                            'idDetfacture',
+                            'fkidfacture',
+                            'Actes',
+                            'PrixFacture',
+                            'Quantite'
+                        );
+                    },
+                ])
                 ->select([
                     'Idfacture', 'Nfacture', 'FkidMedecinInitiateur', 'DtFacture',
                     'TotFacture', 'ISTP', 'TXPEC', 'TotalPEC', 'ReglementPEC',
