@@ -48,6 +48,16 @@ class UiContractTest extends TestCase
         $this->assertStringNotContainsString('wire:click="showStatistiques"', $view);
     }
 
+    public function test_pending_requests_badge_is_anchored_to_a_notification_bell(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2) . '/resources/views/livewire/accueil-patient.blade.php');
+
+        $this->assertStringContainsString('notification-bell', $view);
+        $this->assertStringContainsString('notification-badge', $view);
+        $this->assertStringContainsString('fas fa-bell', $view);
+        $this->assertStringNotContainsString('absolute -right-2 -top-2', $view);
+    }
+
     public function test_escape_only_closes_the_topmost_modal(): void
     {
         $component = file_get_contents(dirname(__DIR__, 2) . '/resources/views/components/modal.blade.php');

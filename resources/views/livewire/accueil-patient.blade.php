@@ -46,13 +46,18 @@
             </button>
 
             @if($isDocteurProprietaire || $isSecretaire || $isDocteur)
-                <button type="button" wire:click="openAppointmentRequests" class="nav-button btn-secondary relative min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
-                    <i class="fas fa-calendar-check" aria-hidden="true"></i> Demandes en ligne
-                    @if($pendingAppointmentRequestsCount > 0)
-                        <span class="absolute -right-2 -top-2 inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-extrabold text-white shadow ring-2 ring-white" aria-label="{{ $pendingAppointmentRequestsCount }} demandes en attente">
-                            {{ $pendingAppointmentRequestsCount > 99 ? '99+' : $pendingAppointmentRequestsCount }}
-                        </span>
-                    @endif
+                <button type="button" wire:click="openAppointmentRequests"
+                    aria-label="Demandes en ligne{{ $pendingAppointmentRequestsCount > 0 ? ' — ' . $pendingAppointmentRequestsCount . ' en attente' : '' }}"
+                    class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
+                    <span class="notification-bell" aria-hidden="true">
+                        <i class="fas fa-bell"></i>
+                        @if($pendingAppointmentRequestsCount > 0)
+                            <span class="notification-badge">
+                                {{ $pendingAppointmentRequestsCount > 99 ? '99+' : $pendingAppointmentRequestsCount }}
+                            </span>
+                        @endif
+                    </span>
+                    <span>Demandes en ligne</span>
                 </button>
             @endif
 
