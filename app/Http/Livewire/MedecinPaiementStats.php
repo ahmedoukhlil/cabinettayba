@@ -5,7 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\Medecin;
 use App\Models\CaisseOperation;
-use App\Models\Detailfacturepatient;
+use App\Models\DetailFacturePatient;
 use App\Models\Facture;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;

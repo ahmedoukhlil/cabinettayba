@@ -9,7 +9,7 @@ use App\Models\CaisseOperation;
 use App\Models\Medecin;
 use App\Models\RefTypePaiement;
 use Illuminate\Support\Facades\DB;
-use App\Models\Detailfacturepatient;
+use App\Models\DetailFacturePatient;
 use Livewire\WithPagination;
 use App\Models\Facturepatient;
 use Carbon\Carbon;
@@ -303,7 +303,7 @@ class ReglementFacture extends Component
                 ->where('IDPatient', $this->selectedPatient['ID'] ?? 0)
                 ->findOrFail($this->factureIdForActe);
 
-            \App\Models\Detailfacturepatient::create([
+            DetailFacturePatient::create([
                 'fkidfacture' => $this->factureIdForActe,
                 'DtAjout' => now(),
                 'Actes' => $acte ? $acte->Acte : null,
@@ -395,7 +395,7 @@ class ReglementFacture extends Component
             DB::beginTransaction();
 
             // Récupérer le détail de l'acte
-            $detail = Detailfacturepatient::find($detailId);
+            $detail = DetailFacturePatient::find($detailId);
             if (!$detail) {
                 throw new \Exception('Acte non trouvé');
             }

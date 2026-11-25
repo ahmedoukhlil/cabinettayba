@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Detailfacturepatient
+ * Class DetailFacturePatient
  * 
  * @property int $idDetfacture
  * @property int $fkidfacture
@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @package App\Models
  */
-class Detailfacturepatient extends Model
+class DetailFacturePatient extends Model
 {
 	protected $table = 'detailfacturepatient';
 	protected $primaryKey = 'idDetfacture';
