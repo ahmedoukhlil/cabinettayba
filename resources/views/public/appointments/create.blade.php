@@ -12,8 +12,15 @@
     <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8" aria-labelledby="booking-form-title">
         <div class="border-b border-slate-100 pb-5 text-right">
             <h1 id="booking-form-title" class="text-2xl font-semibold text-slate-900">طلب موعد</h1>
-            <p class="mt-2 text-sm leading-6 text-slate-600">أدخل رقم هاتفك أولاً للتحقق من وجود ملفك، ثم اختر الفترة المناسبة.</p>
+            <p class="mt-2 text-sm leading-6 text-slate-600">تحقق من ملفك، ثم اختر الطبيب والتاريخ والساعة المناسبة.</p>
         </div>
+
+        <ol class="mt-5 grid grid-cols-4 gap-2 text-center text-[11px] font-semibold text-slate-400 sm:text-xs" aria-label="مراحل حجز الموعد">
+            <li data-booking-step="1" class="booking-step is-active"><span>1</span><small>الهاتف</small></li>
+            <li data-booking-step="2" class="booking-step"><span>2</span><small>المريض</small></li>
+            <li data-booking-step="3" class="booking-step"><span>3</span><small>الطبيب</small></li>
+            <li data-booking-step="4" class="booking-step"><span>4</span><small>الموعد</small></li>
+        </ol>
 
         @if($errors->any())
             <div class="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert" aria-live="assertive">
@@ -82,7 +89,7 @@
                                        class="h-4 w-4 border-slate-300 text-blue-800 focus:ring-blue-700">
                                 <span class="flex-1">
                                     <strong class="block text-sm font-medium text-slate-900">الفترة الصباحية</strong>
-                                    <span class="mt-0.5 block text-xs text-slate-500" dir="rtl">ابتداءً من الساعة <span dir="ltr">09:00</span></span>
+                                    <span class="mt-0.5 block text-xs text-slate-500" dir="rtl">ابتداءً من الساعة <span dir="ltr">{{ substr($morningStartTime, 0, 5) }}</span></span>
                                 </span>
                             </label>
                             <label class="flex cursor-pointer items-center gap-3 bg-white px-4 py-4 hover:bg-slate-50">
@@ -90,13 +97,28 @@
                                        class="h-4 w-4 border-slate-300 text-blue-800 focus:ring-blue-700">
                                 <span class="flex-1">
                                     <strong class="block text-sm font-medium text-slate-900">الفترة المسائية</strong>
-                                    <span class="mt-0.5 block text-xs text-slate-500" dir="rtl">ابتداءً من الساعة <span dir="ltr">17:00</span></span>
+                                    <span class="mt-0.5 block text-xs text-slate-500" dir="rtl">ابتداءً من الساعة <span dir="ltr">{{ substr($eveningStartTime, 0, 5) }}</span></span>
                                 </span>
                             </label>
                         </div>
                     </fieldset>
 
-                    <button type="submit" id="submit-button" class="inline-flex w-full items-center justify-center rounded-lg bg-[#1e3a8a] px-5 py-3 text-base font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60">
+                    <div>
+                        <label for="date_souhaitee" class="block text-sm font-medium text-slate-700">تاريخ الموعد <span class="text-red-600">*</span></label>
+                        <input id="date_souhaitee" name="date_souhaitee" type="date" value="{{ old('date_souhaitee') }}" required
+                               min="{{ $minimumBookingDate }}" max="{{ $maximumBookingDate }}"
+                               class="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-base focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                    </div>
+
+                    <fieldset id="slots-section" class="hidden">
+                        <legend class="text-sm font-medium text-slate-700">الساعة المتاحة <span class="text-red-600">*</span></legend>
+                        <div id="slots-status" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-600" role="status" aria-live="polite">
+                            اختر الطبيب والفترة والتاريخ لعرض الساعات المتاحة.
+                        </div>
+                        <div id="slots-list" class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4" dir="ltr"></div>
+                    </fieldset>
+
+                    <button type="submit" id="submit-button" disabled class="inline-flex w-full items-center justify-center rounded-lg bg-[#1e3a8a] px-5 py-3 text-base font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                         إرسال الطلب
                     </button>
 
@@ -129,21 +151,128 @@
     const nameHelp = document.getElementById('patient-name-help');
     const reservationSection = document.getElementById('reservation-section');
     const submit = document.getElementById('submit-button');
+    const doctor = document.getElementById('medecin_id');
+    const periods = [...form.querySelectorAll('input[name="periode"]')];
+    const bookingDate = document.getElementById('date_souhaitee');
+    const slotsSection = document.getElementById('slots-section');
+    const slotsStatus = document.getElementById('slots-status');
+    const slotsList = document.getElementById('slots-list');
+    const steps = [...document.querySelectorAll('[data-booking-step]')];
     let verifiedTelephone = null;
+    let verificationTimer = null;
+    let patientRequest = null;
+    let slotsRequest = null;
+    let preferredSlot = @json(old('heure_souhaitee'));
 
     const normalizedTelephone = () => telephone.value.replace(/\D/g, '');
 
+    const setStep = current => steps.forEach(step => {
+        const number = Number(step.dataset.bookingStep);
+        step.classList.toggle('is-active', number === current);
+        step.classList.toggle('is-complete', number < current);
+    });
+
+    const selectedPeriod = () => periods.find(input => input.checked)?.value || '';
+
+    const resetSlots = (message = 'اختر الطبيب والفترة والتاريخ لعرض الساعات المتاحة.') => {
+        slotsRequest?.abort();
+        slotsRequest = null;
+        slotsList.innerHTML = '';
+        slotsStatus.textContent = message;
+        slotsStatus.className = 'mt-2 rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-600';
+        slotsSection.classList.toggle('hidden', !doctor.value && !selectedPeriod() && !bookingDate.value);
+        submit.disabled = true;
+    };
+
     const resetVerification = () => {
+        patientRequest?.abort();
+        patientRequest = null;
+        verifyButton.disabled = false;
+        verifyButton.textContent = 'التحقق من الملف';
         verifiedTelephone = null;
         status.className = 'mt-2 hidden rounded-lg p-3 text-sm';
         status.textContent = '';
         nameSection.classList.add('hidden');
         reservationSection.classList.add('hidden');
+        resetSlots();
+        setStep(1);
         if (nameInput.readOnly) nameInput.value = '';
         nameInput.readOnly = false;
         nameInput.required = false;
         nameInput.classList.remove('bg-slate-100');
         nameHelp.textContent = '';
+    };
+
+    const loadSlots = async () => {
+        const period = selectedPeriod();
+        if (!doctor.value || !period || !bookingDate.value) {
+            resetSlots();
+            setStep(doctor.value ? 4 : 3);
+            return;
+        }
+
+        slotsRequest?.abort();
+        slotsRequest = new AbortController();
+        slotsSection.classList.remove('hidden');
+        slotsList.innerHTML = '';
+        slotsStatus.textContent = 'جارٍ تحميل الساعات المتاحة…';
+        slotsStatus.className = 'mt-2 rounded-lg border border-blue-100 bg-blue-50 p-4 text-center text-sm text-blue-800';
+        submit.disabled = true;
+        setStep(4);
+
+        const query = new URLSearchParams({
+            medecin_id: doctor.value,
+            date: bookingDate.value,
+            periode: period,
+        });
+
+        try {
+            const response = await fetch(`${@json(route('public.appointment.availability'))}?${query}`, {
+                headers: { 'Accept': 'application/json' },
+                signal: slotsRequest.signal,
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'تعذر تحميل المواعيد.');
+
+            if (!data.slots.length) {
+                resetSlots('لا توجد ساعات متاحة في هذا التاريخ والفترة. اختر تاريخاً أو فترة أخرى.');
+                slotsSection.classList.remove('hidden');
+                slotsStatus.className = 'mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-center text-sm text-amber-900';
+                return;
+            }
+
+            slotsStatus.classList.add('hidden');
+            data.slots.forEach(slot => {
+                const label = document.createElement('label');
+                label.className = 'slot-option';
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'heure_souhaitee';
+                input.value = slot;
+                input.required = true;
+                input.className = 'sr-only';
+                input.checked = preferredSlot && preferredSlot.substring(0, 5) === slot;
+                input.addEventListener('change', () => {
+                    slotsList.querySelectorAll('.slot-option').forEach(item => item.classList.remove('is-selected'));
+                    label.classList.add('is-selected');
+                    submit.disabled = false;
+                });
+                const text = document.createElement('span');
+                text.textContent = slot;
+                label.append(input, text);
+                slotsList.appendChild(label);
+                if (input.checked) {
+                    label.classList.add('is-selected');
+                    submit.disabled = false;
+                }
+            });
+            preferredSlot = null;
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            resetSlots(error.message || 'تعذر تحميل المواعيد الآن. يرجى المحاولة مرة أخرى.');
+            slotsSection.classList.remove('hidden');
+            slotsStatus.className = 'mt-2 rounded-lg border border-red-200 bg-red-50 p-4 text-center text-sm text-red-800';
+        }
     };
 
     const showStatus = (message, type) => {
@@ -154,6 +283,8 @@
     };
 
     const verifyPatient = async () => {
+        window.clearTimeout(verificationTimer);
+        verificationTimer = null;
         const phone = normalizedTelephone();
         if (phone.length < 8 || phone.length > 15) {
             showStatus('يرجى إدخال رقم هاتف صحيح يحتوي على 8 إلى 15 رقماً.', 'error');
@@ -163,6 +294,9 @@
 
         verifyButton.disabled = true;
         verifyButton.textContent = 'جارٍ التحقق…';
+        patientRequest?.abort();
+        const requestController = new AbortController();
+        patientRequest = requestController;
 
         try {
             const response = await fetch(@json(route('public.appointment.patient.lookup')), {
@@ -174,6 +308,7 @@
                     'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
                 },
                 body: JSON.stringify({ telephone: telephone.value }),
+                signal: requestController.signal,
             });
 
             const data = await response.json();
@@ -184,6 +319,7 @@
             verifiedTelephone = phone;
             nameSection.classList.remove('hidden');
             reservationSection.classList.remove('hidden');
+            setStep(2);
 
             if (data.found) {
                 nameInput.value = data.name;
@@ -192,6 +328,7 @@
                 nameInput.classList.add('bg-slate-100');
                 nameHelp.textContent = 'تم استرجاع الاسم من ملف المريض المسجل.';
                 showStatus('تم العثور على ملفك. يمكنك متابعة طلب الموعد.', 'success');
+                setStep(3);
             } else {
                 nameInput.readOnly = false;
                 nameInput.required = true;
@@ -200,21 +337,42 @@
                 showStatus('لم يتم العثور على ملف بهذا الرقم. يرجى إدخال اسمك للمتابعة.', 'success');
                 nameInput.focus();
             }
+
+            if (doctor.value || selectedPeriod() || bookingDate.value) loadSlots();
         } catch (error) {
+            if (error.name === 'AbortError') return;
             resetVerification();
             showStatus(error.message || 'تعذر التحقق الآن. يرجى المحاولة مرة أخرى.', 'error');
         } finally {
-            verifyButton.disabled = false;
-            verifyButton.textContent = 'التحقق من الملف';
+            if (patientRequest === requestController) {
+                patientRequest = null;
+                verifyButton.disabled = false;
+                verifyButton.textContent = 'التحقق من الملف';
+            }
         }
     };
 
-    telephone.addEventListener('input', resetVerification);
+    telephone.addEventListener('input', () => {
+        window.clearTimeout(verificationTimer);
+        resetVerification();
+        const length = normalizedTelephone().length;
+        if (length >= 8 && length <= 15) {
+            verificationTimer = window.setTimeout(verifyPatient, 500);
+        }
+    });
     verifyButton.addEventListener('click', verifyPatient);
+    nameInput.addEventListener('input', () => setStep(nameInput.value.trim().length >= 2 ? 3 : 2));
+    doctor.addEventListener('change', () => {
+        setStep(doctor.value ? 4 : 3);
+        loadSlots();
+    });
+    periods.forEach(input => input.addEventListener('change', loadSlots));
+    bookingDate.addEventListener('change', loadSlots);
     form.addEventListener('submit', (event) => {
-        if (verifiedTelephone !== normalizedTelephone()) {
+        if (verifiedTelephone !== normalizedTelephone() || !form.querySelector('input[name="heure_souhaitee"]:checked')) {
             event.preventDefault();
-            verifyPatient();
+            if (verifiedTelephone !== normalizedTelephone()) verifyPatient();
+            else loadSlots();
             return;
         }
 

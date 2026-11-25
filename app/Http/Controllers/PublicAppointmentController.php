@@ -32,6 +32,10 @@ class PublicAppointmentController extends Controller
             'medecins' => Medecin::where('fkidcabinet', $cabinetId)
                 ->orderBy('Nom')
                 ->get(['idMedecin', 'Nom']),
+            'minimumBookingDate' => now()->toDateString(),
+            'maximumBookingDate' => now()->addDays(config('appointments.booking_horizon_days'))->toDateString(),
+            'morningStartTime' => config('appointments.morning_start_time'),
+            'eveningStartTime' => config('appointments.evening_start_time'),
         ]);
     }
 
@@ -50,10 +54,23 @@ class PublicAppointmentController extends Controller
                 'integer',
                 Rule::exists('medecins', 'idMedecin')->where(fn ($query) => $query->where('fkidcabinet', $cabinetId)),
             ],
+            'periode' => ['nullable', Rule::in(['morning', 'evening'])],
         ]);
 
+        $slots = $this->availableSlots($cabinetId, (int) $validated['medecin_id'], $validated['date']);
+        if (!empty($validated['periode'])) {
+            if ($this->periodBookingCount($cabinetId, $validated['date'], $validated['periode']) >= max(1, (int) config('appointments.period_limit', 20))) {
+                $slots = [];
+            } else {
+                $slots = array_values(array_filter(
+                    $slots,
+                    fn (string $slot) => $this->slotMatchesPeriod($slot, $validated['periode'])
+                ));
+            }
+        }
+
         return response()->json([
-            'slots' => $this->availableSlots($cabinetId, (int) $validated['medecin_id'], $validated['date']),
+            'slots' => $slots,
         ]);
     }
 
@@ -91,6 +108,13 @@ class PublicAppointmentController extends Controller
                     ->where(fn ($query) => $query->where('fkidcabinet', $cabinetId)),
             ],
             'periode' => ['required', Rule::in(['morning', 'evening'])],
+            'date_souhaitee' => [
+                'required',
+                'date_format:Y-m-d',
+                'after_or_equal:today',
+                'before_or_equal:' . now()->addDays(config('appointments.booking_horizon_days'))->toDateString(),
+            ],
+            'heure_souhaitee' => ['required', 'date_format:H:i'],
             'website' => ['nullable', 'max:0'],
         ], array_merge($this->telephoneValidationMessages(), [
             'nom.required' => 'يرجى إدخال الاسم الكامل.',
@@ -99,6 +123,11 @@ class PublicAppointmentController extends Controller
             'medecin_id.exists' => 'الطبيب المختار غير متاح.',
             'periode.required' => 'يرجى اختيار الفترة المناسبة.',
             'periode.in' => 'الفترة المختارة غير صالحة.',
+            'date_souhaitee.required' => 'يرجى اختيار تاريخ الموعد.',
+            'date_souhaitee.after_or_equal' => 'يجب اختيار تاريخ ابتداءً من اليوم.',
+            'date_souhaitee.before_or_equal' => 'التاريخ المختار خارج فترة الحجز المتاحة.',
+            'heure_souhaitee.required' => 'يرجى اختيار ساعة الموعد.',
+            'heure_souhaitee.date_format' => 'ساعة الموعد غير صالحة.',
         ]));
 
         $telephone = $this->normalizeTelephone($validated['telephone']);
@@ -116,42 +145,53 @@ class PublicAppointmentController extends Controller
             $nom = trim($validated['nom']);
         }
 
+        $selectedTime = substr($validated['heure_souhaitee'], 0, 5);
+        $availableSlots = $this->availableSlots(
+            $cabinetId,
+            (int) $validated['medecin_id'],
+            $validated['date_souhaitee']
+        );
+        $periodIsFull = $this->periodBookingCount(
+            $cabinetId,
+            $validated['date_souhaitee'],
+            $validated['periode']
+        ) >= max(1, (int) config('appointments.period_limit', 20));
+
+        if (
+            $periodIsFull
+            || !$this->slotMatchesPeriod($selectedTime, $validated['periode'])
+            || !in_array($selectedTime, $availableSlots, true)
+        ) {
+            return back()->withErrors([
+                'heure_souhaitee' => 'هذا الموعد لم يعد متاحاً. يرجى اختيار موعد آخر.',
+            ])->withInput();
+        }
+
         $token = Str::random(64);
         $periodLabel = $validated['periode'] === 'morning' ? 'الفترة الصباحية' : 'الفترة المسائية';
         $reference = null;
         $appointmentRequest = null;
 
         for ($attempt = 0; $attempt < 3; $attempt++) {
-            $slot = $this->firstAvailableSlot(
-                $cabinetId,
-                (int) $validated['medecin_id'],
-                $validated['periode']
-            );
-            if (!$slot) {
-                return back()->withErrors([
-                    'periode' => 'لا يوجد موعد متاح في هذه الفترة حالياً. يرجى اختيار الفترة الأخرى أو الاتصال بالعيادة.',
-                ])->withInput();
-            }
-
             $reference = $this->generateReference();
             $slotKey = hash('sha256', implode('|', [
                 $cabinetId,
-                $slot['medecin_id'],
-                $slot['date'],
-                $slot['heure'],
+                $validated['medecin_id'],
+                $validated['date_souhaitee'],
+                $selectedTime,
             ]));
 
             try {
                 $appointmentRequest = PublicAppointmentRequest::create([
                     'fkidcabinet' => $cabinetId,
-                    'fkidmedecin' => $slot['medecin_id'],
+                    'fkidmedecin' => $validated['medecin_id'],
                     'fkidacte' => null,
                     'nom' => $nom,
                     'prenom' => '',
                     'telephone' => $telephone,
                     'patient_id' => $patient ? $patient->ID : null,
-                    'date_souhaitee' => $slot['date'],
-                    'heure_souhaitee' => $slot['heure'],
+                    'date_souhaitee' => $validated['date_souhaitee'],
+                    'heure_souhaitee' => $selectedTime,
                     'message' => 'الفترة المطلوبة: ' . $periodLabel,
                     'status' => 'pending',
                     'reference' => $reference,
@@ -166,7 +206,7 @@ class PublicAppointmentController extends Controller
 
         if (!$reference) {
             return back()->withErrors([
-                'periode' => 'تعذر حجز الموعد الآن. يرجى المحاولة مرة أخرى بعد قليل.',
+                'heure_souhaitee' => 'لم يعد هذا الموعد متاحاً. يرجى اختيار موعد آخر.',
             ])->withInput();
         }
 
@@ -228,32 +268,6 @@ class PublicAppointmentController extends Controller
         }
 
         return $slots;
-    }
-
-    private function firstAvailableSlot(int $cabinetId, int $medecinId, string $period): ?array
-    {
-        $horizon = max(1, (int) config('appointments.booking_horizon_days'));
-        $periodLimit = max(1, (int) config('appointments.period_limit', 20));
-
-        for ($offset = 0; $offset <= $horizon; $offset++) {
-            $date = now()->startOfDay()->addDays($offset)->toDateString();
-
-            if ($this->periodBookingCount($cabinetId, $date, $period) >= $periodLimit) {
-                continue;
-            }
-
-            foreach ($this->availableSlots($cabinetId, $medecinId, $date) as $slot) {
-                if ($this->slotMatchesPeriod($slot, $period)) {
-                    return [
-                        'medecin_id' => $medecinId,
-                        'date' => $date,
-                        'heure' => $slot,
-                    ];
-                }
-            }
-        }
-
-        return null;
     }
 
     private function periodBookingCount(int $cabinetId, string $date, string $period): int

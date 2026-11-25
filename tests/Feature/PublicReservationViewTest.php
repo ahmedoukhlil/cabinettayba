@@ -45,6 +45,10 @@ class PublicReservationViewTest extends TestCase
             ->assertSee('manifest-patient.webmanifest', false)
             ->assertSee('icons/pwa-logo-48.png', false)
             ->assertSee('د. Dr Test', false)
+            ->assertSee('name="date_souhaitee"', false)
+            ->assertSee('id="slots-list"', false)
+            ->assertSee('reservation\\/creneaux', false)
+            ->assertDontSee('cdn.tailwindcss.com', false)
             ->assertDontSee("idMedecin)&gt;", false);
     }
 }

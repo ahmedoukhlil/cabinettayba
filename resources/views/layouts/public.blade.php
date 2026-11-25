@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('pwa-icons/pwa-logo-48.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('pwa-icons/pwa-logo-192.png') }}">
     <title>@yield('title', 'Réservation') - Cabinet Tayba</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @php
         $publicPwaConfig = [
             'locale' => trim($__env->yieldContent('lang', 'fr')),

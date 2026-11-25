@@ -17,9 +17,9 @@
 <div class="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl ring-1 ring-slate-200 sm:p-10" style="font-family: Tahoma, Arial, sans-serif">
     @php
         $states = [
-            'pending' => ['label' => 'في انتظار التأكيد', 'class' => 'bg-amber-100 text-amber-900', 'text' => 'ستراجع العيادة طلبك وتتصل بك لتأكيد الموعد.'],
-            'confirmed' => ['label' => 'تم تأكيد الموعد', 'class' => 'bg-green-100 text-green-900', 'text' => 'تمت إضافة موعدك إلى برنامج العيادة.'],
-            'rejected' => ['label' => 'تعذر تأكيد الموعد', 'class' => 'bg-red-100 text-red-900', 'text' => 'يمكنك إرسال طلب جديد أو الاتصال بالعيادة.'],
+            'pending' => ['label' => 'في انتظار التأكيد', 'title' => 'تم تسجيل طلبك', 'class' => 'bg-amber-100 text-amber-900', 'text' => 'ستراجع العيادة طلبك وتتصل بك لتأكيد الموعد.'],
+            'confirmed' => ['label' => 'تم تأكيد الموعد', 'title' => 'موعدك مؤكد', 'class' => 'bg-green-100 text-green-900', 'text' => 'تمت إضافة موعدك إلى برنامج العيادة.'],
+            'rejected' => ['label' => 'تعذر تأكيد الموعد', 'title' => 'تعذر تأكيد طلبك', 'class' => 'bg-red-100 text-red-900', 'text' => 'يمكنك إرسال طلب جديد أو الاتصال بالعيادة.'],
         ];
         $state = $states[$appointmentRequest->status] ?? $states['pending'];
         $requestedTime = substr($appointmentRequest->heure_souhaitee, 0, 5);
@@ -27,7 +27,7 @@
     @endphp
 
     <span class="inline-flex rounded-full px-4 py-2 text-sm font-semibold {{ $state['class'] }}">{{ $state['label'] }}</span>
-    <h1 class="mt-6 text-3xl font-bold text-slate-900">تم تسجيل طلبك</h1>
+    <h1 class="mt-6 text-3xl font-bold text-slate-900">{{ $state['title'] }}</h1>
     <p class="mt-3 text-slate-600">{{ $state['text'] }}</p>
 
     <dl class="mt-8 grid gap-4 rounded-xl bg-slate-50 p-5 text-right sm:grid-cols-2">
@@ -39,7 +39,7 @@
         @endif
     </dl>
 
-    <p class="mt-6 text-sm text-slate-500">احتفظ برقم الطلب لمتابعة الحجز.</p>
+    <p class="mt-6 text-sm text-slate-500">احتفظ بهذا الرابط الخاص لمتابعة الحجز. رقم الطلب وحده لا يسمح بالدخول إلى تفاصيلك.</p>
     <p class="mt-2 text-sm text-slate-500">فعّل الإشعارات لتصلك نتيجة التأكيد حتى عند إغلاق التطبيق.</p>
     <a href="{{ route('public.appointment.create') }}" class="mt-6 inline-flex rounded-lg bg-[#1e3a8a] px-5 py-3 font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">إرسال طلب جديد</a>
 </div>
