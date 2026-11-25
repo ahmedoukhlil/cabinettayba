@@ -1,7 +1,11 @@
 <div wire:poll.15s="refreshPendingAppointmentRequestsCount" class="mx-auto mt-4 w-full max-w-7xl px-3 sm:px-4 md:mt-8 md:px-6 lg:px-8">
     @php
         $patientData = is_array($selectedPatient) ? $selectedPatient : ($selectedPatient ? $selectedPatient->toArray() : []);
-        $patientName = trim(($patientData['Prenom'] ?? '') . ' ' . ($patientData['NomPatient'] ?? $patientData['Nom'] ?? ''));
+        $patientFirstName = trim($patientData['Prenom'] ?? '');
+        $patientLastName = trim($patientData['NomPatient'] ?? $patientData['Nom'] ?? '');
+        $patientName = $patientFirstName !== '' && mb_strtolower($patientFirstName) === mb_strtolower($patientLastName)
+            ? $patientFirstName
+            : trim($patientFirstName . ' ' . $patientLastName);
         $patientId = $patientData['ID'] ?? null;
     @endphp
 
@@ -93,17 +97,6 @@
                     <i class="fas fa-users-cog" aria-hidden="true"></i> Utilisateurs
                 </button>
             @endif
-        </section>
-    @endif
-
-    @if($selectedPatient)
-        <section class="mb-4 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary-light p-3 shadow-sm">
-            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary" aria-hidden="true"><i class="fas fa-user text-lg"></i></span>
-            <div class="min-w-0 flex-1">
-                <p class="truncate font-semibold text-primary">{{ $patientName ?: 'Patient sélectionné' }}</p>
-                <p class="text-sm text-gray-600">N° fiche {{ $patientData['IdentifiantPatient'] ?? '—' }} · {{ $patientData['Telephone1'] ?? 'Téléphone non renseigné' }}</p>
-            </div>
-            <button wire:click="setPatient(null)" class="rounded-lg p-2 text-primary hover:bg-white" aria-label="Désélectionner le patient"><i class="fas fa-times"></i></button>
         </section>
     @endif
 

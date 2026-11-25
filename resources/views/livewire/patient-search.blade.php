@@ -31,8 +31,15 @@
     </div>
 
     @if($selectedPatient)
+        @php
+            $selectedFirstName = trim($selectedPatient['Prenom'] ?? '');
+            $selectedLastName = trim($selectedPatient['NomPatient'] ?? '');
+            $selectedDisplayName = $selectedFirstName !== '' && mb_strtolower($selectedFirstName) === mb_strtolower($selectedLastName)
+                ? $selectedFirstName
+                : trim($selectedFirstName . ' ' . $selectedLastName);
+        @endphp
         <div class="mt-2 flex items-center justify-between rounded-lg border border-primary/20 bg-primary-light px-3 py-2 text-sm">
-            <span class="font-semibold text-primary"><i class="fas fa-user-check mr-2"></i>{{ trim(($selectedPatient['Prenom'] ?? '') . ' ' . ($selectedPatient['NomPatient'] ?? '')) }}</span>
+            <span class="font-semibold text-primary"><i class="fas fa-user-check mr-2"></i>{{ $selectedDisplayName ?: 'Patient sélectionné' }}</span>
             <span class="text-gray-600">{{ $selectedPatient['Telephone1'] ?? '' }}</span>
         </div>
     @endif
