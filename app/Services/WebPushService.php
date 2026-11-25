@@ -12,6 +12,10 @@ use Minishlink\WebPush\WebPush;
 
 class WebPushService
 {
+    public function __construct(private AppointmentQueueService $queue)
+    {
+    }
+
     public function notifyStaffForNewRequest(PublicAppointmentRequest $appointmentRequest): void
     {
         $userIds = TUser::where('fkidcabinet', $appointmentRequest->fkidcabinet)
@@ -42,6 +46,7 @@ class WebPushService
     public function notifyPatientStatus(PublicAppointmentRequest $appointmentRequest): void
     {
         $confirmed = $appointmentRequest->status === 'confirmed';
+        $state = $this->queue->state($appointmentRequest->loadMissing('appointment'));
         $subscriptions = PushSubscriptionModel::where(
             'public_appointment_request_id',
             $appointmentRequest->getKey()
@@ -50,8 +55,44 @@ class WebPushService
         $this->send($subscriptions, [
             'title' => $confirmed ? 'تم تأكيد موعدك' : 'تحديث طلب الموعد',
             'body' => $confirmed
-                ? 'تم تأكيد موعدك في عيادة طيبة. اضغط لعرض التفاصيل.'
+                ? sprintf(
+                    'رقم موعدك %s، وأمامك %s في الطابور. اضغط للمتابعة.',
+                    $state['appointment_number'] ?? '—',
+                    $state['people_ahead'] ?? 0
+                )
                 : 'تعذر تأكيد الموعد المطلوب. اضغط لعرض التفاصيل.',
+            'tag' => 'patient-appointment-' . $appointmentRequest->getKey(),
+            'dir' => 'rtl',
+        ]);
+    }
+
+    public function notifyPatientQueue(PublicAppointmentRequest $appointmentRequest, int $peopleAhead): void
+    {
+        $subscriptions = PushSubscriptionModel::where(
+            'public_appointment_request_id',
+            $appointmentRequest->getKey()
+        )->get();
+
+        $this->send($subscriptions, [
+            'title' => $peopleAhead === 0 ? 'حان دورك قريباً' : 'تحديث طابور الموعد',
+            'body' => $peopleAhead === 0
+                ? 'لم يعد أمامك أي مريض. يرجى الاستعداد للدخول.'
+                : "بقي أمامك {$peopleAhead} في الطابور.",
+            'tag' => 'patient-queue-' . $appointmentRequest->getKey(),
+            'dir' => 'rtl',
+        ]);
+    }
+
+    public function notifyPatientCancelled(PublicAppointmentRequest $appointmentRequest): void
+    {
+        $subscriptions = PushSubscriptionModel::where(
+            'public_appointment_request_id',
+            $appointmentRequest->getKey()
+        )->get();
+
+        $this->send($subscriptions, [
+            'title' => 'تم إلغاء موعدك',
+            'body' => 'تم إلغاء هذا الموعد. اضغط لإرسال طلب موعد جديد.',
             'tag' => 'patient-appointment-' . $appointmentRequest->getKey(),
             'dir' => 'rtl',
         ]);

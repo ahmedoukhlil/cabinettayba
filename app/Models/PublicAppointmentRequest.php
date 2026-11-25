@@ -56,4 +56,9 @@ class PublicAppointmentRequest extends Model
     {
         return $this->belongsTo(Infocabinet::class, 'fkidcabinet', 'idEntete');
     }
+
+    public function appointment()
+    {
+        return $this->belongsTo(Rendezvou::class, 'appointment_id', 'IDRdv');
+    }
 }

@@ -7,6 +7,7 @@ use App\Models\Medecin;
 use App\Models\Patient;
 use App\Models\PublicAppointmentRequest;
 use App\Models\Rendezvou;
+use App\Services\AppointmentQueueService;
 use App\Services\WebPushService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -17,10 +18,12 @@ use Illuminate\Validation\Rule;
 class PublicAppointmentController extends Controller
 {
     private WebPushService $webPush;
+    private AppointmentQueueService $queue;
 
-    public function __construct(WebPushService $webPush)
+    public function __construct(WebPushService $webPush, AppointmentQueueService $queue)
     {
         $this->webPush = $webPush;
+        $this->queue = $queue;
     }
 
     public function create()
@@ -220,13 +223,38 @@ class PublicAppointmentController extends Controller
 
     public function show(string $reference, string $token)
     {
+        $appointmentRequest = $this->trackedRequest($reference, $token)
+            ->load(['medecin', 'appointment']);
+        $queueState = $this->queue->state($appointmentRequest);
+
+        return view('public.appointments.show', compact('appointmentRequest', 'queueState'));
+    }
+
+    public function status(string $reference, string $token)
+    {
+        $appointmentRequest = $this->trackedRequest($reference, $token)
+            ->load('appointment');
+        $state = $this->queue->state($appointmentRequest);
+
+        return response()->json([
+            'status' => $appointmentRequest->status,
+            'expired' => $state['expired'],
+            'cancelled' => $state['cancelled'],
+            'appointmentNumber' => $state['appointment_number'],
+            'peopleAhead' => $state['people_ahead'],
+            'newRequestUrl' => route('public.appointment.create'),
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    private function trackedRequest(string $reference, string $token): PublicAppointmentRequest
+    {
         $appointmentRequest = PublicAppointmentRequest::where('reference', $reference)->firstOrFail();
         abort_unless(
             hash_equals($appointmentRequest->tracking_token_hash, hash('sha256', $token)),
             404
         );
 
-        return view('public.appointments.show', compact('appointmentRequest'));
+        return $appointmentRequest;
     }
 
     private function availableSlots(int $cabinetId, int $medecinId, string $date): array

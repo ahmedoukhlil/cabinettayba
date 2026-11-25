@@ -42,6 +42,10 @@ Route::get('/reservation-suivi/{reference}/{token}', [PublicAppointmentControlle
     ->middleware('throttle:60,1')
     ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])
     ->name('public.appointment.show');
+Route::get('/reservation-suivi/{reference}/{token}/statut', [PublicAppointmentController::class, 'status'])
+    ->middleware('throttle:120,1')
+    ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])
+    ->name('public.appointment.status');
 Route::post('/reservation-suivi/{reference}/{token}/notifications', [PushSubscriptionController::class, 'storeForAppointment'])
     ->middleware('throttle:10,1')
     ->where(['reference' => '[A-Z0-9-]+', 'token' => '[A-Za-z0-9]+'])

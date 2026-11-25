@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\PublicAppointmentRequest;
 use App\Models\PushSubscription;
+use App\Services\AppointmentQueueService;
 use Illuminate\Http\Request;
 
 class PushSubscriptionController extends Controller
 {
+    public function __construct(private AppointmentQueueService $queue)
+    {
+    }
+
     public function storeForUser(Request $request)
     {
         $user = $request->user();
@@ -34,6 +39,9 @@ class PushSubscriptionController extends Controller
     public function storeForAppointment(Request $request, string $reference, string $token)
     {
         $appointmentRequest = $this->appointmentRequest($reference, $token);
+        if ($this->queue->state($appointmentRequest->loadMissing('appointment'))['expired']) {
+            return response()->json(['message' => 'انتهت صلاحية رابط هذا الموعد.'], 410);
+        }
         $this->storeSubscription($request, [
             'user_id' => null,
             'public_appointment_request_id' => $appointmentRequest->getKey(),

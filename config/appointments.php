@@ -9,4 +9,5 @@ return [
     'evening_start_time' => env('PUBLIC_BOOKING_EVENING_START_TIME', '17:00'),
     'slot_duration_minutes' => (int) env('PUBLIC_BOOKING_SLOT_DURATION', 30),
     'period_limit' => (int) env('PUBLIC_BOOKING_PERIOD_LIMIT', 20),
+    'tracking_link_expiry_minutes' => (int) env('PUBLIC_TRACKING_LINK_EXPIRY_MINUTES', 180),
 ];
