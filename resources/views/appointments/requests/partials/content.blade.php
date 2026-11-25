@@ -58,7 +58,7 @@
                             </td>
                             <td>
                                 <span class="font-medium text-gray-900">{{ trim($item->prenom . ' ' . $item->nom) }}</span>
-                                <a href="{{ route('appointment-requests.show', $item) }}" class="mt-1 block text-xs font-semibold text-primary hover:underline">{{ $item->reference }}</a>
+                                <a href="{{ route('appointment-requests.show', ['appointmentRequest' => $item] + ($embedded ? ['embedded' => 1] : [])) }}" class="mt-1 block text-xs font-semibold text-primary hover:underline">{{ $item->reference }}</a>
                             </td>
                             <td class="whitespace-nowrap"><a href="tel:{{ $item->telephone }}" class="font-medium text-primary hover:underline">{{ $item->telephone }}</a></td>
                             <td>Dr {{ optional($item->medecin)->Nom ?: '—' }}</td>
@@ -93,7 +93,7 @@
                                             'rejected' => 'badge-error', 'cancelled' => 'bg-gray-200 text-gray-700',
                                         ];
                                     @endphp
-                                    <a href="{{ route('appointment-requests.show', $item) }}" class="badge {{ $itemStatusClasses[$item->status] ?? 'bg-gray-100 text-gray-700' }} hover:underline">
+                                    <a href="{{ route('appointment-requests.show', ['appointmentRequest' => $item] + ($embedded ? ['embedded' => 1] : [])) }}" class="badge {{ $itemStatusClasses[$item->status] ?? 'bg-gray-100 text-gray-700' }} hover:underline">
                                         {{ $itemStatusLabels[$item->status] ?? $item->status }}
                                     </a>
                                 @endif

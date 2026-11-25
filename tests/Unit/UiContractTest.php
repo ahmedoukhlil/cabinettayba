@@ -67,6 +67,19 @@ class UiContractTest extends TestCase
         $this->assertStringNotContainsString('wire:keydown.escape.window', $component);
     }
 
+    public function test_embedded_appointment_workflow_never_loads_the_global_pwa_actions(): void
+    {
+        $embeddedLayout = file_get_contents(dirname(__DIR__, 2) . '/resources/views/layouts/embedded.blade.php');
+        $embeddedIndex = file_get_contents(dirname(__DIR__, 2) . '/resources/views/appointments/requests/embedded.blade.php');
+        $show = file_get_contents(dirname(__DIR__, 2) . '/resources/views/appointments/requests/show.blade.php');
+
+        $this->assertStringNotContainsString('data-pwa-notifications', $embeddedLayout);
+        $this->assertStringNotContainsString('js/pwa.js', $embeddedLayout);
+        $this->assertStringContainsString("@extends('layouts.embedded')", $embeddedIndex);
+        $this->assertStringContainsString("@extends(\$embedded ? 'layouts.embedded' : 'layouts.app')", $show);
+        $this->assertStringContainsString("['embedded' => 1]", $show);
+    }
+
     private function livewireViewContents(): string
     {
         $directory = dirname(__DIR__, 2) . '/resources/views/livewire';

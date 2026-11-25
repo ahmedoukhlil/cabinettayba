@@ -53,14 +53,15 @@ class AppointmentRequestController extends Controller
         return view($view, compact('requests', 'status'));
     }
 
-    public function show(PublicAppointmentRequest $appointmentRequest)
+    public function show(Request $request, PublicAppointmentRequest $appointmentRequest)
     {
         $this->ensureSameCabinet($appointmentRequest);
         abort_unless($this->canView($appointmentRequest), 403);
         $appointmentRequest->load(['medecin', 'acte']);
         $canManage = $this->canManage($appointmentRequest);
+        $embedded = $request->boolean('embedded');
 
-        return view('appointments.requests.show', compact('appointmentRequest', 'canManage'));
+        return view('appointments.requests.show', compact('appointmentRequest', 'canManage', 'embedded'));
     }
 
     public function confirm(PublicAppointmentRequest $appointmentRequest)
@@ -403,8 +404,13 @@ class AppointmentRequestController extends Controller
         $appointmentRequest->refresh();
         $this->webPush->notifyPatientRescheduled($appointmentRequest);
 
+        $routeParameters = ['appointmentRequest' => $appointmentRequest];
+        if ($request->boolean('embedded')) {
+            $routeParameters['embedded'] = 1;
+        }
+
         return redirect()
-            ->route('appointment-requests.show', $appointmentRequest)
+            ->route('appointment-requests.show', $routeParameters)
             ->with('message', 'La demande a été reprogrammée et le patient a été notifié.');
     }
 

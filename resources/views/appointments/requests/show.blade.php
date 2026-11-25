@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($embedded ? 'layouts.embedded' : 'layouts.app')
 
 @section('title', 'Traiter une demande de rendez-vous')
 
@@ -6,7 +6,7 @@
 <main class="mx-auto max-w-4xl space-y-5 px-4 py-5 sm:px-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <a href="{{ route('appointment-requests.index') }}" class="text-sm font-semibold text-primary hover:underline">
+            <a href="{{ route('appointment-requests.index', $embedded ? ['embedded' => 1] : []) }}" class="text-sm font-semibold text-primary hover:underline">
                 <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Toutes les demandes
             </a>
             <h1 class="mt-2 text-2xl font-bold text-primary">Demande {{ $appointmentRequest->reference }}</h1>
@@ -68,13 +68,13 @@
                 <h2 class="text-lg font-bold text-gray-900">Traiter la demande</h2>
                 <p class="mt-1 text-sm text-gray-500">La confirmation créera automatiquement le rendez-vous dans l’agenda.</p>
                 <div class="mt-5 flex flex-wrap gap-3">
-                    <form method="POST" action="{{ route('appointment-requests.confirm', $appointmentRequest) }}">
+                    <form method="POST" action="{{ route('appointment-requests.confirm', ['appointmentRequest' => $appointmentRequest] + ($embedded ? ['embedded' => 1] : [])) }}">
                         @csrf
                         <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700">
                             <i class="fas fa-check" aria-hidden="true"></i> Confirmer
                         </button>
                     </form>
-                    <form method="POST" action="{{ route('appointment-requests.reject', $appointmentRequest) }}" onsubmit="event.preventDefault(); const form = this; confirmAction('Refuser la demande', 'Le créneau sera libéré et le patient sera notifié.', () => form.submit());">
+                    <form method="POST" action="{{ route('appointment-requests.reject', ['appointmentRequest' => $appointmentRequest] + ($embedded ? ['embedded' => 1] : [])) }}" onsubmit="event.preventDefault(); const form = this; confirmAction('Refuser la demande', 'Le créneau sera libéré et le patient sera notifié.', () => form.submit());">
                         @csrf
                         <button type="submit" class="btn-danger px-4 py-3"><i class="fas fa-times mr-1" aria-hidden="true"></i> Refuser</button>
                     </form>
@@ -101,7 +101,7 @@
                     <p class="mt-1 text-sm text-gray-500">Chaque étape met à jour la file et notifie le patient.</p>
                     <div class="mt-5 flex flex-wrap gap-3">
                         @foreach($queueActions as [$value, $label, $icon, $class])
-                            <form method="POST" action="{{ route('appointment-requests.queue-status', $appointmentRequest) }}"
+                            <form method="POST" action="{{ route('appointment-requests.queue-status', ['appointmentRequest' => $appointmentRequest] + ($embedded ? ['embedded' => 1] : [])) }}"
                                   @if($value === 'no_show') onsubmit="event.preventDefault(); const form = this; confirmAction('Marquer le patient absent', 'La file avancera et le patient sera invité à reprendre rendez-vous.', () => form.submit());" @endif>
                                 @csrf
                                 <input type="hidden" name="queue_status" value="{{ $value }}">
@@ -112,7 +112,7 @@
                         @endforeach
                     </div>
                     @if(in_array($appointmentRequest->status, ['confirmed', 'arrived'], true))
-                        <form method="POST" action="{{ route('appointment-requests.cancel', $appointmentRequest) }}" class="mt-4 border-t border-gray-100 pt-4" onsubmit="event.preventDefault(); const form = this; confirmAction('Annuler le rendez-vous', 'Cette action libérera le créneau et notifiera le patient.', () => form.submit());">
+                        <form method="POST" action="{{ route('appointment-requests.cancel', ['appointmentRequest' => $appointmentRequest] + ($embedded ? ['embedded' => 1] : [])) }}" class="mt-4 border-t border-gray-100 pt-4" onsubmit="event.preventDefault(); const form = this; confirmAction('Annuler le rendez-vous', 'Cette action libérera le créneau et notifiera le patient.', () => form.submit());">
                             @csrf
                             <button type="submit" class="btn-danger px-4 py-3">
                                 <i class="fas fa-calendar-times mr-1" aria-hidden="true"></i> Annuler le rendez-vous
@@ -126,7 +126,7 @@
             <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
                 <h2 class="text-lg font-bold text-primary">Reprogrammer</h2>
                 <p class="mt-1 text-sm text-gray-600">Choisissez un nouveau créneau. L’agenda sera synchronisé et le patient sera notifié.</p>
-                <form method="POST" action="{{ route('appointment-requests.reschedule', $appointmentRequest) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
+                <form method="POST" action="{{ route('appointment-requests.reschedule', ['appointmentRequest' => $appointmentRequest] + ($embedded ? ['embedded' => 1] : [])) }}" class="mt-4 grid gap-3 sm:grid-cols-2">
                     @csrf
                     <div>
                         <label for="date_souhaitee" class="block text-sm font-semibold text-gray-700">Nouvelle date</label>
