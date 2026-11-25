@@ -4,11 +4,14 @@
     @if (session()->has('message'))
         <div class="mb-4 p-3 bg-primary-light text-primary rounded">{{ session('message') }}</div>
     @endif
+    @if (session()->has('error'))
+        <div class="mb-4 rounded bg-red-50 p-3 text-red-800">{{ session('error') }}</div>
+    @endif
 
     <!-- Barre de recherche et bouton nouveau -->
     <div class="mb-4 flex items-center gap-4">
-        <input type="text" wire:model="search" placeholder="Rechercher un assureur..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
-        <button wire:click="openModal" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">+ Nouvel assureur</button>
+        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Rechercher un assureur..." class="form-input">
+        <button type="button" wire:click="openModal" class="btn-primary whitespace-nowrap"><i class="fas fa-plus" aria-hidden="true"></i> Nouvel assureur</button>
     </div>
 
     <!-- Tableau des assureurs -->
@@ -51,41 +54,34 @@
 
     <!-- Modal création/édition -->
     @if($showModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-8 relative">
-                <div class="text-xl font-bold mb-4">{{ $assureurId ? 'Modifier' : 'Créer' }} un assureur</div>
-                <button wire:click="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-primary text-2xl font-bold">&times;</button>
-                <form wire:submit.prevent="save">
+        <x-modal id="insurer-form" :title="$assureurId ? 'Modifier un assureur' : 'Créer un assureur'" icon="fa-shield-alt" close="closeModal" level="nested" max-width="max-w-lg">
+                <form wire:submit="save">
                     <div class="mb-4">
                         <label for="libAssurance" class="block text-sm font-medium text-gray-700">Nom de l'assureur *</label>
-                        <input type="text" wire:model.defer="libAssurance" id="libAssurance" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <input type="text" wire:model="libAssurance" id="libAssurance" class="form-input">
                         @error('libAssurance') <span class="text-primary text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div class="mb-4">
                         <label for="tauxdePEC" class="block text-sm font-medium text-gray-700">Taux de PEC (%) *</label>
-                        <input type="number" step="0.01" wire:model.defer="tauxdePEC" id="tauxdePEC" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <input type="number" min="0" max="100" step="0.01" wire:model="tauxdePEC" id="tauxdePEC" class="form-input">
                         @error('tauxdePEC') <span class="text-primary text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" wire:click="closeModal" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Annuler</button>
-                        <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">Enregistrer</button>
+                        <button type="button" wire:click="closeModal" class="btn-secondary">Annuler</button>
+                        <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="save">Enregistrer</button>
                     </div>
                 </form>
-            </div>
-        </div>
+        </x-modal>
     @endif
 
     <!-- Modal de suppression -->
     @if($showDeleteModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-8 relative">
-                <div class="text-xl font-bold mb-4">Confirmer la suppression</div>
-                <p class="mb-6">Êtes-vous sûr de vouloir supprimer cet assureur ? Cette action est irréversible.</p>
-                <div class="flex justify-end space-x-3">
-                    <button wire:click="deleteAssureur" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark">Supprimer</button>
-                    <button wire:click="$set('showDeleteModal', false)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Annuler</button>
-                </div>
-            </div>
-        </div>
+        <x-modal id="insurer-delete" title="Supprimer l’assureur ?" subtitle="Cette action est irréversible." icon="fa-triangle-exclamation" close="$set('showDeleteModal', false)" level="nested" max-width="max-w-md">
+            <p class="text-sm text-gray-700">L’assureur ne pourra être supprimé que s’il n’est associé à aucun dossier.</p>
+            <x-slot:footer>
+                <button type="button" wire:click="$set('showDeleteModal', false)" class="btn-secondary">Annuler</button>
+                <button type="button" wire:click="deleteAssureur" class="btn-danger" wire:loading.attr="disabled" wire:target="deleteAssureur">Supprimer</button>
+            </x-slot:footer>
+        </x-modal>
     @endif
-</div> 
+</div>

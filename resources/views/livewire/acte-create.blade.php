@@ -13,19 +13,19 @@
             <div class="space-y-6">
                 <div>
                     <label class="block text-base font-bold text-gray-700 mb-1">Nom de l'acte <span class="text-red-500">*</span></label>
-                    <input type="text" wire:model.defer="Acte" class="mt-1 block w-full rounded-md border-gray-400 shadow focus:border-blue-500 focus:ring-blue-500 h-12 text-lg bg-gray-50" required>
+                    <input type="text" wire:model="Acte" class="form-input" required>
                     @error('Acte') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
                     <label class="block text-base font-bold text-gray-700 mb-1">Prix de référence (MRU) <span class="text-red-500">*</span></label>
-                    <input type="number" wire:model.defer="PrixRef" min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-400 shadow focus:border-blue-500 focus:ring-blue-500 h-12 text-lg bg-gray-50" required>
+                    <input type="number" wire:model="PrixRef" min="0" step="0.01" class="form-input" required>
                     @error('PrixRef') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
                     <label class="block text-base font-bold text-gray-700 mb-1">Type d'acte <span class="text-red-500">*</span></label>
-                    <select wire:model.defer="fkidTypeActe" class="mt-1 block w-full rounded-md border-gray-400 shadow focus:border-blue-500 focus:ring-blue-500 h-12 text-lg bg-gray-50" required>
+                    <select wire:model="fkidTypeActe" class="form-select" required>
                         <option value="">Sélectionner un type d'acte</option>
                         @foreach($types as $type)
                             <option value="{{ $type->ID }}">{{ $type->LibTypeActe }}</option>
@@ -39,7 +39,7 @@
             <div class="space-y-6">
                 <div>
                     <label class="block text-base font-bold text-gray-700 mb-1">Assureur</label>
-                    <select wire:model.defer="fkidassureur" class="mt-1 block w-full rounded-md border-gray-400 shadow focus:border-blue-500 focus:ring-blue-500 h-12 text-lg bg-gray-50">
+                    <select wire:model="fkidassureur" class="form-select">
                         <option value="">Aucun assureur</option>
                         @foreach($assureurs as $assureur)
                             <option value="{{ $assureur->ID }}">{{ $assureur->LibAssurance }}</option>
@@ -50,12 +50,12 @@
 
                 <div>
                     <label class="block text-base font-bold text-gray-700 mb-1">Nom arabe</label>
-                    <input type="text" wire:model.defer="ActeArab" class="mt-1 block w-full rounded-md border-gray-400 shadow focus:border-blue-500 focus:ring-blue-500 h-12 text-lg bg-gray-50">
+                    <input type="text" wire:model="ActeArab" class="form-input" dir="rtl">
                     @error('ActeArab') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="flex items-center">
-                    <input type="checkbox" wire:model.defer="Masquer" id="masquer" class="form-checkbox h-5 w-5 text-blue-600 rounded border-gray-400 focus:ring-blue-500">
+                    <input type="checkbox" wire:model="Masquer" id="masquer" class="form-checkbox h-5 w-5 text-blue-600 rounded border-gray-400 focus:ring-blue-500">
                     <label for="masquer" class="ml-2 block text-base text-gray-700">Masquer cet acte</label>
                 </div>
             </div>
@@ -65,4 +65,4 @@
             <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-lg font-bold">Enregistrer</button>
         </div>
     </form>
-</div> 
+</div>

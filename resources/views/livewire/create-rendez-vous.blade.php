@@ -11,7 +11,7 @@
     </div>
 
     <!-- Formulaire de création -->
-    <form wire:submit.prevent="createRendezVous" class="space-y-4">
+    <form wire:submit="createRendezVous" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- Recherche de patient -->
             @if(!$patient)
@@ -43,7 +43,7 @@
             <!-- Sélection du médecin -->
             <div>
                 <label for="medecin_id" class="block text-sm font-medium text-gray-700">Médecin</label>
-                <select wire:model="medecin_id" id="medecin_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" {{ $isDocteur ? 'disabled' : '' }}>
+                <select wire:model="medecin_id" id="medecin_id" class="form-select mt-1" {{ $isDocteur ? 'disabled' : '' }}>
                     <option value="">Sélectionner un médecin</option>
                     @foreach($medecins as $medecin)
                         <option value="{{ $medecin->idMedecin }}">Dr. {{ $medecin->Nom }} {{ $medecin->Prenom }}</option>
@@ -58,28 +58,28 @@
             <!-- Date du rendez-vous -->
             <div>
                 <label for="date_rdv" class="block text-sm font-medium text-gray-700">Date</label>
-                <input type="date" wire:model="date_rdv" id="date_rdv" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <input type="date" wire:model="date_rdv" id="date_rdv" class="form-input mt-1">
                 @error('date_rdv') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Heure du rendez-vous -->
             <div>
                 <label for="heure_rdv" class="block text-sm font-medium text-gray-700">Heure</label>
-                <input type="time" wire:model="heure_rdv" id="heure_rdv" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <input type="time" wire:model="heure_rdv" id="heure_rdv" class="form-input mt-1">
                 @error('heure_rdv') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Acte prévu -->
             <div>
                 <label for="acte_prevu" class="block text-sm font-medium text-gray-700">Acte prévu</label>
-                <input type="text" wire:model="acte_prevu" id="acte_prevu" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Ex: Consultation, Détartrage...">
+                <input type="text" wire:model="acte_prevu" id="acte_prevu" class="form-input mt-1" placeholder="Ex: Consultation, Détartrage...">
                 @error('acte_prevu') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <!-- Statut -->
             <div>
                 <label for="rdv_confirmer" class="block text-sm font-medium text-gray-700">Statut</label>
-                <select wire:model="rdv_confirmer" id="rdv_confirmer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <select wire:model="rdv_confirmer" id="rdv_confirmer" class="form-select mt-1">
                     <option value="confirmé">Confirmé</option>
                     <option value="en attente">En attente</option>
                 </select>
@@ -88,9 +88,9 @@
         </div>
 
         <div class="flex justify-end">
-            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <i class="fas fa-plus mr-2"></i>
-                Créer le rendez-vous
+            <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="createRendezVous">
+                <span wire:loading.remove wire:target="createRendezVous"><i class="fas fa-plus mr-2" aria-hidden="true"></i>Créer le rendez-vous</span>
+                <span wire:loading wire:target="createRendezVous"><span class="spinner mr-2" aria-hidden="true"></span>Création…</span>
             </button>
         </div>
     </form>

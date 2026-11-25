@@ -64,7 +64,7 @@
                     </div>
                 @endif
 
-                <form wire:submit.prevent="save" class="space-y-4">
+                <form wire:submit="save" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Sélection du patient -->
                         @if($patient)
@@ -106,7 +106,7 @@
                         <!-- Sélection du médecin -->
                         <div>
                             <label for="medecin_id" class="block text-sm font-medium text-gray-700">Médecin</label>
-                            <select id="medecin_id" wire:model.live="medecin_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <select id="medecin_id" wire:model="medecin_id" class="form-select mt-1">
                                 <option value="">Sélectionner un médecin</option>
                                 @foreach($medecins as $medecin)
                                     <option value="{{ $medecin->idMedecin }}">Dr. {{ $medecin->Nom }}</option>
@@ -118,7 +118,7 @@
                         <!-- Mode de paiement -->
                         <div>
                             <label for="mode_paiement" class="block text-sm font-medium text-gray-700">Mode de paiement</label>
-                            <select id="mode_paiement" wire:model.live="mode_paiement" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <select id="mode_paiement" wire:model="mode_paiement" class="form-select mt-1">
                                 <option value="">Sélectionner un mode de paiement</option>
                                 @foreach($typesPaiement as $type)
                                     <option value="{{ $type }}">{{ $type }}</option>
@@ -141,7 +141,7 @@
                     </pre> --}}
 
                     <!-- Affichage de l'assurance -->
-                    @if($selectedPatient && $selectedPatient['Assureur'] > 0)
+                    @if($selectedPatient && !empty($selectedPatient['IdentifiantAssurance']) && !empty($selectedPatient['Assureur']))
                         <div class="mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
                             <div class="flex items-center space-x-4">
                                 <span class="text-green-800 font-semibold">Patient assuré</span>
@@ -169,8 +169,9 @@
 
                     <!-- Bouton de soumission -->
                     <div class="mt-6 flex justify-end">
-                        <button type="submit" class="px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white rounded hover:from-green-700 hover:to-green-600">
-                            Enregistrer la consultation
+                        <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="save">
+                            <span wire:loading.remove wire:target="save"><i class="fas fa-check mr-2" aria-hidden="true"></i>Enregistrer la consultation</span>
+                            <span wire:loading wire:target="save"><span class="spinner mr-2" aria-hidden="true"></span>Enregistrement…</span>
                         </button>
                     </div>
                 </form>

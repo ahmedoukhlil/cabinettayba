@@ -20,7 +20,7 @@ class ActeCreate extends Component
         'PrixRef' => 'required|numeric|min:0',
         'fkidTypeActe' => 'required|integer|exists:typeactes,ID',
         'ActeArab' => 'nullable|string|max:255',
-        'fkidassureur' => 'nullable|integer|exists:assureur,ID',
+        'fkidassureur' => 'nullable|integer|exists:assureurs,IDAssureur',
         'Masquer' => 'boolean',
     ];
 
@@ -59,4 +59,4 @@ class ActeCreate extends Component
     {
         return view('livewire.acte-create');
     }
-} 
+}

@@ -108,139 +108,81 @@
     @endif
 
     @if($action && $selectedPatient)
-        <div class="modal-overlay" wire:click.self="clearAction">
-            <section class="modal-box max-w-5xl" role="dialog" aria-modal="true" aria-labelledby="patient-action-title">
-                <header class="modal-header">
-                    <div>
-                        <h2 id="patient-action-title">
-                            <i class="fas {{ $action === 'consultation' ? 'fa-stethoscope' : ($action === 'reglement' ? 'fa-file-invoice-dollar' : 'fa-calendar-check') }} mr-2"></i>
-                            {{ $action === 'consultation' ? 'Consultation' : ($action === 'reglement' ? 'Facture / Devis' : 'Rendez-vous') }}
-                        </h2>
-                        <p>{{ $patientName }}</p>
-                    </div>
-                    <button wire:click="clearAction" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body">
-                    @if($action === 'consultation')
-                        <livewire:consultation-form :patient="$selectedPatient" wire:key="consultation-modal-{{ $patientId }}" />
-                    @elseif($action === 'reglement')
-                        <livewire:reglement-facture :selectedPatient="$selectedPatient" wire:key="reglement-modal-{{ $patientId }}" />
-                    @else
-                        <livewire:create-rendez-vous :patient="$selectedPatient" wire:key="rdv-modal-{{ $patientId }}" />
-                    @endif
-                </div>
-            </section>
-        </div>
+        <x-modal
+            id="patient-action"
+            :title="$action === 'consultation' ? 'Consultation' : ($action === 'reglement' ? 'Facture / Devis' : 'Rendez-vous')"
+            :subtitle="$patientName"
+            :icon="$action === 'consultation' ? 'fa-stethoscope' : ($action === 'reglement' ? 'fa-file-invoice-dollar' : 'fa-calendar-check')"
+            close="clearAction"
+            max-width="max-w-5xl"
+        >
+            @if($action === 'consultation')
+                <livewire:consultation-form :patient="$selectedPatient" wire:key="consultation-modal-{{ $patientId }}" />
+            @elseif($action === 'reglement')
+                <livewire:reglement-facture :selectedPatient="$selectedPatient" wire:key="reglement-modal-{{ $patientId }}" />
+            @else
+                <livewire:create-rendez-vous :patient="$selectedPatient" wire:key="rdv-modal-{{ $patientId }}" />
+            @endif
+        </x-modal>
     @endif
 
     @if($showCaisseOperations)
-        <div class="modal-overlay" wire:click.self="closeCaisseOperations">
-            <section class="modal-box max-w-6xl max-h-[90vh]" role="dialog" aria-modal="true" aria-labelledby="cash-title">
-                <header class="modal-header">
-                    <div><h2 id="cash-title"><i class="fas fa-cash-register mr-2"></i>Caisse Paie</h2><p>Opérations et situation journalière</p></div>
-                    <button wire:click="closeCaisseOperations" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body !p-0"><livewire:caisse-operations-manager wire:key="caisse-operations" /></div>
-            </section>
-        </div>
+        <x-modal id="cash" title="Caisse Paie" subtitle="Opérations et situation journalière" icon="fa-cash-register" close="closeCaisseOperations" max-width="max-w-6xl" body-class="modal-body !p-0">
+            <livewire:caisse-operations-manager wire:key="caisse-operations" />
+        </x-modal>
     @endif
 
     @if($showAppointmentRequests)
-        <div class="modal-overlay" wire:click.self="closeAppointmentRequests">
-            <section class="modal-box max-w-7xl max-h-[92vh]" role="dialog" aria-modal="true" aria-labelledby="appointment-requests-title">
-                <header class="modal-header">
-                    <div>
-                        <h2 id="appointment-requests-title"><i class="fas fa-calendar-check mr-2"></i>Demandes en ligne</h2>
-                        <p>Validation des rendez-vous demandés depuis l’interface publique</p>
-                    </div>
-                    <button type="button" wire:click="closeAppointmentRequests" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body !p-0" x-data="{ loaded: false }">
-                    <div x-show="!loaded" class="absolute inset-0 z-10 flex items-center justify-center bg-white">
-                        <span class="spinner spinner-dark" aria-hidden="true"></span>
-                        <span class="ml-3 text-sm font-medium text-gray-600">Chargement des demandes…</span>
-                    </div>
-                    <iframe
-                        src="{{ route('appointment-requests.index', ['embedded' => 1]) }}"
-                        title="Demandes de rendez-vous en ligne"
-                        class="h-[76vh] w-full border-0 bg-gray-50"
-                        @load="loaded = true">
-                    </iframe>
+        <x-modal id="appointment-requests" title="Demandes en ligne" subtitle="Validation des rendez-vous demandés depuis l’interface publique" icon="fa-calendar-check" close="closeAppointmentRequests" max-width="max-w-7xl" body-class="modal-body !p-0 relative">
+            <div x-data="{ loaded: false }">
+                <div x-show="!loaded" class="absolute inset-0 z-10 flex items-center justify-center bg-white">
+                    <span class="spinner spinner-dark" aria-hidden="true"></span>
+                    <span class="ml-3 text-sm font-medium text-gray-600">Chargement des demandes…</span>
                 </div>
-            </section>
-        </div>
+                <iframe
+                    src="{{ route('appointment-requests.index', ['embedded' => 1]) }}"
+                    title="Demandes de rendez-vous en ligne"
+                    class="h-[76vh] w-full border-0 bg-gray-50"
+                    @load="loaded = true">
+                </iframe>
+            </div>
+        </x-modal>
     @endif
 
     @if($showCreateRdvModal)
-        <div class="modal-overlay" wire:click.self="closeCreateRdvModal">
-            <section class="modal-box max-w-6xl" role="dialog" aria-modal="true" aria-labelledby="rdv-title">
-                <header class="modal-header">
-                    <div><h2 id="rdv-title"><i class="fas fa-calendar-plus mr-2"></i>Gestion des rendez-vous</h2></div>
-                    <button wire:click="closeCreateRdvModal" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body"><livewire:create-rendez-vous wire:key="create-rdv-global" /></div>
-            </section>
-        </div>
+        <x-modal id="rdv" title="Gestion des rendez-vous" icon="fa-calendar-plus" close="closeCreateRdvModal" max-width="max-w-6xl">
+            <livewire:create-rendez-vous wire:key="create-rdv-global" />
+        </x-modal>
     @endif
 
     @if($showGestionPatientsModal)
-        <div class="modal-overlay" wire:click.self="closeGestionPatientsModal">
-            <section class="modal-box max-w-7xl" role="dialog" aria-modal="true" aria-labelledby="patients-title">
-                <header class="modal-header">
-                    <div><h2 id="patients-title"><i class="fas fa-users mr-2"></i>Liste des patients</h2></div>
-                    <button wire:click="closeGestionPatientsModal" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body"><livewire:patient-manager /></div>
-            </section>
-        </div>
+        <x-modal id="patients" title="Liste des patients" icon="fa-users" close="closeGestionPatientsModal" max-width="max-w-7xl">
+            <livewire:patient-manager />
+        </x-modal>
     @endif
 
     @if($showAssureurModal)
-        <div class="modal-overlay" wire:click.self="fermerAssureurModal">
-            <section class="modal-box max-w-3xl" role="dialog" aria-modal="true" aria-labelledby="insurance-title">
-                <header class="modal-header">
-                    <div><h2 id="insurance-title"><i class="fas fa-shield-alt mr-2"></i>Assurances</h2></div>
-                    <button wire:click="fermerAssureurModal" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body"><livewire:assureur-manager wire:key="assureur-manager-modal" /></div>
-            </section>
-        </div>
+        <x-modal id="insurance" title="Assurances" icon="fa-shield-alt" close="fermerAssureurModal" max-width="max-w-3xl">
+            <livewire:assureur-manager wire:key="assureur-manager-modal" />
+        </x-modal>
     @endif
 
     @if($showListeActesModal)
-        <div class="modal-overlay" wire:click.self="fermerListeActesModal">
-            <section class="modal-box max-w-7xl" role="dialog" aria-modal="true" aria-labelledby="acts-title">
-                <header class="modal-header">
-                    <div><h2 id="acts-title"><i class="fas fa-list-alt mr-2"></i>Actes / Soins</h2></div>
-                    <button wire:click="fermerListeActesModal" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body"><livewire:acte-manager wire:key="acte-manager" /></div>
-            </section>
-        </div>
+        <x-modal id="acts" title="Actes / Soins" icon="fa-list-alt" close="fermerListeActesModal" max-width="max-w-7xl">
+            <livewire:acte-manager wire:key="acte-manager" />
+        </x-modal>
     @endif
 
     @if($showUsersModal)
-        <div class="modal-overlay" wire:click.self="closeUsersModal">
-            <section class="modal-box max-w-5xl" role="dialog" aria-modal="true" aria-labelledby="users-title">
-                <header class="modal-header">
-                    <div><h2 id="users-title"><i class="fas fa-users-cog mr-2"></i>Utilisateurs</h2></div>
-                    <button wire:click="closeUsersModal" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body"><livewire:user-manager /></div>
-            </section>
-        </div>
+        <x-modal id="users" title="Utilisateurs" icon="fa-users-cog" close="closeUsersModal" max-width="max-w-5xl">
+            <livewire:user-manager />
+        </x-modal>
     @endif
 
     @if($isDocteurProprietaire && $showStatistiques)
-        <div class="modal-overlay" wire:click.self="closeStatistiques">
-            <section class="modal-box max-w-7xl" role="dialog" aria-modal="true" aria-labelledby="stats-title">
-                <header class="modal-header">
-                    <div><h2 id="stats-title"><i class="fas fa-chart-bar mr-2"></i>Statistiques</h2></div>
-                    <button wire:click="closeStatistiques" class="modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </header>
-                <div class="modal-body"><livewire:statistiques-manager wire:key="statistiques-manager" /></div>
-            </section>
-        </div>
+        <x-modal id="stats" title="Statistiques" icon="fa-chart-bar" close="closeStatistiques" max-width="max-w-7xl">
+            <livewire:statistiques-manager wire:key="statistiques-manager" />
+        </x-modal>
     @endif
 
     @if($selectedPatient)

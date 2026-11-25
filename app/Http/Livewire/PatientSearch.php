@@ -72,6 +72,7 @@ class PatientSearch extends Component
                 'patients.Genre',
                 'patients.DtNaissance',
                 'patients.Assureur',
+                'patients.IdentifiantAssurance',
                 'assureurs.TauxdePEC',
                 'assureurs.LibAssurance'
             )
@@ -90,6 +91,7 @@ class PatientSearch extends Component
                     'Genre' => $patient->Genre,
                     'DtNaissance' => $patient->DtNaissance,
                     'Assureur' => $patient->Assureur,
+                    'IdentifiantAssurance' => $patient->IdentifiantAssurance,
                     'TauxPEC' => $patient->TauxdePEC ?? 0,
                     'NomAssureur' => $patient->LibAssurance ?? ''
                 ];
@@ -126,6 +128,7 @@ class PatientSearch extends Component
                     'Genre' => $patient->Genre,
                     'DtNaissance' => $patient->DtNaissance,
                     'Assureur' => $patient->Assureur,
+                    'IdentifiantAssurance' => $patient->IdentifiantAssurance,
                     'TauxPEC' => $assureur ? $assureur->TauxdePEC : 0,
                     'NomAssureur' => $assureur ? $assureur->LibAssurance : ''
                 ];
@@ -179,8 +182,7 @@ class PatientSearch extends Component
      */
     public function onBlur()
     {
-        // Fermer la liste quand on clique ailleurs
-        $this->dispatch('delay-blur');
+        $this->closeResults();
     }
 
     /**

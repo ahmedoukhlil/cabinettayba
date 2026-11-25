@@ -5,7 +5,7 @@
             <div class="relative">
                 <label for="patient-search" class="sr-only">Rechercher un patient</label>
                 <div class="flex flex-col sm:flex-row gap-2 sm:gap-0">
-                    <select wire:model="searchBy" aria-label="Critère de recherche" class="rounded-lg sm:rounded-r-none border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select wire:model.live="searchBy" aria-label="Critère de recherche" class="rounded-lg sm:rounded-r-none border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="all">Tout</option>
                         <option value="name">Nom/Prénom</option>
                         <option value="nni">NNI</option>
@@ -17,7 +17,7 @@
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
             <label class="flex items-center space-x-2 text-sm text-gray-600">
-                <input type="checkbox" wire:model="showInactive" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                <input type="checkbox" wire:model.live="showInactive" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                 <span>Afficher les patients inactifs</span>
             </label>
             <button wire:click="openModal" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
@@ -85,13 +85,13 @@
                                 </span>
                             </td>
                             <td class="px-3 py-2 w-1/4">
-                                @if($patient->Assureur > 0 && $patient->assureur)
+                                @if(!empty($patient->IdentifiantAssurance) && $patient->assureur)
                                     <div class="space-y-1">
                                         <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 border border-green-200 shadow-sm">
                                             {{ $patient->assureur->LibAssurance }}
                                         </span>
                                         <div class="text-xs text-gray-500">
-                                            Taux PEC: {{ number_format($patient->assureur->TauxdePEC, 2) }}%
+                                            Taux PEC: {{ number_format($patient->assureur->TauxdePEC * 100, 2) }}%
                                         </div>
                                     </div>
                                 @else
@@ -131,20 +131,9 @@
 
     <!-- Modal de création/édition -->
     @if($showModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="patient-modal-title">
-        <div class="flex items-stretch justify-center min-h-screen px-0 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl border border-gray-300 transform transition-all sm:my-8 sm:align-middle max-w-lg w-full">
-                <form wire:submit.prevent="save">
+        <x-modal id="patient-form" :title="$patientId ? 'Modifier le patient' : 'Nouveau patient'" icon="fa-user" close="closeModal" level="nested" max-width="max-w-3xl" body-class="modal-body !p-0">
+                <form wire:submit="save">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="mb-4">
-                            <h3 id="patient-modal-title" class="text-lg font-medium text-gray-900">
-                                {{ $patientId ? 'Modifier le patient' : 'Nouveau patient' }}
-                            </h3>
-                        </div>
                         <div class="space-y-4">
                             <!-- Informations personnelles -->
                             <div class="bg-gray-50 p-4 rounded-lg">
@@ -152,7 +141,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label for="identifiantPatient" class="block text-sm font-medium text-gray-700">N° Fiche</label>
-                                        <input type="number" wire:model.defer="identifiantPatient" id="identifiantPatient" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" @if(!$patientId) disabled @endif>
+                                        <input type="number" wire:model="identifiantPatient" id="identifiantPatient" class="form-input" @if(!$patientId) readonly @endif>
                                         @error('identifiantPatient') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                         @if(!$patientId)
                                             <p class="text-xs text-gray-500">Le N° Fiche est généré automatiquement à la création.</p>
@@ -160,26 +149,26 @@
                                     </div>
                                     <div>
                                         <label for="nom" class="block text-sm font-medium text-gray-700">Nom *</label>
-                                        <input type="text" wire:model.defer="nom" id="nom" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Entrez le nom du patient">
+                                        <input type="text" wire:model="nom" id="nom" class="form-input" placeholder="Entrez le nom du patient">
                                         @error('nom') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
 
                                 <div class="mt-4">
                                     <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
-                                    <input type="text" wire:model.defer="prenom" id="prenom" autocomplete="given-name" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Entrez le prénom du patient">
+                                    <input type="text" wire:model="prenom" id="prenom" autocomplete="given-name" class="form-input" placeholder="Entrez le prénom du patient">
                                     @error('prenom') <span class="text-red-500 text-xs" role="alert">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="nni" class="block text-sm font-medium text-gray-700">NNI</label>
-                                        <input type="text" wire:model.defer="nni" id="nni" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Numéro d'identité national">
+                                        <input type="text" wire:model="nni" id="nni" class="form-input" placeholder="Numéro d'identité national">
                                         @error('nni') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                     <div>
                                         <label for="genre" class="block text-sm font-medium text-gray-700">Genre</label>
-                                        <select wire:model.defer="genre" id="genre" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500">
+                                        <select wire:model="genre" id="genre" class="form-select">
                                             <option value="">Sélectionner</option>
                                             <option value="H">Homme (H)</option>
                                             <option value="F">Femme (F)</option>
@@ -191,12 +180,12 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="dateNaissance" class="block text-sm font-medium text-gray-700">Date de naissance</label>
-                                        <input type="date" wire:model.defer="dateNaissance" id="dateNaissance" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500">
+                                        <input type="date" wire:model="dateNaissance" id="dateNaissance" max="{{ now()->toDateString() }}" class="form-input">
                                         @error('dateNaissance') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                     <div>
                                         <label for="telephone1" class="block text-sm font-medium text-gray-700">Téléphone principal *</label>
-                                        <input type="tel" wire:model.defer="telephone1" id="telephone1" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Ex: +222 12345678">
+                                        <input type="tel" wire:model="telephone1" id="telephone1" class="form-input" placeholder="Ex: +222 12345678">
                                         @error('telephone1') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
@@ -204,19 +193,19 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="telephone2" class="block text-sm font-medium text-gray-700">Téléphone secondaire</label>
-                                        <input type="tel" wire:model.defer="telephone2" id="telephone2" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Ex: +222 12345678">
+                                        <input type="tel" wire:model="telephone2" id="telephone2" class="form-input" placeholder="Ex: +222 12345678">
                                         @error('telephone2') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                     <div>
                                         <label for="adresse" class="block text-sm font-medium text-gray-700">Adresse</label>
-                                        <textarea wire:model.defer="adresse" id="adresse" rows="2" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Adresse complète du patient"></textarea>
+                                        <textarea wire:model="adresse" id="adresse" rows="2" class="form-textarea" placeholder="Adresse complète du patient"></textarea>
                                         @error('adresse') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
 
                                 <div class="mt-4">
                                     <label class="flex items-center space-x-2">
-                                        <input type="checkbox" wire:model="isAssured" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                        <input type="checkbox" wire:model.live="isAssured" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                                         <span class="text-sm text-gray-700">Patient assuré</span>
                                     </label>
                                 </div>
@@ -225,7 +214,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label for="assureur" class="block text-sm font-medium text-gray-700">Assureur *</label>
-                                        <select wire:model="assureur" id="assureur" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500">
+                                        <select wire:model="assureur" id="assureur" class="form-select">
                                             <option value="">Sélectionner un assureur</option>
                                             @foreach($assureurs as $assureur)
                                                 <option value="{{ $assureur->IDAssureur }}">{{ $assureur->LibAssurance }}</option>
@@ -235,7 +224,7 @@
                                     </div>
                                     <div>
                                         <label for="identifiantAssurance" class="block text-sm font-medium text-gray-700">Identifiant Assurance *</label>
-                                        <input type="text" wire:model="identifiantAssurance" id="identifiantAssurance" class="mt-1 block w-full rounded-md border-2 border-blue-400 shadow-sm focus:border-blue-600 focus:ring-blue-500" placeholder="Numéro d'assuré">
+                                        <input type="text" wire:model="identifiantAssurance" id="identifiantAssurance" class="form-input" placeholder="Numéro d'assuré">
                                         @error('identifiantAssurance') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
@@ -247,7 +236,7 @@
                                 <h4 class="text-sm font-medium text-gray-700 mb-3">Statut du patient</h4>
                                 <div>
                                     <label class="flex items-center space-x-2">
-                                        <input type="checkbox" wire:model.defer="isActive" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                        <input type="checkbox" wire:model="isActive" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                                         <span class="text-sm text-gray-700">Patient actif</span>
                                     </label>
                                 </div>
@@ -255,36 +244,23 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" wire:loading.attr="disabled" wire:target="save" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                         <button type="submit" wire:loading.attr="disabled" wire:target="save" class="btn-primary sm:ml-3">
                             <span wire:loading.remove wire:target="save">Enregistrer</span>
                             <span wire:loading wire:target="save">Enregistrement…</span>
                         </button>
-                        <button type="button" wire:click="closeModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                         <button type="button" wire:click="closeModal" class="btn-secondary mt-3 sm:mt-0 sm:ml-3">
                             Annuler
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
+        </x-modal>
     @endif
 
     <!-- Modal d'historique des paiements -->
     @if($showPaymentHistoryModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="payment-history-title">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <x-modal id="payment-history" title="Historique des paiements" icon="fa-money-bill-wave" close="closePaymentHistoryModal" level="nested" max-width="max-w-4xl">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                            <h3 id="payment-history-title" class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                                Historique des paiements
-                            </h3>
-                            
                             @if($paymentHistory->isEmpty())
                                 <div class="text-center py-4">
                                     <i class="fas fa-info-circle text-gray-400 text-4xl mb-2"></i>
@@ -330,14 +306,6 @@
                             @endif
                         </div>
                     </div>
-                </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" wire:click="closePaymentHistoryModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Fermer
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+        </x-modal>
     @endif
 </div>

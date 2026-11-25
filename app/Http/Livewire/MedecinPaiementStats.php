@@ -61,6 +61,8 @@ class MedecinPaiementStats extends Component
         if ($this->isMedecin) {
             $this->medecin_id = $user->fkidmedecin;
         }
+
+        $this->refreshData();
     }
 
     protected function initializePermissions()
@@ -251,6 +253,13 @@ class MedecinPaiementStats extends Component
             // Appliquer le filtre de date uniquement si ce n'est pas "all"
             if ($this->periode !== 'all') {
                 $query->whereBetween('dateoper', [$dateDebut, $dateFin]);
+            }
+
+            // Le dénominateur doit respecter le même périmètre médecin que le détail.
+            if ($this->isMedecin) {
+                $query->where('fkidmedecin', Auth::user()->fkidmedecin);
+            } elseif ($this->medecin_id) {
+                $query->where('fkidmedecin', $this->medecin_id);
             }
 
             $totauxGlobaux = $query->first();

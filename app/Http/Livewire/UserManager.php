@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\TUser;
 use Illuminate\Support\Facades\Auth;
 use Livewire\WithPagination;
+use Illuminate\Validation\Rule;
 
 class UserManager extends Component
 {
@@ -17,6 +18,7 @@ class UserManager extends Component
     public $password;
     public $nomComplet;
     public $role;
+    public $medecinId;
     public $isActive = true;
     public $isMasquer = false;
 
@@ -27,6 +29,8 @@ class UserManager extends Component
 
     // Propriétés pour la modal
     public $showModal = false;
+    public $showDeleteModal = false;
+    public $userToDelete = null;
     public $modalTitle = '';
 
     protected $rules = [
@@ -50,7 +54,8 @@ class UserManager extends Component
 
     public function render()
     {
-        $users = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)
+        $cabinetId = Auth::user()->fkidcabinet;
+        $users = TUser::where('fkidcabinet', $cabinetId)
         ->where(function($query) {
             $query->where('NomComplet', 'like', '%' . $this->search . '%')
                   ->orWhere('login', 'like', '%' . $this->search . '%');
@@ -60,7 +65,14 @@ class UserManager extends Component
         ->paginate(10);
 
         return view('livewire.user-manager', [
-            'users' => $users
+            'users' => $users,
+            'medecins' => \App\Models\Medecin::where('fkidcabinet', $cabinetId)
+                ->orderBy('Nom')
+                ->get(['idMedecin', 'Nom']),
+            'activeOwnerCount' => TUser::where('fkidcabinet', $cabinetId)
+                ->where('IdClasseUser', 3)
+                ->where('ismasquer', false)
+                ->count(),
         ]);
     }
 
@@ -77,7 +89,7 @@ class UserManager extends Component
     public function openModal($mode = 'create', $userId = null)
     {
         $this->resetValidation();
-        $this->reset(['login', 'password', 'nomComplet', 'role', 'isActive', 'isMasquer']);
+        $this->reset(['userId', 'login', 'password', 'nomComplet', 'role', 'medecinId', 'isActive', 'isMasquer']);
 
         if ($mode === 'edit' && $userId) {
             $user = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)->find($userId);
@@ -86,6 +98,7 @@ class UserManager extends Component
                 $this->login = $user->login;
                 $this->nomComplet = $user->NomComplet;
                 $this->role = $user->IdClasseUser;
+                $this->medecinId = $user->fkidmedecin;
                 $this->isActive = !$user->ismasquer;
                 $this->isMasquer = $user->ismasquer;
                 $this->modalTitle = 'Modifier l\'utilisateur';
@@ -101,31 +114,30 @@ class UserManager extends Component
     {
         $this->showModal = false;
         $this->resetValidation();
-        $this->reset(['userId', 'login', 'password', 'nomComplet', 'role', 'isActive', 'isMasquer']);
+        $this->reset(['userId', 'login', 'password', 'nomComplet', 'role', 'medecinId', 'isActive', 'isMasquer']);
     }
 
     public function save()
     {
+        $rules = $this->rules;
         if ($this->userId) {
-            $this->rules['login'] = 'required|min:3|unique:t_user,login,' . $this->userId . ',Iduser';
-            $this->rules['password'] = 'nullable|min:6';
+            $rules['login'] = 'required|min:3|unique:t_user,login,' . $this->userId . ',Iduser';
+            $rules['password'] = 'nullable|min:6';
         }
 
-        $this->validate();
+        if (in_array((int) $this->role, [2, 3], true)) {
+            $rules['medecinId'] = [
+                'required',
+                Rule::exists('medecins', 'idMedecin')
+                    ->where(fn ($query) => $query->where('fkidcabinet', Auth::user()->fkidcabinet)),
+            ];
+        }
+        $this->validate($rules);
 
         try {
-            // Si c'est un médecin ou un propriétaire, on doit avoir un fkidmedecin
-            if ($this->role == 2 || $this->role == 3) {
-                // Récupérer le premier médecin disponible
-                $medecin = \App\Models\Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)->first();
-                if (!$medecin) {
-                    session()->flash('error', 'Aucun médecin trouvé dans la base de données.');
-                    return;
-                }
-                $fkidmedecin = $medecin->idMedecin;
-            } else {
-                $fkidmedecin = 1; // Valeur par défaut pour les secrétaires
-            }
+            $fkidmedecin = in_array((int) $this->role, [2, 3], true)
+                ? (int) $this->medecinId
+                : 1;
 
             $userData = [
                 'login' => $this->login,
@@ -197,6 +209,27 @@ class UserManager extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Une erreur est survenue lors de la suppression.');
         }
+    }
+
+    public function confirmDelete($userId)
+    {
+        $user = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)->find($userId);
+        if (!$user) {
+            return;
+        }
+
+        $this->userToDelete = $user->Iduser;
+        $this->showDeleteModal = true;
+    }
+
+    public function deleteConfirmed()
+    {
+        if ($this->userToDelete) {
+            $this->delete($this->userToDelete);
+        }
+
+        $this->showDeleteModal = false;
+        $this->userToDelete = null;
     }
 
     public function toggleStatus($userId)

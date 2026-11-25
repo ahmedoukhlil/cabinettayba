@@ -67,7 +67,7 @@ class ConsultationForm extends Component
         'selectedPatient' => 'required',
         'medecin_id' => 'required',
         'mode_paiement' => 'required',
-        'montant' => 'required|numeric|min:0',
+        'montant' => 'required|numeric|min:0.01',
         'txpec' => 'nullable|numeric|min:0|max:100',
     ];
 
@@ -161,7 +161,7 @@ class ConsultationForm extends Component
         $this->selectedPatient = $patient;
         
         // Charger les informations d'assurance si le patient est assuré
-        if (isset($patient['Assureur']) && $patient['Assureur'] > 0) {
+        if (!empty($patient['IdentifiantAssurance']) && !empty($patient['Assureur'])) {
             $this->tauxPEC = isset($patient['TauxPEC']) ? floatval($patient['TauxPEC']) : 0;
             $this->montantAssurance = ($this->montant * $this->tauxPEC);
             $this->montantPatient = ($this->montant * (1 - $this->tauxPEC));
@@ -316,7 +316,7 @@ class ConsultationForm extends Component
         $totalPEC = 0;
         $totalPatient = $montant;
         
-        if (isset($this->selectedPatient['Assureur']) && $this->selectedPatient['Assureur'] > 0) {
+        if (!empty($this->selectedPatient['IdentifiantAssurance']) && !empty($this->selectedPatient['Assureur'])) {
             $patient = Patient::where('fkidcabinet', $cabinetId)
                 ->find($this->selectedPatient['ID']);
 
@@ -419,7 +419,7 @@ class ConsultationForm extends Component
     protected function createRendezVous($facture)
     {
         $date = Carbon::now();
-        $ordreRDV = Rendezvou::generateNextOrderNumber($date);
+        $ordreRDV = Rendezvou::generateNextOrderNumber($date, Auth::user()->fkidcabinet);
         
         $rendezVous = Rendezvou::create([
             'fkidPatient' => $this->selectedPatient['ID'],
@@ -427,7 +427,7 @@ class ConsultationForm extends Component
             'dtPrevuRDV' => $date,
             'HeureRdv' => $date->setHour(0)->setMinute(0),
             'ActePrevu' => 'Consultation',
-            'rdvConfirmer' => 'Confirmé',
+            'rdvConfirmer' => 'confirmé',
             'DtAjRdv' => now(),
             'user' => Auth::user()->NomComplet ?? Auth::user()->login,
             'fkidcabinet' => Auth::user()->fkidcabinet,
@@ -470,7 +470,7 @@ class ConsultationForm extends Component
                 $this->selectedPatient = $patientData['data'];
                 
                 // Restaurer les informations d'assurance si le patient est assuré
-                if (isset($this->selectedPatient['Assureur']) && $this->selectedPatient['Assureur'] > 0) {
+                if (!empty($this->selectedPatient['IdentifiantAssurance']) && !empty($this->selectedPatient['Assureur'])) {
                     $patient = Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
                         ->find($this->selectedPatient['ID']);
                     if ($patient && $patient->Assureur) {

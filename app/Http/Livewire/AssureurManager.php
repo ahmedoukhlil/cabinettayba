@@ -5,6 +5,7 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Assureur;
+use Illuminate\Database\QueryException;
 
 class AssureurManager extends Component
 {
@@ -38,7 +39,7 @@ class AssureurManager extends Component
             if ($assureur) {
                 $this->assureurId = $assureur->IDAssureur;
                 $this->libAssurance = $assureur->LibAssurance;
-                $this->tauxdePEC = $assureur->TauxdePEC;
+                $this->tauxdePEC = round(((float) $assureur->TauxdePEC) * 100, 2);
             }
         }
         $this->showModal = true;
@@ -55,7 +56,7 @@ class AssureurManager extends Component
         $this->validate();
         $data = [
             'LibAssurance' => $this->libAssurance,
-            'TauxdePEC' => $this->tauxdePEC,
+            'TauxdePEC' => ((float) $this->tauxdePEC) / 100,
         ];
         if ($this->assureurId) {
             $assureur = Assureur::where('IDAssureur', $this->assureurId)->first();
@@ -78,10 +79,14 @@ class AssureurManager extends Component
 
     public function deleteAssureur()
     {
-        $assureur = Assureur::where('IDAssureur', $this->assureurToDelete)->first();
-        if ($assureur) {
-            $assureur->delete();
-            session()->flash('message', 'Assureur supprimé avec succès.');
+        try {
+            $assureur = Assureur::where('IDAssureur', $this->assureurToDelete)->first();
+            if ($assureur) {
+                $assureur->delete();
+                session()->flash('message', 'Assureur supprimé avec succès.');
+            }
+        } catch (QueryException $exception) {
+            session()->flash('error', 'Cet assureur est utilisé par des patients ou des actes et ne peut pas être supprimé.');
         }
         $this->showDeleteModal = false;
         $this->assureurToDelete = null;
@@ -105,4 +110,4 @@ class AssureurManager extends Component
             'assureurs' => $assureurs,
         ]);
     }
-} 
+}

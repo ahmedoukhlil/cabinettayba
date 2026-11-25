@@ -22,7 +22,7 @@ class AssureurCreate extends Component
 
         Assureur::create([
             'LibAssurance' => $this->LibAssurance,
-            'TauxdePEC' => $this->TauxdePEC,
+            'TauxdePEC' => ((float) $this->TauxdePEC) / 100,
             'DtConvention' => $this->DtConvention,
             'user' => Auth::user()->name ?? 'system',
         ]);
@@ -35,4 +35,4 @@ class AssureurCreate extends Component
     {
         return view('livewire.assureur-create');
     }
-} 
+}

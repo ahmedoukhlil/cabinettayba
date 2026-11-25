@@ -1,4 +1,8 @@
-<div class="relative">
+<div
+    class="relative"
+    x-data="{ blurTimer: null }"
+    @maintain-focus.window="$nextTick(() => { const input = $refs.searchInput; if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } })"
+>
     <div class="flex">
         <label for="patient-search-type" class="sr-only">Critère de recherche</label>
         <select id="patient-search-type" wire:model="searchBy" class="rounded-l-lg border-r-0 border-gray-300 bg-gray-50 text-sm text-gray-600 focus:border-primary focus:ring-primary">
@@ -8,8 +12,9 @@
         </select>
         <div class="relative flex-1">
             <label for="patient-search-input" class="sr-only">Rechercher un patient</label>
-            <input id="patient-search-input" type="search" wire:model.live.debounce.300ms="search"
-                wire:keydown.enter="selectFirstPatient" wire:focus="onFocus" wire:blur="onBlur"
+            <input id="patient-search-input" x-ref="searchInput" type="search" wire:model.live.debounce.300ms="search"
+                wire:keydown.enter="selectFirstPatient" wire:focus="onFocus"
+                @blur="blurTimer = setTimeout(() => $wire.closeResults(), 200)"
                 autocomplete="off" placeholder="Rechercher un patient…"
                 class="w-full rounded-r-lg border-gray-300 pr-10 text-sm focus:border-primary focus:ring-primary">
 
@@ -44,7 +49,7 @@
             @elseif(!empty($patients))
                 <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">{{ count($patients) }} résultat(s)</div>
                 @foreach($patients as $patient)
-                    <button type="button" wire:click="selectPatient({{ $patient['ID'] }})"
+                    <button type="button" wire:click="selectPatient({{ $patient['ID'] }})" @mousedown="clearTimeout(blurTimer)"
                         class="block w-full border-b border-gray-100 px-4 py-3 text-left last:border-0 hover:bg-primary-light focus:bg-primary-light focus:outline-none">
                         <span class="flex items-start gap-3">
                             <span class="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500"><i class="fas fa-user"></i></span>
@@ -67,25 +72,3 @@
         </div>
     @endif
 </div>
-
-<script>
-document.addEventListener('livewire:init', function () {
-    let blurTimeout;
-
-    Livewire.on('maintain-focus', () => {
-        const input = document.getElementById('patient-search-input');
-        if (!input) return;
-        input.focus();
-        input.setSelectionRange(input.value.length, input.value.length);
-    });
-
-    Livewire.on('delay-blur', () => {
-        clearTimeout(blurTimeout);
-        blurTimeout = setTimeout(() => @this.call('closeResults'), 200);
-    });
-
-    document.addEventListener('mousedown', event => {
-        if (event.target.closest('.patient-search-results')) clearTimeout(blurTimeout);
-    });
-});
-</script>

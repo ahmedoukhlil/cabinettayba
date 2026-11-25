@@ -123,7 +123,7 @@
                                                 <tr wire:key="detail-{{ $detail->idDetfacture }}">
                                                     <td class="px-2 py-1">
                                                         @if(in_array(Auth::user()->IdClasseUser ?? null, [2, 3]))
-                                                            <button onclick="event.stopPropagation(); if(confirm('Êtes-vous sûr de vouloir supprimer cet acte ?')) { @this.removeActe({{ $detail->idDetfacture }}) }" class="text-red-600 hover:text-red-800">
+                                                            <button type="button" wire:click.stop="removeActe({{ $detail->idDetfacture }})" wire:confirm="Supprimer cet acte de la facture ?" class="rounded p-2 text-red-600 hover:bg-red-50 hover:text-red-800" aria-label="Supprimer {{ $detail->Actes }}">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         @endif
@@ -172,22 +172,7 @@
 
     <!-- Modal de règlement de facture -->
     @if($showReglementModal && $factureSelectionnee)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <!-- Header vert dégradé -->
-                <div class="p-6 rounded-t-lg text-white shadow relative" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
-                    <button wire:click="closeReglementForm" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
-                    <h2 class="text-2xl font-bold">Facture/DEVIS</h2>
-                    <p class="text-green-100 mt-1">Facture N° {{ $factureSelectionnee['numero'] ?? '---' }}</p>
-                </div>
-
-                <!-- Détails de la facture -->
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <x-modal id="payment" title="Régler la facture" :subtitle="'Facture N° '.($factureSelectionnee['numero'] ?? '---')" icon="fa-credit-card" close="closeReglementForm" level="nested" max-width="max-w-2xl">
                     @php
                         $txpec = $factureSelectionnee['TXPEC'] ?? 0;
                         $totalPEC = $factureSelectionnee['montant_pec'] ?? 0;
@@ -215,17 +200,29 @@
                         </div>
                     </div>
 
+                    @if(($factureSelectionnee['ISTP'] ?? 0) > 0)
+                        <fieldset class="mt-4 rounded-lg border border-gray-200 p-4">
+                            <legend class="px-1 text-sm font-semibold text-gray-800">Affecter ce règlement à</legend>
+                            <div class="mt-2 flex flex-wrap gap-4">
+                                <label class="inline-flex items-center gap-2"><input type="radio" wire:model="pourQui" value="patient"> Patient</label>
+                                <label class="inline-flex items-center gap-2"><input type="radio" wire:model="pourQui" value="pec"> Prise en charge (PEC)</label>
+                            </div>
+                            @error('pourQui') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </fieldset>
+                    @endif
+
                     <!-- Formulaire de règlement -->
-                    <form wire:submit.prevent="enregistrerReglement">
+                    <form wire:submit="enregistrerReglement">
                         <div class="mt-4">
                             <label for="montantReglement" class="block text-sm font-medium text-gray-700">
                                 Montant du paiement
                             </label>
                             <div class="mt-1">
                                 <input type="number" step="0.01" wire:model="montantReglement" id="montantReglement"
-                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    class="form-input"
                                     placeholder="Entrez un montant positif pour un paiement/acompte, négatif pour un remboursement">
                             </div>
+                            @error('montantReglement') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             @if(($factureSelectionnee['est_reglee'] ?? false))
                                 <p class="mt-2 text-sm text-gray-500">
                                     Cette facture est déjà réglée. Vous pouvez ajouter un nouveau paiement ou un remboursement.
@@ -243,52 +240,34 @@
                             </label>
                             <div class="mt-1">
                                 <select wire:model="modePaiement" id="modePaiement" required
-                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                    class="form-select">
                                     <option value="">Sélectionnez un mode de paiement</option>
                                     @foreach($modesPaiement as $mode)
                                         <option value="{{ $mode->idtypepaie }}">{{ $mode->LibPaie }}</option>
                                     @endforeach
                                 </select>
                             </div>
+                            @error('modePaiement') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
                         <div class="mt-6 flex justify-end">
                             <div class="flex justify-end mt-4">
-                                <button type="button" wire:click="closeReglementForm" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <button type="button" wire:click="closeReglementForm" class="btn-secondary">
                                     Annuler
                                 </button>
-                                <button type="button" wire:click="enregistrerReglement" class="ml-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Payer
+                                <button type="submit" class="btn-primary ml-3" wire:loading.attr="disabled" wire:target="enregistrerReglement">
+                                    <span wire:loading.remove wire:target="enregistrerReglement">Enregistrer le règlement</span>
+                                    <span wire:loading wire:target="enregistrerReglement">Enregistrement…</span>
                                 </button>
                             </div>
                         </div>
                     </form>
-                </div>
-
-                <!-- Footer avec bouton Fermer -->
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                    <button type="button" wire:click="closeReglementForm" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Fermer
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+        </x-modal>
     @endif
 
     <!-- Formulaire d'ajout d'acte sous la facture sélectionnée -->
     @if($showAddActeForm && $factureIdForActe)
-        <div class="fixed inset-0 overflow-y-auto" style="z-index: 100;" wire:keydown.escape.window="closeAddActeForm">
-            <div class="flex min-h-full items-center justify-center p-4">
-                <button type="button" class="absolute inset-0 h-full w-full bg-gray-900 opacity-60" style="z-index: 100;" wire:click="closeAddActeForm" aria-label="Fermer la fenêtre"></button>
-                <section class="relative w-full max-w-2xl overflow-visible rounded-lg bg-white text-left shadow-2xl" style="z-index: 101;" role="dialog" aria-modal="true" aria-labelledby="add-acte-title">
-                    <!-- Header vert dégradé -->
-                    <div class="relative rounded-t-lg p-6 text-white shadow" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
-                        <button type="button" wire:click="closeAddActeForm" class="absolute right-4 top-4 rounded p-2 text-xl leading-none text-white hover:bg-white/20" aria-label="Fermer">&times;</button>
-                        <h2 id="add-acte-title" class="text-2xl font-bold">Ajouter un acte à la facture</h2>
-                        <p class="mt-1 text-cyan-50">Facture N° {{ $factureSelectionnee['numero'] ?? $factureIdForActe }}</p>
-                    </div>
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 rounded-b-lg">
+        <x-modal id="add-act" title="Ajouter un acte à la facture" :subtitle="'Facture N° '.($factureSelectionnee['numero'] ?? $factureIdForActe)" icon="fa-plus" close="closeAddActeForm" level="nested" max-width="max-w-2xl">
                         <form wire:submit.prevent="saveActeToFacture" wire:key="form-add-acte-{{ $factureIdForActe }}">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -297,11 +276,11 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Prix de référence</label>
-                                    <input type="number" wire:model="prixReference" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm bg-gray-50 text-gray-900" readonly>
+                                    <input type="number" wire:model="prixReference" class="form-input bg-gray-50" readonly>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Prix facturé</label>
-                                    <input type="number" wire:model="prixFacture" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input type="number" min="0" step="0.01" wire:model="prixFacture" class="form-input">
                                 </div>
                                 @php
                                     $isAssure = $selectedPatient['Assureur'] ?? 0;
@@ -324,46 +303,26 @@
                                 @endif
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
-                                    <input type="number" wire:model.defer="quantite" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500" min="1">
+                                    <input type="number" wire:model="quantite" class="form-input" min="1">
                                 </div>
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Séance (Dent)</label>
-                                    <input type="text" wire:model.defer="seance" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm bg-white text-gray-900 focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input type="text" wire:model="seance" class="form-input">
                                 </div>
                             </div>
                             <div class="mt-6 flex justify-end">
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                                    Ajouter
+                                <button type="button" wire:click="closeAddActeForm" class="btn-secondary">Annuler</button>
+                                <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="saveActeToFacture">
+                                    Ajouter l’acte
                                 </button>
                             </div>
                         </form>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                        <button type="button" wire:click="closeAddActeForm" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Fermer
-                        </button>
-                    </div>
-                </section>
-            </div>
-        </div>
+        </x-modal>
     @endif
 
     <!-- Modal de sélection du médecin -->
     @if($showMedecinModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                </div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <!-- Header -->
-                    <div class="bg-primary text-white p-4 rounded-t-lg">
-                        <button wire:click="$set('showMedecinModal', false)" class="absolute top-4 right-4 text-white hover:text-red-200 text-2xl font-bold">&times;</button>
-                        <h2 class="text-2xl font-bold">Sélectionner un médecin</h2>
-                    </div>
-                    <!-- Contenu -->
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <x-modal id="doctor-select" title="Sélectionner un médecin" subtitle="Le médecin sera associé à la nouvelle facture." icon="fa-user-doctor" close="$set('showMedecinModal', false)" level="nested" max-width="max-w-lg">
                         <div class="mb-4">
                             <input type="text" wire:model.live.debounce.300ms="searchMedecin"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
@@ -372,8 +331,8 @@
                         <div class="max-h-96 overflow-y-auto">
                             <div class="grid grid-cols-1 gap-2">
                                 @foreach($medecins as $medecin)
-                                <button wire:click="selectMedecin({{ $medecin->idMedecin }})"
-                                    class="text-left px-4 py-2 hover:bg-gray-100 rounded-md transition-colors duration-150">
+                                <button type="button" wire:click="selectMedecin({{ $medecin->idMedecin }})"
+                                    class="w-full rounded-md px-4 py-3 text-left transition-colors duration-150 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-primary">
                                     <div class="font-medium">Dr. {{ $medecin->Nom }}</div>
                                     @if($medecin->Contact)
                                     <div class="text-sm text-gray-500">{{ $medecin->Contact }}</div>
@@ -385,15 +344,7 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg">
-                        <button type="button" wire:click="$set('showMedecinModal', false)" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Annuler
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </x-modal>
     @endif
 </div>
 

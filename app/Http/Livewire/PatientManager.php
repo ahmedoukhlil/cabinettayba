@@ -62,7 +62,7 @@ class PatientManager extends Component
                     }
                 }
             ],
-            'dateNaissance' => 'nullable|date',
+            'dateNaissance' => 'nullable|date|before_or_equal:today',
             'genre' => 'nullable|in:H,F',
             'telephone1' => 'required|min:8',
             'telephone2' => 'nullable|min:8',
@@ -159,7 +159,8 @@ class PatientManager extends Component
             $this->nomContact = $patient->NomContact;
             $this->classerSous = $patient->ClasserSous;
             $this->isActive = !$patient->choix;
-            $this->isAssured = !empty($patient->IdentifiantAssurance) || !empty($patient->Assureur);
+            // Assureur=1 est aussi la valeur technique historique des patients non assurés.
+            $this->isAssured = !empty($patient->IdentifiantAssurance);
         }
         $this->showModal = true;
     }
@@ -189,6 +190,10 @@ class PatientManager extends Component
                 ->ignore($this->patientId, 'ID')
                 ->where(fn ($query) => $query->where('fkidcabinet', Auth::user()->fkidcabinet)),
         ];
+        if ($this->isAssured) {
+            $rules['assureur'] = ['required', 'integer', Rule::exists('assureurs', 'IDAssureur')];
+            $rules['identifiantAssurance'] = ['required', 'string', 'max:191'];
+        }
         $this->validate($rules);
 
         try {
@@ -231,8 +236,9 @@ class PatientManager extends Component
             $this->resetForm();
             $this->closeModal();
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur SQL : ' . $e->getMessage() . ' (code: ' . $e->getCode() . ')');
-            // Ne pas fermer le modal ni reset le formulaire en cas d'erreur
+            report($e);
+            session()->flash('error', 'Impossible d’enregistrer le patient. Vérifiez les informations puis réessayez.');
+            // Conserver la modale et les valeurs saisies afin de permettre la correction.
         }
     }
 

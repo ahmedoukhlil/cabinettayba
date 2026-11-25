@@ -144,7 +144,7 @@ class ReglementFacture extends Component
     public function enregistrerReglement()
     {
         $this->validate([
-            'montantReglement' => 'required|numeric',
+            'montantReglement' => 'required|numeric|not_in:0',
             'modePaiement' => 'required|exists:ref_type_paiement,idtypepaie',
         ]);
         // Si assuré, on doit avoir pourQui
@@ -152,7 +152,8 @@ class ReglementFacture extends Component
             && ($facture = Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
                 ->find($this->factureSelectionnee['id']))
             && $facture->ISTP == 1) {
-            throw new \Exception('Veuillez préciser pour qui est le règlement (Patient ou PEC).');
+            $this->addError('pourQui', 'Veuillez préciser si le règlement concerne le patient ou la prise en charge.');
+            return;
         }
         try {
             DB::beginTransaction();
@@ -316,7 +317,7 @@ class ReglementFacture extends Component
             ]);
 
             // Mise à jour de la facture uniquement pour l'acte sélectionné
-            $prixFactureActe = $this->prixFacture;
+            $prixFactureActe = ((float) $this->prixFacture) * ((int) $this->quantite);
             $txpec = $facture->TXPEC ?? 0;
             $nouveauTotFacture = ($facture->TotFacture ?? 0) + $prixFactureActe;
             $montantPEC = $prixFactureActe * $txpec;

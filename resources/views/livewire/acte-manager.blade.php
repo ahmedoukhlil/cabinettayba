@@ -8,16 +8,16 @@
     <!-- Filtres et bouton nouveau -->
     <div class="mb-4 flex items-center gap-4">
         <label class="font-semibold">Filtrer par assureur :</label>
-        <select wire:model="selectedAssureur" class="rounded border border-black border-gray-300">
+        <select wire:model.live="selectedAssureur" class="form-select max-w-xs">
             <option value="">Tous</option>
             @foreach($assureurs as $assureur)
                 <option value="{{ $assureur->IDAssureur ?? $assureur->ID }}">{{ $assureur->LibAssurance }}</option>
             @endforeach
         </select>
         <div class="flex-1">
-            <input type="text" wire:model="search" placeholder="Rechercher un acte..." class="w-full rounded border-gray-300">
+            <input type="search" wire:model.live.debounce.300ms="search" placeholder="Rechercher un acte..." class="form-input">
         </div>
-        <button wire:click="openModal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">+ Nouveau acte</button>
+        <button type="button" wire:click="openModal" class="btn-primary whitespace-nowrap"><i class="fas fa-plus" aria-hidden="true"></i> Nouvel acte</button>
     </div>
 
     <!-- Tableau des actes -->
@@ -67,24 +67,21 @@
 
     <!-- Modal création/édition -->
     @if($showModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-8 relative">
-                <div class="text-xl font-bold mb-4">{{ $acteId ? 'Modifier' : 'Créer' }} un acte</div>
-                <button wire:click="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold">&times;</button>
-                <form wire:submit.prevent="save">
+        <x-modal id="act-form" :title="$acteId ? 'Modifier un acte' : 'Créer un acte'" icon="fa-tooth" close="closeModal" level="nested" max-width="max-w-lg">
+                <form wire:submit="save">
                     <div class="mb-4">
                         <label for="acteNom" class="block text-sm font-medium text-gray-700">Nom de l'acte *</label>
-                        <input type="text" wire:model.defer="acteNom" id="acteNom" class="mt-1 block w-full rounded-md border border-black border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <input type="text" wire:model="acteNom" id="acteNom" class="form-input">
                         @error('acteNom') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div class="mb-4">
                         <label for="montant" class="block text-sm font-medium text-gray-700">Prix de référence *</label>
-                        <input type="number" step="0.01" wire:model.defer="montant" id="montant" class="mt-1 block w-full rounded-md border border-black border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <input type="number" min="0" step="0.01" wire:model="montant" id="montant" class="form-input">
                         @error('montant') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div class="mb-4">
                         <label for="assureurId" class="block text-sm font-medium text-gray-700">Assureur *</label>
-                        <select wire:model.defer="assureurId" id="assureurId" class="mt-1 block w-full rounded-md border border-black border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <select wire:model="assureurId" id="assureurId" class="form-select">
                             <option value="">Sélectionner un assureur</option>
                             @foreach($assureurs as $assureur)
                                 <option value="{{ $assureur->IDAssureur ?? $assureur->ID }}">{{ $assureur->LibAssurance }}</option>
@@ -94,28 +91,24 @@
                     </div>
                     <div class="mb-4">
                         <label for="acteArab" class="block text-sm font-medium text-gray-700">Nom arabe</label>
-                        <input type="text" wire:model.defer="acteArab" id="acteArab" class="mt-1 block w-full rounded-md border border-black border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <input type="text" wire:model="acteArab" id="acteArab" class="form-input" dir="rtl">
                     </div>
                     <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" wire:click="closeModal" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Annuler</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Enregistrer</button>
+                        <button type="button" wire:click="closeModal" class="btn-secondary">Annuler</button>
+                        <button type="submit" class="btn-primary" wire:loading.attr="disabled" wire:target="save"><span wire:loading.remove wire:target="save">Enregistrer</span><span wire:loading wire:target="save">Enregistrement…</span></button>
                     </div>
                 </form>
-            </div>
-        </div>
+        </x-modal>
     @endif
 
     <!-- Modal de suppression -->
     @if($showDeleteModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-8 relative">
-                <div class="text-xl font-bold mb-4">Confirmer la suppression</div>
-                <p class="mb-6">Êtes-vous sûr de vouloir supprimer cet acte ? Cette action est irréversible.</p>
-                <div class="flex justify-end space-x-3">
-                    <button wire:click="deleteActe" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Supprimer</button>
-                    <button wire:click="$set('showDeleteModal', false)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Annuler</button>
-                </div>
-            </div>
-        </div>
+        <x-modal id="act-delete" title="Supprimer l’acte ?" subtitle="Cette action est irréversible." icon="fa-triangle-exclamation" close="$set('showDeleteModal', false)" level="nested" max-width="max-w-md">
+            <p class="text-sm text-gray-700">L’acte ne pourra être supprimé que s’il n’est utilisé dans aucune facture.</p>
+            <x-slot:footer>
+                <button type="button" wire:click="$set('showDeleteModal', false)" class="btn-secondary">Annuler</button>
+                <button type="button" wire:click="deleteActe" class="btn-danger" wire:loading.attr="disabled" wire:target="deleteActe">Supprimer</button>
+            </x-slot:footer>
+        </x-modal>
     @endif
-</div> 
+</div>

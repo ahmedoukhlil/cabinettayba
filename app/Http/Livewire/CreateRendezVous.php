@@ -43,9 +43,9 @@ class CreateRendezVous extends Component
         'patient_id' => 'required',
         'medecin_id' => 'required',
         'date_rdv' => 'required|date|after_or_equal:today',
-        'heure_rdv' => 'required',
+        'heure_rdv' => 'required|date_format:H:i',
         'acte_prevu' => 'required|min:3',
-        'rdv_confirmer' => 'required'
+        'rdv_confirmer' => 'required|in:confirmé,en attente,annulé'
     ];
 
     protected $messages = [
@@ -54,9 +54,11 @@ class CreateRendezVous extends Component
         'date_rdv.required' => 'La date est requise',
         'date_rdv.date' => 'La date n\'est pas valide',
         'heure_rdv.required' => 'L\'heure est requise',
+        'heure_rdv.date_format' => 'L\'heure du rendez-vous n\'est pas valide',
         'acte_prevu.required' => 'L\'acte prévu est requis',
         'acte_prevu.min' => 'L\'acte prévu doit contenir au moins 3 caractères',
-        'rdv_confirmer.required' => 'Le statut est requis'
+        'rdv_confirmer.required' => 'Le statut est requis',
+        'rdv_confirmer.in' => 'Le statut sélectionné est invalide',
     ];
 
     protected $listeners = [
@@ -128,7 +130,7 @@ class CreateRendezVous extends Component
                 'DtAjRdv' => now(),
                 'user' => Auth::id(),
                 'fkidcabinet' => Auth::user()->fkidcabinet,
-                'OrdreRDV' => Rendezvou::generateNextOrderNumber($this->date_rdv)
+                'OrdreRDV' => Rendezvou::generateNextOrderNumber($this->date_rdv, $user->fkidcabinet)
             ]);
 
             $this->reset(['patient_id', 'heure_rdv', 'acte_prevu']);

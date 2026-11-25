@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Acte;
 use App\Models\Assureur;
+use Illuminate\Database\QueryException;
 
 class ActeManager extends Component
 {
@@ -98,10 +99,14 @@ class ActeManager extends Component
 
     public function deleteActe()
     {
-        $acte = Acte::find($this->acteToDelete);
-        if ($acte) {
-            $acte->delete();
-            session()->flash('message', 'Acte supprimé avec succès.');
+        try {
+            $acte = Acte::find($this->acteToDelete);
+            if ($acte) {
+                $acte->delete();
+                session()->flash('message', 'Acte supprimé avec succès.');
+            }
+        } catch (QueryException $exception) {
+            session()->flash('error', 'Cet acte est déjà utilisé dans une facture et ne peut pas être supprimé.');
         }
         $this->showDeleteModal = false;
         $this->acteToDelete = null;
@@ -135,4 +140,4 @@ class ActeManager extends Component
             'assureurs' => $assureurs,
         ]);
     }
-} 
+}

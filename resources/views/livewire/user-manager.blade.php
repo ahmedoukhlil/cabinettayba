@@ -7,7 +7,7 @@
             </div>
             <input wire:model.live.debounce.300ms="search" type="text" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md" placeholder="Rechercher un utilisateur...">
         </div>
-        <button wire:click="openModal()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <button type="button" wire:click="openModal()" class="btn-primary whitespace-nowrap">
             <i class="fas fa-plus mr-2"></i>
             Nouvel Utilisateur
         </button>
@@ -112,10 +112,9 @@
                                         class="text-blue-600 hover:text-blue-900 transition-colors duration-200">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                @if($user->IdClasseUser != 3 || $users->where('IdClasseUser', 3)->where('ismasquer', false)->count() > 1)
-                                    <button wire:click="delete({{ $user->Iduser }})"
+                                @if($user->IdClasseUser != 3 || $activeOwnerCount > 1)
+                                    <button type="button" wire:click="confirmDelete({{ $user->Iduser }})"
                                             wire:loading.attr="disabled"
-                                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')"
                                             class="text-red-600 hover:text-red-900 transition-colors duration-200">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -141,31 +140,21 @@
 
     <!-- Modal de création/modification -->
     @if($showModal)
-        <div class="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <form wire:submit.prevent="save">
+        <x-modal id="user-form" :title="$modalTitle" icon="fa-user-gear" close="closeModal" level="nested" max-width="max-w-lg" body-class="modal-body !p-0">
+                    <form wire:submit="save">
                         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <div class="mb-4">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    {{ $modalTitle }}
-                                </h3>
-                            </div>
-
                             <div class="space-y-4">
                                 <!-- Nom Complet -->
                                 <div>
                                     <label for="nomComplet" class="block text-sm font-medium text-gray-700">Nom Complet</label>
-                                    <input type="text" wire:model="nomComplet" id="nomComplet" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                    <input type="text" wire:model="nomComplet" id="nomComplet" class="form-input">
                                     @error('nomComplet') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
                                 <!-- Login -->
                                 <div>
                                     <label for="login" class="block text-sm font-medium text-gray-700">Identifiant</label>
-                                    <input type="text" wire:model="login" id="login" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                    <input type="text" wire:model="login" id="login" class="form-input" autocomplete="username">
                                     @error('login') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
@@ -174,14 +163,14 @@
                                     <label for="password" class="block text-sm font-medium text-gray-700">
                                         Mot de passe {{ $userId ? '(laisser vide pour ne pas modifier)' : '' }}
                                     </label>
-                                    <input type="password" wire:model="password" id="password" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                    <input type="password" wire:model="password" id="password" class="form-input" autocomplete="new-password">
                                     @error('password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
                                 <!-- Rôle -->
                                 <div>
                                     <label for="role" class="block text-sm font-medium text-gray-700">Rôle</label>
-                                    <select wire:model="role" id="role" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <select wire:model.live="role" id="role" class="form-select">
                                         <option value="">Sélectionner un rôle</option>
                                         <option value="1">Secrétaire</option>
                                         <option value="2">Médecin</option>
@@ -189,6 +178,19 @@
                                     </select>
                                     @error('role') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
+
+                                @if(in_array((int) $role, [2, 3], true))
+                                    <div>
+                                        <label for="medecinId" class="block text-sm font-medium text-gray-700">Fiche médecin associée</label>
+                                        <select wire:model="medecinId" id="medecinId" class="form-select">
+                                            <option value="">Sélectionner un médecin</option>
+                                            @foreach($medecins as $medecin)
+                                                <option value="{{ $medecin->idMedecin }}">Dr. {{ $medecin->Nom }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('medecinId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    </div>
+                                @endif
 
                                 <!-- Statut -->
                                 <div class="flex items-center">
@@ -201,16 +203,24 @@
                         </div>
 
                         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            <button type="submit" class="btn-primary sm:ml-3" wire:loading.attr="disabled" wire:target="save">
                                 Enregistrer
                             </button>
-                            <button type="button" wire:click="closeModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            <button type="button" wire:click="closeModal" class="btn-secondary mt-3 sm:mt-0 sm:ml-3">
                                 Annuler
                             </button>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
+        </x-modal>
+    @endif
+
+    @if($showDeleteModal)
+        <x-modal id="user-delete" title="Désactiver l’utilisateur ?" subtitle="Le compte ne pourra plus se connecter." icon="fa-user-slash" close="$set('showDeleteModal', false)" level="nested" max-width="max-w-md">
+            <p class="text-sm text-gray-700">Les données historiques liées à cet utilisateur seront conservées.</p>
+            <x-slot:footer>
+                <button type="button" wire:click="$set('showDeleteModal', false)" class="btn-secondary">Annuler</button>
+                <button type="button" wire:click="deleteConfirmed" class="btn-danger">Désactiver</button>
+            </x-slot:footer>
+        </x-modal>
     @endif
 </div>
