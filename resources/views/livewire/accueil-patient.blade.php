@@ -37,7 +37,7 @@
                 <i class="fas fa-chevron-{{ $showPatientMenu ? 'up' : 'down' }} text-xs opacity-60" aria-hidden="true"></i>
             </button>
 
-            <button wire:click="showCaisseOperations" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+            <button type="button" wire:click="openCaisseOperations" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
                 <i class="fas fa-cash-register" aria-hidden="true"></i> Caisse Paie
             </button>
 
@@ -53,7 +53,7 @@
             @endif
 
             @if($isDocteurProprietaire)
-                <button wire:click="showStatistiques" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+                <button type="button" wire:click="openStatistiques" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
                     <i class="fas fa-chart-bar" aria-hidden="true"></i> Statistiques
                 </button>
             @endif

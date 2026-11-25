@@ -231,7 +231,7 @@ class AccueilPatient extends Component
         $this->showCreateRdvModal = false;
     }
 
-    public function showCaisseOperations()
+    public function openCaisseOperations()
     {
         $this->resetState();
         $this->showCaisseOperations = true;
@@ -311,7 +311,7 @@ class AccueilPatient extends Component
         $this->showUsersModal = false;
     }
 
-    public function showStatistiques()
+    public function openStatistiques()
     {
         $this->resetState();
         $this->showStatistiques = true;

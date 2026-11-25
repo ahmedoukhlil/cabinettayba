@@ -38,6 +38,16 @@ class UiContractTest extends TestCase
         }
     }
 
+    public function test_dashboard_modal_actions_do_not_collide_with_their_state_properties(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2) . '/resources/views/livewire/accueil-patient.blade.php');
+
+        $this->assertStringContainsString('wire:click="openCaisseOperations"', $view);
+        $this->assertStringContainsString('wire:click="openStatistiques"', $view);
+        $this->assertStringNotContainsString('wire:click="showCaisseOperations"', $view);
+        $this->assertStringNotContainsString('wire:click="showStatistiques"', $view);
+    }
+
     private function livewireViewContents(): string
     {
         $directory = dirname(__DIR__, 2) . '/resources/views/livewire';
