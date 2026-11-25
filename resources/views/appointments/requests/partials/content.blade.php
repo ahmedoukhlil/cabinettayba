@@ -1,4 +1,6 @@
-@php($embedded = $embedded ?? false)
+@php
+    $embedded = $embedded ?? false;
+@endphp
 
 <main class="space-y-4 p-4 md:p-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
