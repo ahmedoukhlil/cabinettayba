@@ -2,7 +2,7 @@
     <div class="mb-4">
         <div class="flex gap-4">
             <div class="flex-1">
-                <input type="text" wire:model.debounce.300ms="search" 
+                <input type="text" wire:model.live.debounce.300ms="search"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
                        placeholder="Rechercher un acte...">
             </div>
@@ -47,4 +47,4 @@
             <p class="text-gray-500">Aucun acte trouvé</p>
         </div>
     @endif
-</div> 
+</div>

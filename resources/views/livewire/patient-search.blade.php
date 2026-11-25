@@ -8,7 +8,7 @@
         </select>
         <div class="relative flex-1">
             <label for="patient-search-input" class="sr-only">Rechercher un patient</label>
-            <input id="patient-search-input" type="search" wire:model.debounce.300ms="search"
+            <input id="patient-search-input" type="search" wire:model.live.debounce.300ms="search"
                 wire:keydown.enter="selectFirstPatient" wire:focus="onFocus" wire:blur="onBlur"
                 autocomplete="off" placeholder="Rechercher un patient…"
                 class="w-full rounded-r-lg border-gray-300 pr-10 text-sm focus:border-primary focus:ring-primary">

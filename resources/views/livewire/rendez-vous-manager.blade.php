@@ -41,7 +41,7 @@
                                 <option value="nni">NNI</option>
                                 <option value="phone">Téléphone</option>
                             </select>
-                            <input type="text" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-lg border border-green-200 focus:ring-green-500 focus:border-green-500 sm:text-sm" wire:model.debounce.300ms="searchPatient" placeholder="Rechercher...">
+                            <input type="text" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-lg border border-green-200 focus:ring-green-500 focus:border-green-500 sm:text-sm" wire:model.live.debounce.300ms="searchPatient" placeholder="Rechercher...">
                         </div>
                     </div>
                     <div class="md:col-span-2">

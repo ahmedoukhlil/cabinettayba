@@ -278,20 +278,17 @@
 
     <!-- Formulaire d'ajout d'acte sous la facture sélectionnée -->
     @if($showAddActeForm && $factureIdForActe)
-        <div class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                </div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+        <div class="fixed inset-0 overflow-y-auto" style="z-index: 100;" wire:keydown.escape.window="closeAddActeForm">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <button type="button" class="absolute inset-0 h-full w-full bg-gray-900 opacity-60" style="z-index: 100;" wire:click="closeAddActeForm" aria-label="Fermer la fenêtre"></button>
+                <section class="relative w-full max-w-2xl overflow-visible rounded-lg bg-white text-left shadow-2xl" style="z-index: 101;" role="dialog" aria-modal="true" aria-labelledby="add-acte-title">
                     <!-- Header vert dégradé -->
-                    <div class="p-6 rounded-t-lg text-white shadow" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
-                        <h2 class="text-2xl font-bold">Ajouter un acte à la facture</h2>
-                        <p class="text-green-100 mt-1">Facture N° {{ $factures->firstWhere('id', $factureIdForActe)['numero'] ?? '' }}</p>
+                    <div class="relative rounded-t-lg p-6 text-white shadow" style="background: linear-gradient(90deg, #06b6d4 0%, #0e7490 100%);">
+                        <button type="button" wire:click="closeAddActeForm" class="absolute right-4 top-4 rounded p-2 text-xl leading-none text-white hover:bg-white/20" aria-label="Fermer">&times;</button>
+                        <h2 id="add-acte-title" class="text-2xl font-bold">Ajouter un acte à la facture</h2>
+                        <p class="mt-1 text-cyan-50">Facture N° {{ $factureSelectionnee['numero'] ?? $factureIdForActe }}</p>
                     </div>
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 rounded-b-lg">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Ajouter un acte à la facture</h3>
                         <form wire:submit.prevent="saveActeToFacture" wire:key="form-add-acte-{{ $factureIdForActe }}">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -346,7 +343,7 @@
                             Fermer
                         </button>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     @endif
@@ -368,7 +365,7 @@
                     <!-- Contenu -->
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="mb-4">
-                            <input type="text" wire:model.debounce.300ms="searchMedecin" 
+                            <input type="text" wire:model.live.debounce.300ms="searchMedecin"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                                 placeholder="Rechercher un médecin...">
                         </div>
@@ -406,4 +403,4 @@
             window.open(e.detail.url, '_blank');
         }
     });
-</script> 
+</script>
