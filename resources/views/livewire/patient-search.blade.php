@@ -5,14 +5,14 @@
 >
     <div class="flex">
         <label for="patient-search-type" class="sr-only">Critère de recherche</label>
-        <select id="patient-search-type" wire:model="searchBy" class="rounded-l-lg border-r-0 border-gray-300 bg-gray-50 text-sm text-gray-600 focus:border-primary focus:ring-primary">
+        <select id="patient-search-type" wire:model.live="searchBy" class="rounded-l-lg border-r-0 border-gray-300 bg-gray-50 text-sm text-gray-600 focus:border-primary focus:ring-primary">
             <option value="telephone">Téléphone</option>
             <option value="nom">Nom</option>
             <option value="identifiant">N° Fiche</option>
         </select>
         <div class="relative flex-1">
             <label for="patient-search-input" class="sr-only">Rechercher un patient</label>
-            <input id="patient-search-input" x-ref="searchInput" type="search" wire:model.live.debounce.300ms="search"
+            <input id="patient-search-input" x-ref="searchInput" type="search" wire:model.live.debounce.250ms="search"
                 wire:keydown.enter="selectFirstPatient" wire:focus="onFocus"
                 @blur="blurTimer = setTimeout(() => $wire.closeResults(), 200)"
                 autocomplete="off" placeholder="Rechercher un patient…"
@@ -41,10 +41,10 @@
         <div class="patient-search-results absolute left-0 right-0 z-50 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-xl">
             @if($isSearching)
                 <div class="flex items-center justify-center gap-2 px-4 py-4 text-sm text-gray-500"><span class="spinner spinner-dark"></span> Recherche en cours…</div>
-            @elseif($searchBy === 'telephone' && strlen(trim($search)) > 0 && strlen(trim($search)) < 8)
+            @elseif($searchBy === 'telephone' && strlen(preg_replace('/[^0-9]/', '', $search)) > 0 && strlen(preg_replace('/[^0-9]/', '', $search)) < $minimumSearchLength)
                 <div class="px-4 py-4 text-center text-sm text-gray-500">
                     <i class="fas fa-phone mb-2 block text-xl text-gray-300"></i>
-                    Saisissez au moins 8 chiffres.
+                    Saisissez au moins {{ $minimumSearchLength }} chiffres : la recherche démarrera automatiquement.
                 </div>
             @elseif(!empty($patients))
                 <div class="border-b border-gray-100 px-3 py-2 text-xs font-medium text-gray-500">{{ count($patients) }} résultat(s)</div>
@@ -63,7 +63,7 @@
                         </span>
                     </button>
                 @endforeach
-            @elseif(strlen(trim($search)) >= ($searchBy === 'telephone' ? 8 : 1))
+            @elseif(($searchBy === 'telephone' ? strlen(preg_replace('/[^0-9]/', '', $search)) : mb_strlen(trim($search))) >= $minimumSearchLength)
                 <div class="px-4 py-5 text-center text-sm text-gray-500">
                     <i class="fas fa-search mb-2 block text-xl text-gray-300"></i>
                     Aucun patient trouvé.

@@ -57,8 +57,12 @@ class UpgradedUiBusinessLogicTest extends TestCase
             $table->increments('ID');
             $table->string('Nom')->nullable();
             $table->string('Prenom')->nullable();
+            $table->string('IdentifiantPatient')->nullable();
             $table->string('Telephone1')->nullable();
             $table->string('Telephone2')->nullable();
+            $table->string('Adresse')->nullable();
+            $table->string('Genre')->nullable();
+            $table->date('DtNaissance')->nullable();
             $table->unsignedInteger('Assureur')->default(1);
             $table->string('IdentifiantAssurance')->nullable();
             $table->unsignedInteger('fkidcabinet');
@@ -221,6 +225,24 @@ class UpgradedUiBusinessLogicTest extends TestCase
             ->call('selectPatient', $patientId)
             ->assertSet('selectedPatient.IdentifiantAssurance', 'PEC-2026-01')
             ->assertSet('selectedPatient.Assureur', $assureurId);
+    }
+
+    public function test_phone_search_starts_automatically_after_three_digits(): void
+    {
+        $owner = $this->createOwner();
+        DB::table('patients')->insert([
+            'Nom' => 'Recherche',
+            'Prenom' => 'Automatique',
+            'Telephone1' => '22324567',
+            'Assureur' => 1,
+            'fkidcabinet' => 1,
+        ]);
+
+        Livewire::actingAs($owner)
+            ->test(PatientSearch::class)
+            ->set('search', '223')
+            ->assertCount('patients', 1)
+            ->assertSet('patients.0.NomPatient', 'Recherche');
     }
 
     private function createOwner(): TUser

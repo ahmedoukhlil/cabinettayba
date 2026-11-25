@@ -15,6 +15,8 @@ class PatientSearch extends Component
     public $isSearching = false;
     public $isFocused = false;
 
+    private const PHONE_MIN_LENGTH = 3;
+
     protected $listeners = ['clearPatient' => 'clearPatient'];
 
     public function mount()
@@ -23,20 +25,19 @@ class PatientSearch extends Component
 
     public function updatedSearch()
     {
-        // Pour les téléphones, ne commencer la recherche qu'après 8 caractères
-        if ($this->searchBy === 'telephone' && strlen($this->search) < 8) {
+        $search = trim((string) $this->search);
+        $searchLength = $this->searchBy === 'telephone'
+            ? strlen(preg_replace('/[^0-9]/', '', $search))
+            : mb_strlen($search);
+
+        if ($searchLength < $this->minimumSearchLength()) {
             $this->patients = [];
-            return;
-        }
-        
-        // Pour les autres critères, commencer après 1 caractère
-        if ($this->searchBy !== 'telephone' && strlen($this->search) < 1) {
-            $this->patients = [];
+            $this->isSearching = false;
             return;
         }
 
         $this->isSearching = true;
-        $this->isFocused = true; // Maintenir le focus
+        $this->isFocused = true;
 
         try {
             $query = Patient::query();
@@ -108,6 +109,12 @@ class PatientSearch extends Component
         $this->dispatch('maintain-focus');
     }
 
+    public function updatedSearchBy()
+    {
+        $this->patients = [];
+        $this->updatedSearch();
+    }
+
     public function selectPatient($patientId)
     {
         try {
@@ -172,7 +179,7 @@ class PatientSearch extends Component
     {
         $this->isFocused = true;
         // Si il y a déjà une recherche, afficher les résultats
-        if (strlen(trim($this->search)) >= 1 && empty($this->patients)) {
+        if ($this->hasEnoughCharacters() && empty($this->patients)) {
             $this->updatedSearch();
         }
     }
@@ -213,6 +220,23 @@ class PatientSearch extends Component
 
     public function render()
     {
-        return view('livewire.patient-search');
+        return view('livewire.patient-search', [
+            'minimumSearchLength' => $this->minimumSearchLength(),
+        ]);
+    }
+
+    private function minimumSearchLength(): int
+    {
+        return $this->searchBy === 'telephone' ? self::PHONE_MIN_LENGTH : 1;
+    }
+
+    private function hasEnoughCharacters(): bool
+    {
+        $value = trim((string) $this->search);
+        $length = $this->searchBy === 'telephone'
+            ? strlen(preg_replace('/[^0-9]/', '', $value))
+            : mb_strlen($value);
+
+        return $length >= $this->minimumSearchLength();
     }
 }
