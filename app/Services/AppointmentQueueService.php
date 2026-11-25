@@ -14,6 +14,10 @@ class AppointmentQueueService
             ? $request->appointment
             : $request->appointment()->first();
 
+        if ($request->status === 'cancelled') {
+            return $this->emptyState(true);
+        }
+
         if ($request->status !== 'confirmed' || !$appointment) {
             return $this->emptyState();
         }
@@ -60,12 +64,12 @@ class AppointmentQueueService
         return $query->count();
     }
 
-    private function emptyState(): array
+    private function emptyState(bool $cancelled = false): array
     {
         return [
             'confirmed' => false,
-            'expired' => false,
-            'cancelled' => false,
+            'expired' => $cancelled,
+            'cancelled' => $cancelled,
             'appointment_number' => null,
             'people_ahead' => null,
             'appointment_at' => null,

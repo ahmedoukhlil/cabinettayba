@@ -25,7 +25,7 @@
     @endif
 
     <nav class="flex flex-wrap gap-2 rounded-xl border border-gray-200 bg-white p-2" aria-label="Filtrer les demandes">
-        @foreach(['pending' => ['En attente', 'fa-clock'], 'confirmed' => ['Confirmées', 'fa-check-circle'], 'rejected' => ['Refusées', 'fa-times-circle']] as $value => [$label, $icon])
+        @foreach(['pending' => ['En attente', 'fa-clock'], 'confirmed' => ['Confirmées', 'fa-check-circle'], 'rejected' => ['Refusées', 'fa-times-circle'], 'cancelled' => ['Annulées', 'fa-calendar-times']] as $value => [$label, $icon])
             <a href="{{ route('appointment-requests.index', ['status' => $value] + ($embedded ? ['embedded' => 1] : [])) }}"
                class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors {{ $status === $value ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:bg-primary-light hover:text-primary' }}">
                 <i class="fas {{ $icon }}" aria-hidden="true"></i>{{ $label }}
@@ -71,15 +71,15 @@
                                                 <i class="fas fa-check" aria-hidden="true"></i> Confirmer
                                             </button>
                                         </form>
-                                        <form method="POST" action="{{ route('appointment-requests.reject', $item) }}" onsubmit="return confirm('Refuser cette demande et libérer le créneau ?')">
+                                        <form method="POST" action="{{ route('appointment-requests.reject', $item) }}" onsubmit="event.preventDefault(); const form = this; confirmAction('Refuser la demande', 'Le créneau sera libéré et le patient sera notifié.', () => form.submit());">
                                             @csrf
                                             <button type="submit" class="btn-danger px-3 py-2 text-xs"><i class="fas fa-times" aria-hidden="true"></i> Refuser</button>
                                         </form>
                                     </div>
                                 @else
-                                    <span class="badge {{ $item->status === 'confirmed' ? 'badge-success' : 'badge-error' }}">
-                                        {{ $item->status === 'confirmed' ? 'Confirmée' : 'Refusée' }}
-                                    </span>
+                                    <a href="{{ route('appointment-requests.show', $item) }}" class="badge {{ $item->status === 'confirmed' ? 'badge-success' : ($item->status === 'cancelled' ? 'bg-gray-200 text-gray-700' : 'badge-error') }} hover:underline">
+                                        {{ ['confirmed' => 'Confirmée', 'rejected' => 'Refusée', 'cancelled' => 'Annulée'][$item->status] ?? $item->status }}
+                                    </a>
                                 @endif
                             </td>
                         </tr>

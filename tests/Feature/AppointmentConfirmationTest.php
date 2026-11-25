@@ -47,9 +47,11 @@ class AppointmentConfirmationTest extends TestCase
             $table->string('tracking_token_hash');
             $table->string('slot_key')->nullable();
             $table->unsignedInteger('confirmed_by')->nullable();
+            $table->unsignedInteger('rejected_by')->nullable();
             $table->unsignedInteger('patient_id')->nullable();
             $table->unsignedInteger('appointment_id')->nullable();
             $table->timestamp('confirmed_at')->nullable();
+            $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
         });
         Schema::create('rendezvous', function (Blueprint $table) {
@@ -150,5 +152,89 @@ class AppointmentConfirmationTest extends TestCase
         $rescheduledRequest = $appointmentRequest->fresh();
         $this->assertSame($newDate, $rescheduledRequest->date_souhaitee->toDateString());
         $this->assertNotNull($rescheduledRequest->slot_key);
+    }
+
+    public function test_confirmed_appointment_can_be_rescheduled_in_request_and_agenda(): void
+    {
+        $user = $this->staffUser();
+        $this->actingAs($user);
+        $patient = $this->patient();
+        $appointmentRequest = $this->pendingRequest($patient, 'TYB-CONFIRMED-MOVE');
+
+        $this->post(route('appointment-requests.confirm', $appointmentRequest))->assertRedirect();
+        $appointmentRequest->refresh();
+        $newDate = now()->next('Monday')->addWeek()->toDateString();
+
+        $this->post(route('appointment-requests.reschedule', $appointmentRequest), [
+            'date_souhaitee' => $newDate,
+            'heure_souhaitee' => '11:30',
+        ])->assertRedirect(route('appointment-requests.show', $appointmentRequest));
+
+        $appointmentRequest->refresh();
+        $rendezVous = DB::table('rendezvous')->where('IDRdv', $appointmentRequest->appointment_id)->first();
+        $this->assertSame('confirmed', $appointmentRequest->status);
+        $this->assertSame($newDate, $appointmentRequest->date_souhaitee->toDateString());
+        $this->assertSame('11:30:00', $appointmentRequest->heure_souhaitee);
+        $this->assertStringStartsWith($newDate . ' 11:30:00', $rendezVous->HeureRdv);
+    }
+
+    public function test_confirmed_appointment_can_be_cancelled_and_frees_its_slot(): void
+    {
+        $user = $this->staffUser();
+        $this->actingAs($user);
+        $patient = $this->patient();
+        $appointmentRequest = $this->pendingRequest($patient, 'TYB-CONFIRMED-CANCEL');
+
+        $this->post(route('appointment-requests.confirm', $appointmentRequest))->assertRedirect();
+        $appointmentRequest->refresh();
+
+        $this->post(route('appointment-requests.cancel', $appointmentRequest))->assertRedirect();
+
+        $this->assertDatabaseHas('public_appointment_requests', [
+            'id' => $appointmentRequest->getKey(),
+            'status' => 'cancelled',
+            'slot_key' => null,
+        ]);
+        $this->assertDatabaseHas('rendezvous', [
+            'IDRdv' => $appointmentRequest->appointment_id,
+            'rdvConfirmer' => 'annulé',
+        ]);
+    }
+
+    private function staffUser(): TUser
+    {
+        $user = new TUser();
+        $user->forceFill(['Iduser' => 7, 'IdClasseUser' => 3, 'fkidcabinet' => 1]);
+        $user->exists = true;
+
+        return $user;
+    }
+
+    private function patient(): Patient
+    {
+        return Patient::create([
+            'Nom' => 'Test',
+            'Prenom' => 'Patient',
+            'Telephone1' => '22334455',
+            'fkidcabinet' => 1,
+        ]);
+    }
+
+    private function pendingRequest(Patient $patient, string $reference): PublicAppointmentRequest
+    {
+        return PublicAppointmentRequest::create([
+            'fkidcabinet' => 1,
+            'fkidmedecin' => 5,
+            'nom' => 'Patient Test',
+            'prenom' => '',
+            'telephone' => '22334455',
+            'date_souhaitee' => now()->addDay()->toDateString(),
+            'heure_souhaitee' => '09:00:00',
+            'status' => 'pending',
+            'reference' => $reference,
+            'tracking_token_hash' => hash('sha256', 'token'),
+            'slot_key' => hash('sha256', $reference),
+            'patient_id' => $patient->ID,
+        ]);
     }
 }

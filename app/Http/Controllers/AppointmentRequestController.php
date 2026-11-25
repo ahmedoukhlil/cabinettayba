@@ -23,7 +23,7 @@ class AppointmentRequestController extends Controller
     public function index(Request $request)
     {
         $status = $request->get('status', 'pending');
-        if (!in_array($status, ['pending', 'confirmed', 'rejected'], true)) {
+        if (!in_array($status, ['pending', 'confirmed', 'rejected', 'cancelled'], true)) {
             $status = 'pending';
         }
 
@@ -183,6 +183,48 @@ class AppointmentRequestController extends Controller
         return back()->with('message', 'La demande a été refusée et le créneau a été libéré.');
     }
 
+    public function cancel(PublicAppointmentRequest $appointmentRequest)
+    {
+        $this->ensureSameCabinet($appointmentRequest);
+        abort_unless($this->canManage($appointmentRequest), 403);
+
+        try {
+            DB::transaction(function () use ($appointmentRequest) {
+                $request = PublicAppointmentRequest::whereKey($appointmentRequest->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($request->status !== 'confirmed') {
+                    throw new \RuntimeException('Seul un rendez-vous confirmé peut être annulé.');
+                }
+
+                $rendezVous = Rendezvou::where('fkidcabinet', $request->fkidcabinet)
+                    ->whereKey($request->appointment_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$rendezVous) {
+                    throw new \RuntimeException('Le rendez-vous lié est introuvable dans l’agenda.');
+                }
+
+                $rendezVous->update(['rdvConfirmer' => 'annulé']);
+                $request->update([
+                    'status' => 'cancelled',
+                    'slot_key' => null,
+                    'rejected_by' => Auth::id(),
+                    'rejected_at' => now(),
+                ]);
+            });
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        $appointmentRequest->refresh();
+        $this->webPush->notifyPatientCancelled($appointmentRequest);
+
+        return back()->with('message', 'Le rendez-vous a été annulé, le créneau libéré et le patient notifié.');
+    }
+
     public function reschedule(Request $request, PublicAppointmentRequest $appointmentRequest)
     {
         $this->ensureSameCabinet($appointmentRequest);
@@ -228,8 +270,8 @@ class AppointmentRequestController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if ($appointment->status !== 'pending') {
-                    throw new \RuntimeException('Seule une demande en attente peut être reprogrammée.');
+                if (!in_array($appointment->status, ['pending', 'confirmed'], true)) {
+                    throw new \RuntimeException('Cette demande ne peut plus être reprogrammée.');
                 }
 
                 $date = $newDateTime->toDateString();
@@ -237,6 +279,9 @@ class AppointmentRequestController extends Controller
 
                 $occupiedInAgenda = Rendezvou::where('fkidcabinet', $appointment->fkidcabinet)
                     ->where('fkidMedecin', $appointment->fkidmedecin)
+                    ->when($appointment->appointment_id, function ($query) use ($appointment) {
+                        $query->where('IDRdv', '!=', $appointment->appointment_id);
+                    })
                     ->whereDate('dtPrevuRDV', $date)
                     ->whereTime('HeureRdv', $time)
                     ->where(function ($query) {
@@ -267,6 +312,26 @@ class AppointmentRequestController extends Controller
                         $newDateTime->format('H:i'),
                     ])),
                 ]);
+
+                if ($appointment->status === 'confirmed') {
+                    $rendezVous = Rendezvou::where('fkidcabinet', $appointment->fkidcabinet)
+                        ->whereKey($appointment->appointment_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$rendezVous) {
+                        throw new \RuntimeException('Le rendez-vous lié est introuvable dans l’agenda.');
+                    }
+
+                    $rendezVous->update([
+                        'dtPrevuRDV' => $newDateTime,
+                        'HeureRdv' => $newDateTime,
+                        'OrdreRDV' => Rendezvou::generateNextOrderNumber(
+                            $newDateTime,
+                            $appointment->fkidcabinet
+                        ),
+                    ]);
+                }
             });
         } catch (\RuntimeException $exception) {
             return back()->withInput()->with('error', $exception->getMessage());
