@@ -48,6 +48,15 @@ class UiContractTest extends TestCase
         $this->assertStringNotContainsString('wire:click="showStatistiques"', $view);
     }
 
+    public function test_escape_only_closes_the_topmost_modal(): void
+    {
+        $component = file_get_contents(dirname(__DIR__, 2) . '/resources/views/components/modal.blade.php');
+
+        $this->assertStringContainsString("modals[modals.length - 1] === \$el", $component);
+        $this->assertStringContainsString('x-ref="close"', $component);
+        $this->assertStringNotContainsString('wire:keydown.escape.window', $component);
+    }
+
     private function livewireViewContents(): string
     {
         $directory = dirname(__DIR__, 2) . '/resources/views/livewire';

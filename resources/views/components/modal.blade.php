@@ -13,8 +13,8 @@
     {{ $attributes->class(['modal-overlay', 'modal-overlay-nested' => $level === 'nested']) }}
     x-data
     x-init="$nextTick(() => $refs.dialog.focus())"
+    x-on:keydown.escape.window="const modals = [...document.querySelectorAll('.modal-overlay')]; if (modals[modals.length - 1] === $el) $refs.close.click()"
     wire:click.self="{{ $close }}"
-    wire:keydown.escape.window="{{ $close }}"
 >
     <section
         x-ref="dialog"
@@ -36,7 +36,7 @@
                     <p id="{{ $id }}-description">{{ $subtitle }}</p>
                 @endif
             </div>
-            <button type="button" wire:click="{{ $close }}" class="modal-close" aria-label="Fermer {{ $title }}">
+            <button x-ref="close" type="button" wire:click="{{ $close }}" class="modal-close" aria-label="Fermer {{ $title }}">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
         </header>
