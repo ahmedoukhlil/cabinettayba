@@ -55,7 +55,56 @@
 
     <!-- Tableau des patients -->
     <div class="bg-white rounded-lg shadow w-full">
-        <div class="overflow-x-auto">
+        <div class="space-y-3 p-3 md:hidden">
+            @forelse($patients as $patient)
+                @php
+                    $mobileFirstName = trim($patient->Prenom ?? '');
+                    $mobileLastName = trim($patient->Nom ?? '');
+                    $mobileDisplayName = $mobileFirstName !== '' && mb_strtolower($mobileFirstName) === mb_strtolower($mobileLastName)
+                        ? $mobileFirstName
+                        : trim($mobileFirstName . ' ' . $mobileLastName);
+                    $mobileInsurerName = trim($patient->assureur->LibAssurance ?? '');
+                    $mobileHasInsurance = !empty($patient->IdentifiantAssurance)
+                        && $patient->assureur
+                        && !str_contains(mb_strtolower($mobileInsurerName), 'sans assurance');
+                @endphp
+                <article class="rounded-xl border border-gray-200 p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h3 class="truncate font-bold text-gray-900">{{ $mobileDisplayName ?: 'Patient sans nom' }}</h3>
+                            <p class="mt-1 text-xs text-gray-500">N° fiche {{ $patient->IdentifiantPatient ?: '—' }}</p>
+                        </div>
+                        <span class="rounded-full px-2 py-1 text-xs font-bold {{ in_array($patient->Genre, ['H','M']) ? 'bg-blue-100 text-blue-800' : ($patient->Genre === 'F' ? 'bg-pink-100 text-pink-800' : 'bg-gray-100 text-gray-500') }}">
+                            {{ in_array($patient->Genre, ['H','M']) ? 'H' : ($patient->Genre === 'F' ? 'F' : '—') }}
+                        </span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-sm">
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-gray-400">Téléphone</p>
+                            <a href="tel:{{ $patient->Telephone1 }}" class="mt-1 inline-flex min-h-11 items-center font-semibold text-primary">{{ $patient->Telephone1 ?: '—' }}</a>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase text-gray-400">Assurance</p>
+                            <p class="mt-2 text-gray-700">{{ $mobileHasInsurance ? $mobileInsurerName : 'Non assuré' }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
+                        <button type="button" wire:click="showPaymentHistory({{ $patient->ID }})" class="btn-secondary min-h-12 justify-center px-2" aria-label="Paiements de {{ $mobileDisplayName }}">
+                            <i class="fas fa-money-bill-wave" aria-hidden="true"></i><span class="sr-only">Paiements</span>
+                        </button>
+                        <button type="button" wire:click="toggleStatus({{ $patient->ID }})" class="btn-secondary min-h-12 justify-center px-2" aria-label="{{ $patient->choix ? 'Activer' : 'Désactiver' }} ce patient">
+                            <i class="fas fa-{{ $patient->choix ? 'check' : 'times' }}" aria-hidden="true"></i><span class="sr-only">Statut</span>
+                        </button>
+                        <button type="button" wire:click="edit({{ $patient->ID }})" class="btn-secondary min-h-12 justify-center px-2" aria-label="Modifier {{ $mobileDisplayName }}">
+                            <i class="fas fa-edit" aria-hidden="true"></i><span class="sr-only">Modifier</span>
+                        </button>
+                    </div>
+                </article>
+            @empty
+                <p class="py-10 text-center text-sm text-gray-500">Aucun patient trouvé</p>
+            @endforelse
+        </div>
+        <div class="hidden overflow-x-auto md:block">
             <table class="w-full min-w-[760px] divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

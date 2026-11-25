@@ -25,11 +25,6 @@
         window.PWA_CONFIG = @json($staffPwaConfig);
     </script>
     <script src="{{ asset('js/pwa.js') }}?v={{ filemtime(public_path('js/pwa.js')) }}" defer></script>
-    <style>
-        .pwa-actions{position:fixed;right:1rem;bottom:1rem;z-index:60;display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
-        .pwa-action{border:0;border-radius:.75rem;background:#1e3a8a;color:#fff;padding:.7rem 1rem;font-weight:700;box-shadow:0 8px 20px rgba(15,23,42,.2);cursor:pointer}
-        .pwa-action[data-enabled="true"]{background:#475569}.pwa-action:disabled{opacity:.6;cursor:wait}
-    </style>
     @livewireStyles
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-900 antialiased">
@@ -112,11 +107,16 @@
 
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-    <div class="pwa-actions" aria-label="Application mobile">
-        <button type="button" class="pwa-action" data-pwa-install hidden>Installer l’application</button>
-        @auth
-            <button type="button" class="pwa-action" data-pwa-notifications hidden>Activer les notifications</button>
-        @endauth
+    <div class="pwa-actions" data-pwa-actions hidden aria-label="Application mobile">
+        <button type="button" class="pwa-actions-toggle" data-pwa-actions-toggle aria-expanded="false" aria-label="Options de l’application">
+            <i class="fas fa-mobile-screen-button" aria-hidden="true"></i>
+        </button>
+        <div class="pwa-actions-menu" data-pwa-actions-menu hidden>
+            <button type="button" class="pwa-action" data-pwa-install hidden>Installer l’application</button>
+            @auth
+                <button type="button" class="pwa-action" data-pwa-notifications hidden>Activer les notifications</button>
+            @endauth
+        </div>
     </div>
 
     @livewireScripts

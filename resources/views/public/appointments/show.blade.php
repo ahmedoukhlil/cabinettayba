@@ -80,7 +80,9 @@
 
     <p class="mt-6 text-sm text-slate-500">احتفظ بهذا الرابط الخاص لمتابعة الحجز. رقم الطلب وحده لا يسمح بالدخول إلى تفاصيلك.</p>
     <p class="mt-2 text-sm text-slate-500">فعّل الإشعارات لتصلك نتيجة التأكيد حتى عند إغلاق التطبيق.</p>
-    <a href="{{ route('public.appointment.create') }}" class="mt-6 inline-flex rounded-lg bg-[#1e3a8a] px-5 py-3 font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">إرسال طلب جديد</a>
+    @if($appointmentRequest->status === 'rejected')
+        <a href="{{ route('public.appointment.create') }}" class="mt-6 inline-flex min-h-11 items-center rounded-lg bg-[#1e3a8a] px-5 py-3 font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">إرسال طلب جديد</a>
+    @endif
     @endif
 </div>
 @endsection

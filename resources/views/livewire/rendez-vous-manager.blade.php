@@ -57,7 +57,39 @@
                 </div>
             </form>
         </div>
-        <div class="overflow-x-auto bg-white">
+        <div class="space-y-3 bg-white p-3 md:hidden">
+            @forelse($RendezVous as $rdv)
+                <article class="rounded-xl border border-green-100 p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="font-bold text-gray-900">{{ $rdv->patient->Prenom ?? 'Patient' }}</p>
+                            <p class="mt-1 text-sm text-gray-500">Dr {{ $rdv->medecin->Nom ?? '—' }}</p>
+                        </div>
+                        @if($rdv->rdvConfirmer === 'confirmé')
+                            <span class="badge badge-success">Confirmé</span>
+                        @elseif($rdv->rdvConfirmer === 'annulé')
+                            <span class="badge badge-error">Annulé</span>
+                        @else
+                            <span class="badge badge-warning">En attente</span>
+                        @endif
+                    </div>
+                    <dl class="mt-3 grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-sm">
+                        <div><dt class="text-xs font-semibold uppercase text-gray-400">Date</dt><dd class="mt-1 font-semibold">{{ \Carbon\Carbon::parse($rdv->DateRdv)->format('d/m/Y') }}</dd></div>
+                        <div><dt class="text-xs font-semibold uppercase text-gray-400">Heure</dt><dd class="mt-1 font-semibold">{{ $rdv->HeureRdv ? \Carbon\Carbon::parse($rdv->HeureRdv)->format('H:i') : '—' }}</dd></div>
+                        <div class="col-span-2"><dt class="text-xs font-semibold uppercase text-gray-400">Acte prévu</dt><dd class="mt-1">{{ $rdv->ActePrevu ?: '—' }}</dd></div>
+                    </dl>
+                    @if($rdv->rdvConfirmer !== 'confirmé' && $rdv->rdvConfirmer !== 'annulé')
+                        <div class="mt-4 grid grid-cols-2 gap-2">
+                            <button type="button" wire:click="confirmerRendezVous({{ $rdv->IDRdv }})" class="inline-flex min-h-12 items-center justify-center rounded-lg bg-green-600 px-3 text-sm font-semibold text-white">Confirmer</button>
+                            <button type="button" wire:click="annulerRendezVous({{ $rdv->IDRdv }})" class="btn-danger min-h-12 justify-center px-3 text-sm">Annuler</button>
+                        </div>
+                    @endif
+                </article>
+            @empty
+                <p class="py-10 text-center text-sm text-gray-500">Aucun rendez-vous à venir</p>
+            @endforelse
+        </div>
+        <div class="hidden overflow-x-auto bg-white md:block">
             <table class="min-w-full divide-y divide-green-100">
                 <thead class="bg-white">
                     <tr>

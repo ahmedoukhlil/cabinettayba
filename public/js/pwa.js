@@ -10,6 +10,47 @@
 
   const installButtons = [...document.querySelectorAll('[data-pwa-install]')];
   const notificationButtons = [...document.querySelectorAll('[data-pwa-notifications]')];
+  const actionGroups = [...document.querySelectorAll('[data-pwa-actions]')];
+
+  const syncActionGroups = () => actionGroups.forEach(group => {
+    const actionButtons = [...group.querySelectorAll('[data-pwa-install], [data-pwa-notifications]')];
+    const hasVisibleAction = actionButtons.some(button => !button.hidden);
+    const shouldHide = !hasVisibleAction || Boolean(document.querySelector('.modal-overlay'));
+    if (group.hidden !== shouldHide) group.hidden = shouldHide;
+    if (shouldHide) {
+      const menu = group.querySelector('[data-pwa-actions-menu]');
+      const toggle = group.querySelector('[data-pwa-actions-toggle]');
+      if (menu && !menu.hidden) menu.hidden = true;
+      toggle?.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  actionGroups.forEach(group => {
+    const toggle = group.querySelector('[data-pwa-actions-toggle]');
+    const menu = group.querySelector('[data-pwa-actions-menu]');
+    toggle?.addEventListener('click', () => {
+      if (!menu) return;
+      menu.hidden = !menu.hidden;
+      toggle.setAttribute('aria-expanded', String(!menu.hidden));
+    });
+  });
+
+  document.addEventListener('click', event => {
+    actionGroups.forEach(group => {
+      if (group.contains(event.target)) return;
+      const menu = group.querySelector('[data-pwa-actions-menu]');
+      const toggle = group.querySelector('[data-pwa-actions-toggle]');
+      if (menu && !menu.hidden) menu.hidden = true;
+      toggle?.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  new MutationObserver(syncActionGroups).observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['hidden']
+  });
   const notify = (message, type = 'info') => {
     if (window.showToast) window.showToast(message, type);
   };
@@ -41,11 +82,14 @@
     body: JSON.stringify(body)
   });
 
-  const updateNotificationButtons = enabled => notificationButtons.forEach(button => {
-    button.hidden = false;
-    button.dataset.enabled = enabled ? 'true' : 'false';
-    button.textContent = enabled ? labels.disable : labels.enable;
-  });
+  const updateNotificationButtons = enabled => {
+    notificationButtons.forEach(button => {
+      button.hidden = false;
+      button.dataset.enabled = enabled ? 'true' : 'false';
+      button.textContent = enabled ? labels.disable : labels.enable;
+    });
+    syncActionGroups();
+  };
 
   const hideNotificationOnboarding = () => document.getElementById('pwa-notification-onboarding')?.remove();
 
@@ -108,15 +152,18 @@
     event.preventDefault();
     installPrompt = event;
     if (!standalone) installButtons.forEach(button => { button.hidden = false; button.textContent = labels.install; });
+    syncActionGroups();
   });
 
   window.addEventListener('appinstalled', () => {
     installButtons.forEach(button => { button.hidden = true; });
+    syncActionGroups();
     window.setTimeout(showNotificationOnboarding, 300);
   });
 
   if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
     installButtons.forEach(button => { button.hidden = false; button.textContent = labels.install; });
+    syncActionGroups();
   }
 
   installButtons.forEach(button => button.addEventListener('click', async () => {
@@ -171,5 +218,6 @@
     }
   }));
 
+  syncActionGroups();
   initialise();
 })();

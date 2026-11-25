@@ -15,7 +15,7 @@
             <p class="mt-2 text-sm leading-6 text-slate-600">تحقق من ملفك، ثم اختر الطبيب والتاريخ والساعة المناسبة.</p>
         </div>
 
-        <ol class="mt-5 grid grid-cols-4 gap-2 text-center text-[11px] font-semibold text-slate-400 sm:text-xs" aria-label="مراحل حجز الموعد">
+        <ol class="mt-5 grid grid-cols-4 gap-1 text-center text-xs font-semibold text-slate-400 sm:gap-2" aria-label="مراحل حجز الموعد">
             <li data-booking-step="1" class="booking-step is-active"><span>1</span><small>الهاتف</small></li>
             <li data-booking-step="2" class="booking-step"><span>2</span><small>المريض</small></li>
             <li data-booking-step="3" class="booking-step"><span>3</span><small>الطبيب</small></li>

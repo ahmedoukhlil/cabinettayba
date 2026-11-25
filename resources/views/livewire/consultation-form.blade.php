@@ -148,7 +148,7 @@
                                 <span class="text-green-700">Assureur : {{ $selectedPatient['NomAssureur'] ?? '' }}</span>
                                 <span class="text-green-700">Taux de prise en charge : {{ number_format(($selectedPatient['TauxPEC'] ?? 0) * 100, 0) }}%</span>
                             </div>
-                            <div class="mt-2 grid grid-cols-2 gap-4">
+                            <div class="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <p class="text-xs text-gray-600">Montant assurance</p>
                                     @php

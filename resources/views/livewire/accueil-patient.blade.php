@@ -22,33 +22,33 @@
 
     <section class="mb-4 flex flex-col items-stretch gap-3 rounded-xl border border-gray-100 bg-white p-3 shadow-sm md:mb-6 md:p-5 lg:flex-row lg:items-center">
         <div class="w-full lg:flex-1"><livewire:patient-search /></div>
-        <div class="flex flex-col gap-2 sm:flex-row lg:flex-shrink-0">
-            <button wire:click="openGestionPatientsModal" class="btn-secondary justify-center whitespace-nowrap px-4 py-2.5 text-sm">
+        <div class="grid grid-cols-2 gap-2 lg:flex lg:flex-shrink-0">
+            <button wire:click="openGestionPatientsModal" class="btn-secondary min-h-12 justify-center whitespace-nowrap px-3 py-2.5 text-sm">
                 <i class="fas fa-users" aria-hidden="true"></i> Liste patients
             </button>
-            <button wire:click="showCreateRdv" class="btn-secondary justify-center whitespace-nowrap px-4 py-2.5 text-sm">
+            <button wire:click="showCreateRdv" class="btn-secondary min-h-12 justify-center whitespace-nowrap px-3 py-2.5 text-sm">
                 <i class="fas fa-calendar-plus" aria-hidden="true"></i> Gestion RDV
             </button>
         </div>
     </section>
 
     @if($isDocteurProprietaire || $isDocteur || $isSecretaire)
-        <nav class="mb-4 flex flex-wrap justify-center gap-2 rounded-xl border border-gray-100 bg-white px-3 py-3 shadow-sm" aria-label="Actions principales">
+        <nav class="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-gray-100 bg-white px-3 py-3 shadow-sm sm:flex sm:flex-wrap sm:justify-center" aria-label="Actions principales">
             <button wire:click="togglePatientMenu" @if(!$selectedPatient) disabled title="Sélectionnez d’abord un patient" @endif
-                class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showPatientMenu ? '!border-primary !bg-primary !text-white' : '' }}">
+                class="nav-button btn-secondary min-h-12 min-w-0 justify-center px-3 py-2.5 text-sm sm:min-w-[9rem] {{ $showPatientMenu ? '!border-primary !bg-primary !text-white' : '' }}">
                 <i class="fas fa-user-friends" aria-hidden="true"></i>
                 <span>Gestion du patient</span>
                 <i class="fas fa-chevron-{{ $showPatientMenu ? 'up' : 'down' }} text-xs opacity-60" aria-hidden="true"></i>
             </button>
 
-            <button type="button" wire:click="openCaisseOperations" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+            <button type="button" wire:click="openCaisseOperations" class="nav-button btn-secondary min-h-12 min-w-0 justify-center px-3 py-2.5 text-sm sm:min-w-[9rem]">
                 <i class="fas fa-cash-register" aria-hidden="true"></i> Caisse Paie
             </button>
 
             @if($isDocteurProprietaire || $isSecretaire || $isDocteur)
                 <button type="button" wire:click="openAppointmentRequests"
                     aria-label="Demandes en ligne{{ $pendingAppointmentRequestsCount > 0 ? ' — ' . $pendingAppointmentRequestsCount . ' en attente' : '' }}"
-                    class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
+                    class="nav-button btn-secondary min-h-12 min-w-0 justify-center px-3 py-2.5 text-sm sm:min-w-[9rem] {{ $showAppointmentRequests ? '!border-primary !bg-primary !text-white' : '' }}">
                     <span class="notification-bell" aria-hidden="true">
                         <i class="fas fa-bell"></i>
                         @if($pendingAppointmentRequestsCount > 0)
@@ -62,12 +62,12 @@
             @endif
 
             @if($isDocteurProprietaire)
-                <button type="button" wire:click="openStatistiques" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+                <button type="button" wire:click="openStatistiques" class="nav-button btn-secondary min-h-12 min-w-0 justify-center px-3 py-2.5 text-sm sm:min-w-[9rem]">
                     <i class="fas fa-chart-bar" aria-hidden="true"></i> Statistiques
                 </button>
             @endif
 
-            <button wire:click="toggleCabinetMenu" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm {{ $showCabinetMenu ? '!border-primary !bg-primary !text-white' : '' }}">
+            <button wire:click="toggleCabinetMenu" class="nav-button btn-secondary min-h-12 min-w-0 justify-center px-3 py-2.5 text-sm sm:min-w-[9rem] {{ $showCabinetMenu ? '!border-primary !bg-primary !text-white' : '' }}">
                 <i class="fas fa-cogs" aria-hidden="true"></i>
                 <span>Gestion du cabinet</span>
                 <i class="fas fa-chevron-{{ $showCabinetMenu ? 'up' : 'down' }} text-xs opacity-60" aria-hidden="true"></i>

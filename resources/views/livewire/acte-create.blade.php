@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto p-6 bg-white rounded shadow">
+<div class="mx-auto max-w-4xl rounded bg-white p-4 shadow sm:p-6">
     @if (session()->has('success'))
         <div class="mb-4 p-2 bg-green-100 text-green-800 rounded text-center">
             {{ session('success') }}
@@ -8,7 +8,7 @@
     <h2 class="text-2xl font-bold text-gray-800 mb-6 text-left">Créer un acte</h2>
 
     <form wire:submit.prevent="save" class="space-y-6">
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <!-- Colonne de gauche -->
             <div class="space-y-6">
                 <div>

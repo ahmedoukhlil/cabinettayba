@@ -48,7 +48,7 @@
                     <span class="block text-xs text-slate-500">@yield('header_subtitle', 'Réservation en ligne')</span>
                 </span>
             </a>
-            <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded">
+            <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center rounded text-sm font-medium text-slate-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600">
                 @yield('professional_label', 'Espace professionnel')
             </a>
         </div>
@@ -64,11 +64,16 @@
         </div>
     </footer>
     <div id="toast-container" class="public-toast-container" aria-live="polite" aria-atomic="false"></div>
-    <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2" aria-label="تطبيق الهاتف">
-        <button type="button" data-pwa-install hidden class="rounded-xl bg-[#1e3a8a] px-4 py-3 font-semibold text-white shadow-lg">تثبيت التطبيق</button>
-        @hasSection('pwa_subscribe_url')
-            <button type="button" data-pwa-notifications hidden class="rounded-xl bg-[#1e3a8a] px-4 py-3 font-semibold text-white shadow-lg">تفعيل الإشعارات</button>
-        @endif
+    <div class="pwa-actions" data-pwa-actions hidden aria-label="تطبيق الهاتف">
+        <button type="button" class="pwa-actions-toggle" data-pwa-actions-toggle aria-expanded="false" aria-label="خيارات التطبيق">
+            <span aria-hidden="true">🔔</span>
+        </button>
+        <div class="pwa-actions-menu" data-pwa-actions-menu hidden>
+            <button type="button" data-pwa-install hidden class="pwa-action">تثبيت التطبيق</button>
+            @hasSection('pwa_subscribe_url')
+                <button type="button" data-pwa-notifications hidden class="pwa-action">تفعيل الإشعارات</button>
+            @endif
+        </div>
     </div>
     <script>
         window.showToast = function(message, type = 'info', duration = 4200) {
