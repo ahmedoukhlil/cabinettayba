@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Livewire\AssureurManager;
 use App\Http\Livewire\PatientSearch;
+use App\Http\Livewire\PatientManager;
 use App\Http\Livewire\ReglementFacture;
 use App\Http\Livewire\UserManager;
 use App\Models\TUser;
@@ -65,6 +66,15 @@ class UpgradedUiBusinessLogicTest extends TestCase
             $table->date('DtNaissance')->nullable();
             $table->unsignedInteger('Assureur')->default(1);
             $table->string('IdentifiantAssurance')->nullable();
+            $table->string('NNI')->nullable();
+            $table->string('MatriculeFonct')->nullable();
+            $table->string('NomContact')->nullable();
+            $table->string('ClasserSous')->nullable();
+            $table->boolean('choix')->nullable();
+            $table->dateTime('Dtajout')->nullable();
+            $table->unsignedInteger('fkidUser')->nullable();
+            $table->unsignedInteger('fkidtypeTiers')->default(1);
+            $table->unsignedInteger('DernDossierFermer')->default(0);
             $table->unsignedInteger('fkidcabinet');
         });
 
@@ -243,6 +253,30 @@ class UpgradedUiBusinessLogicTest extends TestCase
             ->set('search', '223')
             ->assertCount('patients', 1)
             ->assertSet('patients.0.NomPatient', 'Recherche');
+    }
+
+    public function test_new_patient_can_be_saved_with_blank_optional_fields(): void
+    {
+        $owner = $this->createOwner();
+
+        Livewire::actingAs($owner)
+            ->test(PatientManager::class)
+            ->call('openModal')
+            ->set('nom', 'Patient Minimal')
+            ->set('telephone1', '22334455')
+            ->set('prenom', '')
+            ->set('dateNaissance', '')
+            ->set('genre', '')
+            ->set('nni', '')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('showModal', false);
+
+        $patient = DB::table('patients')->where('Telephone1', '22334455')->first();
+        $this->assertNotNull($patient);
+        $this->assertNull($patient->DtNaissance);
+        $this->assertNull($patient->NNI);
+        $this->assertSame(1, (int) $patient->Assureur);
     }
 
     private function createOwner(): TUser

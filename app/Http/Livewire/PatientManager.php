@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\Dentspatient;
 use Livewire\WithPagination;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class PatientManager extends Component
 {
@@ -198,40 +199,48 @@ class PatientManager extends Component
 
         try {
             $data = [
-                'Nom' => $this->nom,
-                'Prenom' => $this->prenom,
-                'NNI' => $this->nni,
-                'DtNaissance' => $this->dateNaissance,
-                'Genre' => $this->genre,
-                'Telephone1' => $this->telephone1,
-                'Telephone2' => $this->telephone2,
-                'Adresse' => $this->adresse,
-                'IdentifiantAssurance' => $this->isAssured ? $this->identifiantAssurance : '',
-                'Assureur' => $this->isAssured ? $this->assureur : 1,
-                'MatriculeFonct' => $this->matriculeFonct,
-                'NomContact' => $this->nomContact ?: trim($this->prenom . ' ' . $this->nom),
-                'ClasserSous' => $this->classerSous,
+                'Nom' => trim($this->nom),
+                'Prenom' => $this->nullableText($this->prenom),
+                'NNI' => $this->nullableText($this->nni),
+                'DtNaissance' => $this->dateNaissance ?: null,
+                'Genre' => $this->genre ?: null,
+                'Telephone1' => trim($this->telephone1),
+                'Telephone2' => $this->nullableText($this->telephone2),
+                'Adresse' => $this->nullableText($this->adresse),
+                'IdentifiantAssurance' => $this->isAssured
+                    ? $this->nullableText($this->identifiantAssurance)
+                    : null,
+                'Assureur' => $this->isAssured ? (int) $this->assureur : 1,
+                'MatriculeFonct' => $this->nullableText($this->matriculeFonct),
+                'NomContact' => $this->nullableText($this->nomContact)
+                    ?: trim(($this->prenom ?: '') . ' ' . $this->nom),
+                'ClasserSous' => $this->nullableText($this->classerSous),
                 'choix' => !$this->isActive,
-                'Dtajout' => now(),
-                'fkidUser' => Auth::id(),
-                'fkidcabinet' => Auth::user()->fkidcabinet,
                 'IdentifiantPatient' => $this->identifiantPatient,
             ];
 
-            if ($this->patientId) {
-                $patient = $this->patientQuery()->find($this->patientId);
-                if (!$patient) {
-                    throw new \Exception('Patient non trouvé');
+            DB::transaction(function () use ($data) {
+                if ($this->patientId) {
+                    $patient = $this->patientQuery()->find($this->patientId);
+                    if (!$patient) {
+                        throw new \Exception('Patient non trouvé');
+                    }
+                    $patient->update($data);
+                    session()->flash('message', 'Patient mis à jour avec succès.');
+                } else {
+                    $patient = Patient::create(array_merge($data, [
+                        'Dtajout' => now(),
+                        'fkidUser' => Auth::id(),
+                        'fkidtypeTiers' => 1,
+                        'DernDossierFermer' => 0,
+                        'fkidcabinet' => Auth::user()->fkidcabinet,
+                    ]));
+                    if (!$patient) {
+                        throw new \Exception('Erreur lors de la création du patient');
+                    }
+                    session()->flash('message', 'Patient créé avec succès.');
                 }
-                $patient->update($data);
-                session()->flash('message', 'Patient mis à jour avec succès.');
-            } else {
-                $patient = Patient::create($data);
-                if (!$patient) {
-                    throw new \Exception('Erreur lors de la création du patient');
-                }
-                session()->flash('message', 'Patient créé avec succès.');
-            }
+            });
 
             $this->resetForm();
             $this->closeModal();
@@ -331,6 +340,13 @@ class PatientManager extends Component
     private function patientQuery()
     {
         return Patient::where('fkidcabinet', Auth::user()->fkidcabinet);
+    }
+
+    private function nullableText($value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+
+        return $value === '' ? null : $value;
     }
 
     public function closePaymentHistoryModal()
