@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Acte;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 
 class ActeService
@@ -24,7 +23,7 @@ class ActeService
                       ->orWhere('Acte', 'like', '% ' . $searchTerm . '%')  // Recherche par mot
                       ->orWhere('Acte', 'like', '%' . $searchTerm . '%');  // Recherche générale
                 })
-                ->orderBy(DB::raw("CASE WHEN Acte LIKE '{$searchTerm}%' THEN 1 ELSE 2 END")) // Priorité aux résultats commençant par le terme
+                ->orderByRaw('CASE WHEN Acte LIKE ? THEN 1 ELSE 2 END', [$searchTerm . '%'])
                 ->orderBy('nordre', 'asc')
                 ->limit(30);
 
@@ -128,4 +127,4 @@ class ActeService
 
         return $query->get();
     }
-} 
+}

@@ -92,9 +92,11 @@ class MedecinPaiementStats extends Component
     {
         $user = Auth::user();
         if ($this->isProprietaire) {
-            $this->medecinsList = Medecin::select('idMedecin', 'Nom')->get()->toArray();
+            $this->medecinsList = Medecin::where('fkidcabinet', $user->fkidcabinet)
+                ->select('idMedecin', 'Nom')->get()->toArray();
         } elseif ($this->isMedecin) {
-            $this->medecinsList = Medecin::where('idMedecin', $user->fkidmedecin)
+            $this->medecinsList = Medecin::where('fkidcabinet', $user->fkidcabinet)
+                ->where('idMedecin', $user->fkidmedecin)
                 ->select('idMedecin', 'Nom')
                 ->get()
                 ->toArray();
@@ -113,6 +115,7 @@ class MedecinPaiementStats extends Component
 
             $user = Auth::user();
             $query = Rendezvou::with(['medecin', 'patient'])
+                ->where('fkidcabinet', $user->fkidcabinet)
                 ->whereDate('dtPrevuRDV', $this->rdv_date);
 
             if ($this->rdv_medecin_id) {
@@ -243,7 +246,7 @@ class MedecinPaiementStats extends Component
             $query = CaisseOperation::selectRaw('
                 SUM(entreEspece) as total_recettes_global,
                 SUM(retraitEspece) as total_depenses_global
-            ');
+            ')->where('fkidcabinet', Auth::user()->fkidcabinet);
 
             // Appliquer le filtre de date uniquement si ce n'est pas "all"
             if ($this->periode !== 'all') {
@@ -260,7 +263,7 @@ class MedecinPaiementStats extends Component
                 SUM(entreEspece) as total_recettes,
                 SUM(retraitEspece) as total_depenses,
                 COUNT(cle) as nombre_operations
-            ');
+            ')->where('fkidcabinet', Auth::user()->fkidcabinet);
 
             // Appliquer le filtre de date uniquement si ce n'est pas "all"
             if ($this->periode !== 'all') {
@@ -299,7 +302,7 @@ class MedecinPaiementStats extends Component
     private function calculerRecettes($dateDebut, $dateFin)
     {
         try {
-            $query = CaisseOperation::query();
+            $query = CaisseOperation::where('fkidcabinet', Auth::user()->fkidcabinet);
 
             // Appliquer le filtre de date uniquement si ce n'est pas "all"
             if ($this->periode !== 'all') {
@@ -327,7 +330,7 @@ class MedecinPaiementStats extends Component
         }
         
         try {
-            $query = CaisseOperation::query();
+            $query = CaisseOperation::where('fkidcabinet', Auth::user()->fkidcabinet);
 
             // Appliquer le filtre de date uniquement si ce n'est pas "all"
             if ($this->periode !== 'all') {
@@ -349,7 +352,8 @@ class MedecinPaiementStats extends Component
     private function getRecettesParJour($dateDebut, $dateFin)
     {
         try {
-            $query = CaisseOperation::selectRaw('DATE(dateoper) as date, SUM(entreEspece) as montant');
+            $query = CaisseOperation::selectRaw('DATE(dateoper) as date, SUM(entreEspece) as montant')
+                ->where('fkidcabinet', Auth::user()->fkidcabinet);
 
             // Appliquer le filtre de date uniquement si ce n'est pas "all"
             if ($this->periode !== 'all') {
@@ -403,14 +407,14 @@ class MedecinPaiementStats extends Component
     {
         try {
             $user = Auth::user();
-            $rdv = Rendezvou::find($id);
+            $rdv = Rendezvou::where('fkidcabinet', $user->fkidcabinet)->find($id);
 
             if (!$this->canManageRdv) {
                 session()->flash('error', 'Vous n\'avez pas la permission d\'annuler des rendez-vous.');
                 return;
             }
 
-            if ($user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
+            if ($rdv && $user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
                 session()->flash('error', 'Vous ne pouvez annuler que vos propres rendez-vous.');
                 return;
             }
@@ -429,14 +433,14 @@ class MedecinPaiementStats extends Component
     {
         try {
             $user = Auth::user();
-            $rdv = Rendezvou::find($id);
+            $rdv = Rendezvou::where('fkidcabinet', $user->fkidcabinet)->find($id);
 
             if (!$this->canManageRdv) {
                 session()->flash('error', 'Vous n\'avez pas la permission de confirmer des rendez-vous.');
                 return;
             }
 
-            if ($user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
+            if ($rdv && $user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
                 session()->flash('error', 'Vous ne pouvez confirmer que vos propres rendez-vous.');
                 return;
             }
@@ -463,6 +467,7 @@ class MedecinPaiementStats extends Component
 
             if ($user->isDocteur() && !$user->isDocteurProprietaire()) {
                 $invalidRdv = Rendezvou::whereIn('IDRdv', $this->selectedRendezVous)
+                    ->where('fkidcabinet', $user->fkidcabinet)
                     ->where('fkidMedecin', '!=', $user->fkidmedecin)
                     ->exists();
 
@@ -473,6 +478,7 @@ class MedecinPaiementStats extends Component
             }
 
             Rendezvou::whereIn('IDRdv', $this->selectedRendezVous)
+                ->where('fkidcabinet', $user->fkidcabinet)
                 ->update(['rdvConfirmer' => 'annulé']);
             $this->selectedRendezVous = [];
             $this->selectAll = false;

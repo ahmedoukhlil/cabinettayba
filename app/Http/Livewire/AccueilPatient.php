@@ -64,7 +64,8 @@ class AccueilPatient extends Component
         $this->refreshPendingAppointmentRequestsCount();
 
         if (request()->has('patient_id')) {
-            $patient = Patient::find(request()->patient_id);
+            $patient = Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
+                ->find(request()->patient_id);
             if ($patient) {
                 $this->setPatient($patient);
             }
@@ -115,7 +116,7 @@ class AccueilPatient extends Component
         $this->showListeActesModal = true;
         $this->showCaisseOperations = false;
         $this->showStatistiques = false;
-        $this->emit('listeActesModalOpened');
+        $this->dispatch('listeActesModalOpened');
     }
 
     public function fermerListeActesModal()
@@ -156,7 +157,7 @@ class AccueilPatient extends Component
         $this->showCaisseOperations = false;
         $this->showStatistiques = false;
         $this->showPatientMenu = true;
-        $this->emit('actionChanged', $action);
+        $this->dispatch('actionChanged', action: $action);
     }
 
     public function clearAction()
@@ -191,11 +192,11 @@ class AccueilPatient extends Component
     // Gestionnaires d'événements
     public function handlePatientCreated($patientId)
     {
-        $patient = Patient::find($patientId);
+        $patient = Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->find($patientId);
         if ($patient) {
             $this->setPatient($patient);
             $this->showCreatePatientModal = false;
-            $this->emit('patientCreated', $patientId);
         }
     }
 

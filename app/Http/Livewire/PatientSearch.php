@@ -103,13 +103,14 @@ class PatientSearch extends Component
         $this->isSearching = false;
         
         // Maintenir le focus après la recherche
-        $this->dispatchBrowserEvent('maintain-focus');
+        $this->dispatch('maintain-focus');
     }
 
     public function selectPatient($patientId)
     {
         try {
-            $patient = Patient::find($patientId);
+            $patient = Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
+                ->find($patientId);
             
             if ($patient) {
                 $assureur = $patient->assureur;
@@ -133,7 +134,7 @@ class PatientSearch extends Component
                 $this->isFocused = false;
                 $this->patients = [];
                 
-                $this->emit('patientSelected', $this->selectedPatient);
+                $this->dispatch('patientSelected', patient: $this->selectedPatient);
             } else {
                 session()->flash('error', 'Patient non trouvé.');
             }
@@ -147,7 +148,7 @@ class PatientSearch extends Component
         $this->search = '';
         $this->patients = [];
         $this->selectedPatient = null;
-        $this->emit('patientCleared');
+        $this->dispatch('patientCleared');
     }
 
     /**
@@ -179,7 +180,7 @@ class PatientSearch extends Component
     public function onBlur()
     {
         // Fermer la liste quand on clique ailleurs
-        $this->dispatchBrowserEvent('delay-blur');
+        $this->dispatch('delay-blur');
     }
 
     /**
@@ -212,4 +213,4 @@ class PatientSearch extends Component
     {
         return view('livewire.patient-search');
     }
-} 
+}

@@ -130,7 +130,8 @@ class CaisseOperationsManager extends Component
         $medecinsMap = Medecin::whereIn(
             'idMedecin',
             $totauxParMedecinEtMode->pluck('fkidmedecin')->filter()->unique()
-        )->get(['idMedecin', 'Nom'])->keyBy('idMedecin');
+        )->where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->get(['idMedecin', 'Nom'])->keyBy('idMedecin');
 
         $totauxParMedecin = $totauxParMedecinEtMode
             ->groupBy('fkidmedecin')
@@ -161,9 +162,11 @@ class CaisseOperationsManager extends Component
         $paginatedOperations = $this->getPaginatedOperations();
         $pageOperations = $paginatedOperations->getCollection();
         $pageMedecins = Medecin::whereIn('idMedecin', $pageOperations->pluck('fkidmedecin')->filter()->unique())
+            ->where('fkidcabinet', Auth::user()->fkidcabinet)
             ->get(['idMedecin', 'Nom'])
             ->keyBy('idMedecin');
         $patientsMap = Patient::whereIn('ID', $pageOperations->pluck('fkidTiers')->map(fn ($id) => (int) $id)->filter()->unique())
+            ->where('fkidcabinet', Auth::user()->fkidcabinet)
             ->get(['ID', 'Nom', 'Prenom'])
             ->keyBy('ID');
 

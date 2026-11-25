@@ -52,6 +52,7 @@ class ReglementFacture extends Component
     {
         if ($this->selectedPatient) {
             return Facture::where('IDPatient', $this->selectedPatient['ID'])
+                ->where('fkidCabinet', Auth::user()->fkidcabinet)
                 ->with(['medecin' => function($query) {
                     $query->select('idMedecin', 'Nom');
                 }])
@@ -103,7 +104,9 @@ class ReglementFacture extends Component
 
     public function selectionnerFacture($factureId)
     {
-        $facture = Facture::find($factureId);
+        $facture = Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
+            ->where('IDPatient', $this->selectedPatient['ID'] ?? 0)
+            ->find($factureId);
         if ($facture) {
             $this->factureSelectionnee = [
                 'id' => $facture->Idfacture,
@@ -145,18 +148,24 @@ class ReglementFacture extends Component
             'modePaiement' => 'required|exists:ref_type_paiement,idtypepaie',
         ]);
         // Si assuré, on doit avoir pourQui
-        if ($this->pourQui === null && $this->factureSelectionnee && ($facture = Facture::find($this->factureSelectionnee['id'])) && $facture->ISTP == 1) {
+        if ($this->pourQui === null && $this->factureSelectionnee
+            && ($facture = Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
+                ->find($this->factureSelectionnee['id']))
+            && $facture->ISTP == 1) {
             throw new \Exception('Veuillez préciser pour qui est le règlement (Patient ou PEC).');
         }
         try {
             DB::beginTransaction();
 
-            $facture = Facture::find($this->factureSelectionnee['id']);
+            $facture = Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
+                ->where('IDPatient', $this->selectedPatient['ID'] ?? 0)
+                ->find($this->factureSelectionnee['id']);
             if (!$facture) {
                 throw new \Exception('Facture non trouvée');
             }
 
-            $medecin = Medecin::find($facture->FkidMedecinInitiateur);
+            $medecin = Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)
+                ->find($facture->FkidMedecinInitiateur);
             if (!$medecin) {
                 throw new \Exception('Médecin non trouvé');
             }
@@ -219,7 +228,7 @@ class ReglementFacture extends Component
             session()->flash('message', ($isRemboursement ? 'Remboursement' : ($isAcompte ? 'Acompte' : 'Règlement')) . ' enregistré avec succès.');
 
             $receiptUrl = route('reglement-facture.receipt', $operation->getKey());
-            $this->dispatchBrowserEvent('open-receipt', ['url' => $receiptUrl]);
+            $this->dispatch('open-receipt', url: $receiptUrl);
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Une erreur est survenue lors de l\'enregistrement : ' . $e->getMessage());
@@ -289,6 +298,10 @@ class ReglementFacture extends Component
 
             $acte = \App\Models\Acte::find($this->selectedActeId);
 
+            $facture = Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
+                ->where('IDPatient', $this->selectedPatient['ID'] ?? 0)
+                ->findOrFail($this->factureIdForActe);
+
             \App\Models\Detailfacturepatient::create([
                 'fkidfacture' => $this->factureIdForActe,
                 'DtAjout' => now(),
@@ -298,10 +311,11 @@ class ReglementFacture extends Component
                 'Quantite' => $this->quantite,
                 'fkidacte' => $this->selectedActeId,
                 'Dents' => $this->seance ?: 'Dent',
+                'fkidMedecin' => $facture->FkidMedecinInitiateur,
+                'fkidcabinet' => Auth::user()->fkidcabinet,
             ]);
 
             // Mise à jour de la facture uniquement pour l'acte sélectionné
-            $facture = \App\Models\Facture::find($this->factureIdForActe);
             $prixFactureActe = $this->prixFacture;
             $txpec = $facture->TXPEC ?? 0;
             $nouveauTotFacture = ($facture->TotFacture ?? 0) + $prixFactureActe;
@@ -327,6 +341,14 @@ class ReglementFacture extends Component
 
     public function openAddActeForm($factureId)
     {
+        abort_unless(
+            Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
+                ->where('IDPatient', $this->selectedPatient['ID'] ?? 0)
+                ->whereKey($factureId)
+                ->exists(),
+            404
+        );
+
         $this->factureIdForActe = $factureId;
         $this->resetAddActeForm();
         $this->showAddActeForm = true;
@@ -378,7 +400,9 @@ class ReglementFacture extends Component
             }
 
             // Récupérer la facture
-            $facture = Facture::find($detail->fkidfacture);
+            $facture = Facture::where('fkidCabinet', Auth::user()->fkidcabinet)
+                ->where('IDPatient', $this->selectedPatient['ID'] ?? 0)
+                ->find($detail->fkidfacture);
             if (!$facture) {
                 throw new \Exception('Facture non trouvée');
             }
@@ -454,14 +478,26 @@ class ReglementFacture extends Component
                 $medecinId = $user->fkidmedecin;
             }
 
+            if (!Patient::where('fkidcabinet', $user->fkidcabinet)
+                ->whereKey($this->selectedPatient['ID'] ?? 0)->exists()) {
+                throw new \Exception('Patient non trouvé dans ce cabinet');
+            }
+
+            if (!Medecin::where('fkidcabinet', $user->fkidcabinet)
+                ->whereKey($medecinId)->exists()) {
+                throw new \Exception('Médecin non trouvé dans ce cabinet');
+            }
+
             $annee = Carbon::now()->year;
-            $derniereFacture = Facture::where('anneeFacture', $annee)
+            $derniereFacture = Facture::where('fkidCabinet', $user->fkidcabinet)
+                                ->where('anneeFacture', $annee)
                                 ->orderBy('Nfacture', 'desc')
                                 ->first();
             
             $numero = $derniereFacture ? intval(explode('-', $derniereFacture->Nfacture)[0]) + 1 : 1;
             $nfacture = $numero . '-' . $annee;
-            $nordre = (Facture::where('anneeFacture', $annee)->max('nordre') ?? 0) + 1;
+            $nordre = (Facture::where('fkidCabinet', $user->fkidcabinet)
+                ->where('anneeFacture', $annee)->max('nordre') ?? 0) + 1;
 
             $facture = Facture::create([
                 'Nfacture' => $nfacture,

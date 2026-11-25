@@ -14,10 +14,11 @@ class ReglementFactureController extends Controller
 {
     public function showReceipt($operationId)
     {
-        $operation = CaisseOperation::findOrFail($operationId);
-        $facture = Facture::find($operation->fkidfacturebord);
-        $patient = Patient::find($operation->fkidTiers);
-        $medecin = Medecin::find($operation->fkidmedecin);
+        $cabinetId = Auth::user()->fkidcabinet;
+        $operation = CaisseOperation::where('fkidcabinet', $cabinetId)->findOrFail($operationId);
+        $facture = Facture::where('fkidCabinet', $cabinetId)->findOrFail($operation->fkidfacturebord);
+        $patient = Patient::where('fkidcabinet', $cabinetId)->findOrFail($operation->fkidTiers);
+        $medecin = Medecin::where('fkidcabinet', $cabinetId)->findOrFail($operation->fkidmedecin);
         $mode = RefTypePaiement::find($operation->fkidtypePaie);
         $user = Auth::user();
         $cabinet = $user->cabinet ?? null;
@@ -37,4 +38,4 @@ class ReglementFactureController extends Controller
         $f = new \NumberFormatter("fr", \NumberFormatter::SPELLOUT);
         return ucfirst($f->format($number));
     }
-} 
+}

@@ -20,17 +20,17 @@ class ListeActes extends Component
 
     public function updatedSearch()
     {
-        $this->emit('searchUpdated', $this->search);
+        $this->dispatch('searchUpdated', search: $this->search);
     }
 
     public function updatedSelectedTypeActe()
     {
-        $this->emit('typeActeUpdated', $this->selectedTypeActe);
+        $this->dispatch('typeActeUpdated', selectedTypeActe: $this->selectedTypeActe);
     }
 
     public function selectActe($acteId)
     {
-        $this->emit('acteSelected', $acteId);
+        $this->dispatch('acteSelected', acteId: $acteId);
     }
 
     public function render()
@@ -56,4 +56,4 @@ class ListeActes extends Component
             'actes' => $actes
         ]);
     }
-} 
+}

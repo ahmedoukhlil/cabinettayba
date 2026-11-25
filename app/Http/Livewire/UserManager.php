@@ -4,7 +4,7 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\TUser;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Livewire\WithPagination;
 
 class UserManager extends Component
@@ -29,8 +29,6 @@ class UserManager extends Component
     public $showModal = false;
     public $modalTitle = '';
 
-    protected $listeners = ['confirmDelete'];
-
     protected $rules = [
         'login' => 'required|min:3|unique:t_user,login',
         'password' => 'required|min:6',
@@ -52,7 +50,8 @@ class UserManager extends Component
 
     public function render()
     {
-        $users = TUser::where(function($query) {
+        $users = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)
+        ->where(function($query) {
             $query->where('NomComplet', 'like', '%' . $this->search . '%')
                   ->orWhere('login', 'like', '%' . $this->search . '%');
         })
@@ -81,7 +80,7 @@ class UserManager extends Component
         $this->reset(['login', 'password', 'nomComplet', 'role', 'isActive', 'isMasquer']);
 
         if ($mode === 'edit' && $userId) {
-            $user = TUser::find($userId);
+            $user = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)->find($userId);
             if ($user) {
                 $this->userId = $user->Iduser;
                 $this->login = $user->login;
@@ -118,7 +117,7 @@ class UserManager extends Component
             // Si c'est un médecin ou un propriétaire, on doit avoir un fkidmedecin
             if ($this->role == 2 || $this->role == 3) {
                 // Récupérer le premier médecin disponible
-                $medecin = \App\Models\Medecin::first();
+                $medecin = \App\Models\Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)->first();
                 if (!$medecin) {
                     session()->flash('error', 'Aucun médecin trouvé dans la base de données.');
                     return;
@@ -135,13 +134,14 @@ class UserManager extends Component
                 'ismasquer' => !$this->isActive,
                 'fonction' => $this->role == 1 ? 'Secrétaire' : ($this->role == 2 ? 'Médecin' : 'Propriétaire'),
                 'fkidmedecin' => $fkidmedecin,
-                'fkidcabinet' => 1, // Cabinet par défaut
+                'fkidcabinet' => Auth::user()->fkidcabinet,
                 'DtCr' => now(),
             ];
 
             if ($this->userId) {
                 // Si c'est une modification
-                $user = TUser::find($this->userId);
+                $user = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)
+                    ->find($this->userId);
                 if (!$user) {
                     throw new \Exception('Utilisateur non trouvé');
                 }
@@ -172,19 +172,15 @@ class UserManager extends Component
         }
     }
 
-    public function confirmDelete($userId)
-    {
-        $this->emit('confirmDelete', $userId);
-    }
-
     public function delete($userId)
     {
         try {
-            $user = TUser::find($userId);
+            $user = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)->find($userId);
             if ($user) {
                 // Vérifier si l'utilisateur n'est pas le dernier propriétaire
                 if ($user->IdClasseUser == 3) {
                     $ownerCount = TUser::where('IdClasseUser', 3)
+                        ->where('fkidcabinet', Auth::user()->fkidcabinet)
                         ->where('ismasquer', false)
                         ->count();
                     
@@ -206,11 +202,12 @@ class UserManager extends Component
     public function toggleStatus($userId)
     {
         try {
-            $user = TUser::find($userId);
+            $user = TUser::where('fkidcabinet', Auth::user()->fkidcabinet)->find($userId);
             if ($user) {
                 // Vérifier si l'utilisateur n'est pas le dernier propriétaire actif
                 if ($user->IdClasseUser == 3 && !$user->ismasquer) {
                     $activeOwnerCount = TUser::where('IdClasseUser', 3)
+                        ->where('fkidcabinet', Auth::user()->fkidcabinet)
                         ->where('ismasquer', false)
                         ->count();
                     
@@ -228,4 +225,4 @@ class UserManager extends Component
             session()->flash('error', 'Une erreur est survenue lors de la modification du statut.');
         }
     }
-} 
+}

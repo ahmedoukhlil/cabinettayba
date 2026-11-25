@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Dentspatient;
 use Livewire\WithPagination;
+use Illuminate\Validation\Rule;
 
 class PatientManager extends Component
 {
@@ -140,7 +141,7 @@ class PatientManager extends Component
 
     public function edit($id)
     {
-        $patient = Patient::find($id);
+        $patient = $this->patientQuery()->find($id);
         if ($patient) {
             $this->patientId = $patient->ID;
             $this->identifiantPatient = $patient->IdentifiantPatient;
@@ -167,7 +168,7 @@ class PatientManager extends Component
     {
         $this->resetForm();
         if (!$this->patientId) {
-            $dernierIdentifiant = Patient::max('IdentifiantPatient') ?? 0;
+            $dernierIdentifiant = $this->patientQuery()->max('IdentifiantPatient') ?? 0;
             $this->identifiantPatient = $dernierIdentifiant + 1;
         }
         $this->showModal = true;
@@ -181,7 +182,13 @@ class PatientManager extends Component
     public function save()
     {
         $rules = $this->rules();
-        $rules['identifiantPatient'] = 'required|integer|unique:patients,IdentifiantPatient,' . ($this->patientId ?? 'NULL') . ',ID';
+        $rules['identifiantPatient'] = [
+            'required',
+            'integer',
+            Rule::unique('patients', 'IdentifiantPatient')
+                ->ignore($this->patientId, 'ID')
+                ->where(fn ($query) => $query->where('fkidcabinet', Auth::user()->fkidcabinet)),
+        ];
         $this->validate($rules);
 
         try {
@@ -207,7 +214,7 @@ class PatientManager extends Component
             ];
 
             if ($this->patientId) {
-                $patient = Patient::find($this->patientId);
+                $patient = $this->patientQuery()->find($this->patientId);
                 if (!$patient) {
                     throw new \Exception('Patient non trouvé');
                 }
@@ -232,7 +239,7 @@ class PatientManager extends Component
     public function toggleStatus($id)
     {
         try {
-            $patient = Patient::find($id);
+            $patient = $this->patientQuery()->find($id);
             if ($patient) {
                 $patient->choix = !$patient->choix;
                 $patient->save();
@@ -245,7 +252,7 @@ class PatientManager extends Component
 
     public function render()
     {
-        $query = Patient::query()
+        $query = $this->patientQuery()
             ->when(!$this->showInactive, function($query) {
                 $query->where('choix', false);
             })
@@ -296,6 +303,8 @@ class PatientManager extends Component
 
     public function getDentalHistory($patientId)
     {
+        abort_unless($this->patientQuery()->whereKey($patientId)->exists(), 404);
+
         return Dentspatient::where('fkidpatient', $patientId)
             ->orderBy('DtAjout', 'desc')
             ->get();
@@ -303,11 +312,19 @@ class PatientManager extends Component
 
     public function showPaymentHistory($patientId)
     {
+        abort_unless($this->patientQuery()->whereKey($patientId)->exists(), 404);
+
         $this->selectedPatientId = $patientId;
         $this->paymentHistory = \App\Models\CaisseOperation::where('fkidTiers', $patientId)
+            ->where('fkidcabinet', Auth::user()->fkidcabinet)
             ->orderBy('dateoper', 'desc')
             ->get();
         $this->showPaymentHistoryModal = true;
+    }
+
+    private function patientQuery()
+    {
+        return Patient::where('fkidcabinet', Auth::user()->fkidcabinet);
     }
 
     public function closePaymentHistoryModal()

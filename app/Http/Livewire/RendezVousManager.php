@@ -59,6 +59,7 @@ class RendezVousManager extends Component
 
             $user = Auth::user();
             $query = Rendezvou::with(['medecin', 'patient'])
+                ->where('fkidcabinet', $user->fkidcabinet)
                 ->whereDate('dtPrevuRDV', $this->date);
 
             // Filtrer par médecin si spécifié
@@ -110,14 +111,14 @@ class RendezVousManager extends Component
     {
         try {
             $user = Auth::user();
-            $rdv = Rendezvou::find($id);
+            $rdv = Rendezvou::where('fkidcabinet', $user->fkidcabinet)->find($id);
 
             if (!$this->canManageRdv) {
                 session()->flash('error', 'Vous n\'avez pas la permission d\'annuler des rendez-vous.');
                 return;
             }
 
-            if ($user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
+            if ($rdv && $user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
                 session()->flash('error', 'Vous ne pouvez annuler que vos propres rendez-vous.');
                 return;
             }
@@ -135,14 +136,14 @@ class RendezVousManager extends Component
     {
         try {
             $user = Auth::user();
-            $rdv = Rendezvou::find($id);
+            $rdv = Rendezvou::where('fkidcabinet', $user->fkidcabinet)->find($id);
 
             if (!$this->canManageRdv) {
                 session()->flash('error', 'Vous n\'avez pas la permission de confirmer des rendez-vous.');
                 return;
             }
 
-            if ($user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
+            if ($rdv && $user->isDocteur() && !$user->isDocteurProprietaire() && $rdv->fkidMedecin != $user->fkidmedecin) {
                 session()->flash('error', 'Vous ne pouvez confirmer que vos propres rendez-vous.');
                 return;
             }
@@ -173,6 +174,7 @@ class RendezVousManager extends Component
             // Si docteur non propriétaire, vérifier que tous les rendez-vous sélectionnés sont les siens
             if ($user->isDocteur() && !$user->isDocteurProprietaire()) {
                 $invalidRdv = Rendezvou::whereIn('IDRdv', $this->selectedRendezVous)
+                    ->where('fkidcabinet', $user->fkidcabinet)
                     ->where('fkidMedecin', '!=', $user->fkidmedecin)
                     ->exists();
 
@@ -183,6 +185,7 @@ class RendezVousManager extends Component
             }
 
             Rendezvou::whereIn('IDRdv', $this->selectedRendezVous)
+                ->where('fkidcabinet', $user->fkidcabinet)
                 ->update(['rdvConfirmer' => 'annulé']);
             $this->selectedRendezVous = [];
             $this->selectAll = false;
@@ -199,11 +202,12 @@ class RendezVousManager extends Component
             
             // Récupérer la liste des médecins selon les permissions
             if ($user->isDocteurProprietaire()) {
-                $medecins = Medecin::all();
+                $medecins = Medecin::where('fkidcabinet', $user->fkidcabinet)->get();
             } elseif ($user->isDocteur()) {
-                $medecins = Medecin::where('idMedecin', $user->fkidmedecin)->get();
+                $medecins = Medecin::where('fkidcabinet', $user->fkidcabinet)
+                    ->where('idMedecin', $user->fkidmedecin)->get();
             } else {
-                $medecins = Medecin::all();
+                $medecins = Medecin::where('fkidcabinet', $user->fkidcabinet)->get();
             }
 
             $RendezVous = $this->getRendezVousProperty();

@@ -11,9 +11,8 @@
     <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('pwa-icons/pwa-logo-48.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('pwa-icons/pwa-logo-192.png') }}">
     <title>@yield('title', 'Cabinet Tayba')</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="{{ asset('js/app.js') }}?v={{ filemtime(public_path('js/app.js')) }}" defer></script>
     @php
         $staffPwaConfig = [
             'locale' => 'fr',
@@ -137,8 +136,11 @@
             }, duration);
         };
 
-        document.addEventListener('livewire:load', function() {
-            Livewire.on('toast', payload => window.showToast(payload.message, payload.type || 'info'));
+        document.addEventListener('livewire:init', function() {
+            Livewire.on('toast', event => {
+                const payload = event.detail || event;
+                window.showToast(payload.message, payload.type || 'info');
+            });
         });
 
         window.confirmAction = function(title, message, onConfirm) {

@@ -14,7 +14,7 @@ class ActeSearch extends Component
     public $fkidassureur = null;
     public $popularActes = [];
 
-    protected $updatesQueryString = ['fkidassureur'];
+    protected $queryString = ['fkidassureur'];
 
     protected $acteService;
 
@@ -75,7 +75,7 @@ class ActeSearch extends Component
             $this->selectedActeId = $acte->ID;
             $this->search = $acte->Acte;
             $this->showDropdown = false;
-            $this->emitUp('acteSelected', $acte->ID, $acte->PrixRef);
+            $this->dispatch('acteSelected', id: $acte->ID, prixReference: $acte->PrixRef);
         }
     }
 

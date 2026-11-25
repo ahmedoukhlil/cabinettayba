@@ -8,6 +8,7 @@ use App\Models\CaisseOperation;
 use App\Models\Detailfacturepatient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class MedecinFinanceService
 {
@@ -24,6 +25,7 @@ class MedecinFinanceService
         // Récupérer toutes les factures où ce médecin a participé
         $recettes = Detailfacturepatient::join('facture', 'detailfacturepatient.fkidfacture', '=', 'facture.Idfacture')
             ->where('detailfacturepatient.fkidMedecin', $medecinId)
+            ->where('facture.fkidCabinet', Auth::user()->fkidcabinet)
             ->whereBetween('facture.DtFacture', [$dateDebut, $dateFin])
             ->select(
                 DB::raw('DATE(facture.DtFacture) as date'),
@@ -60,6 +62,7 @@ class MedecinFinanceService
     {
         // Récupérer toutes les opérations de caisse associées à ce médecin
         $depenses = CaisseOperation::where('fkidTiers', $medecinId)
+            ->where('fkidcabinet', Auth::user()->fkidcabinet)
             ->where('entreEspece', '<', 'retraitEspece') // Seulement les opérations de dépense
             ->whereBetween('dateoper', [$dateDebut, $dateFin])
             ->select(
@@ -97,6 +100,7 @@ class MedecinFinanceService
         // Nombre de patients traités par ce médecin dans la période
         $nbPatients = Detailfacturepatient::join('facture', 'detailfacturepatient.fkidfacture', '=', 'facture.Idfacture')
             ->where('detailfacturepatient.fkidMedecin', $medecinId)
+            ->where('facture.fkidCabinet', Auth::user()->fkidcabinet)
             ->whereBetween('facture.DtFacture', [$dateDebut, $dateFin])
             ->distinct('facture.IDPatient')
             ->count('facture.IDPatient');
@@ -104,12 +108,14 @@ class MedecinFinanceService
         // Nombre d'actes réalisés par ce médecin
         $nbActes = Detailfacturepatient::join('facture', 'detailfacturepatient.fkidfacture', '=', 'facture.Idfacture')
             ->where('detailfacturepatient.fkidMedecin', $medecinId)
+            ->where('facture.fkidCabinet', Auth::user()->fkidcabinet)
             ->whereBetween('facture.DtFacture', [$dateDebut, $dateFin])
             ->count();
             
         // Montant moyen par acte
         $montantMoyenParActe = Detailfacturepatient::join('facture', 'detailfacturepatient.fkidfacture', '=', 'facture.Idfacture')
             ->where('detailfacturepatient.fkidMedecin', $medecinId)
+            ->where('facture.fkidCabinet', Auth::user()->fkidcabinet)
             ->whereBetween('facture.DtFacture', [$dateDebut, $dateFin])
             ->avg(DB::raw('detailfacturepatient.PrixFacture * detailfacturepatient.Quantite'));
         
@@ -130,7 +136,8 @@ class MedecinFinanceService
      */
     public function generateRapport($medecinId, Carbon $dateDebut, Carbon $dateFin)
     {
-        $medecin = Medecin::findOrFail($medecinId);
+        $medecin = Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->findOrFail($medecinId);
         
         $recettes = $this->getRecettes($medecinId, $dateDebut, $dateFin);
         $depenses = $this->getDepenses($medecinId, $dateDebut, $dateFin);

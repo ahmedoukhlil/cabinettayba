@@ -42,7 +42,7 @@ class CreateRendezVous extends Component
     protected $rules = [
         'patient_id' => 'required',
         'medecin_id' => 'required',
-        'date_rdv' => 'required|date',
+        'date_rdv' => 'required|date|after_or_equal:today',
         'heure_rdv' => 'required',
         'acte_prevu' => 'required|min:3',
         'rdv_confirmer' => 'required'
@@ -67,7 +67,8 @@ class CreateRendezVous extends Component
     public function mount($patient = null)
     {
         $this->patients = collect();
-        $this->medecins = Medecin::where('Masquer', 0)->orderBy('Nom')->get();
+        $this->medecins = Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->where('Masquer', 0)->orderBy('Nom')->get();
         $this->actes = Acte::where('Masquer', 0)->orderBy('Acte')->get();
         $this->initializePermissions();
         if ($patient) {
@@ -103,6 +104,16 @@ class CreateRendezVous extends Component
         $user = Auth::user();
         if ($this->isDocteur && $this->medecin_id != $user->fkidmedecin) {
             session()->flash('error', 'Vous ne pouvez créer des rendez-vous que pour vous-même.');
+            return;
+        }
+
+        if (!Patient::where('fkidcabinet', $user->fkidcabinet)->whereKey($this->patient_id)->exists()) {
+            session()->flash('error', 'Patient non trouvé dans ce cabinet.');
+            return;
+        }
+
+        if (!Medecin::where('fkidcabinet', $user->fkidcabinet)->whereKey($this->medecin_id)->exists()) {
+            session()->flash('error', 'Médecin non trouvé dans ce cabinet.');
             return;
         }
 
@@ -188,7 +199,7 @@ class CreateRendezVous extends Component
                     break;
             }
 
-            $query->where('fkidcabinet', 1);
+            $query->where('fkidcabinet', Auth::user()->fkidcabinet);
 
             $this->patients = $query->select('ID', 'Nom', 'Prenom', 'NNI', 'Telephone1', 'Telephone2', 'Assureur')
                                   ->orderBy('Nom')
@@ -239,12 +250,14 @@ class CreateRendezVous extends Component
 
     public function getTotalRdvJourProperty()
     {
-        return \App\Models\Rendezvou::whereDate('dtPrevuRDV', now()->toDateString())->count();
+        return Rendezvou::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->whereDate('dtPrevuRDV', now()->toDateString())->count();
     }
 
     public function render()
     {
         $query = Rendezvou::query()
+            ->where('fkidcabinet', Auth::user()->fkidcabinet)
             ->with(['patient', 'medecin'])
             ->orderBy('dtPrevuRDV', 'desc')
             ->orderBy('HeureRdv', 'desc');

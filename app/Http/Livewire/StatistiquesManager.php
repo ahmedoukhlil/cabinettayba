@@ -28,9 +28,6 @@ class StatistiquesManager extends Component
         'date_fin' => ['except' => '']
     ];
 
-    // Écouter les changements de propriétés pour réinitialiser la pagination
-    protected $updatesQueryString = ['medecin_id', 'date_debut', 'date_fin'];
-
     public function mount()
     {
         $user = Auth::user();
@@ -64,7 +61,7 @@ class StatistiquesManager extends Component
     public function exportPdf($par = 'medecin')
     {
         $operations = $this->getOperations();
-        $medecins = Medecin::all();
+        $medecins = Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)->get();
         $periode = [$this->date_debut, $this->date_fin];
         $pdf = PDF::loadView('exports.statistiques', compact('operations', 'medecins', 'periode', 'par'));
         return response()->streamDownload(function () use ($pdf) {
@@ -108,7 +105,7 @@ class StatistiquesManager extends Component
     {
         $operations = $this->getOperations();
         $allOperations = $this->getAllOperationsForStats();
-        $medecins = Medecin::all();
+        $medecins = Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)->get();
 
         // Calcul des totaux généraux sur toutes les opérations de la période
         // Si aucune période n'est sélectionnée, les totaux sont à zéro
@@ -170,4 +167,4 @@ class StatistiquesManager extends Component
             'totauxParMedecin'
         ));
     }
-} 
+}

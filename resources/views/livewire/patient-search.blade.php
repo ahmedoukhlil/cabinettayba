@@ -69,7 +69,7 @@
 </div>
 
 <script>
-document.addEventListener('livewire:load', function () {
+document.addEventListener('livewire:init', function () {
     let blurTimeout;
 
     Livewire.on('maintain-focus', () => {

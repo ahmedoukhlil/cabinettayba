@@ -16,18 +16,7 @@ module.exports = {
       },
     },
   },
-  safelist: [
-    // Palette dynamique utilisée pour les rôles (user-manager permissions matrix + badges)
-    ...[
-      'purple','blue','green','orange','pink','teal','indigo','rose','amber','cyan','gray'
-    ].flatMap(c => [
-      `bg-${c}-50`, `bg-${c}-100`, `bg-${c}-200`,
-      `text-${c}-700`, `text-${c}-800`,
-      `border-${c}-300`, `border-${c}-400`,
-      `hover:bg-${c}-200`,
-    ]),
-  ],
   plugins: [
     require('@tailwindcss/forms'),
   ],
-} 
+}

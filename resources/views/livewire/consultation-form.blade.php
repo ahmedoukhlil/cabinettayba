@@ -204,10 +204,10 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('livewire:load', function () {
+        document.addEventListener('livewire:init', function () {
             Livewire.on('receiptGenerated', function(factureId) {
                 // Forcer le rafraîchissement de la vue
-                Livewire.emit('refresh');
+                Livewire.dispatch('refresh');
                 
                 // Imprimer automatiquement
                 setTimeout(function() {
@@ -217,8 +217,8 @@
 
             // Fermer le modal après l'impression
             window.addEventListener('afterprint', function() {
-                Livewire.emit('closeReceiptModal');
+                Livewire.dispatch('closeReceiptModal');
             });
         });
     </script>
-    @endpush 
+    @endpush

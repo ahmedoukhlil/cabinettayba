@@ -19,7 +19,8 @@ class ConsultationController extends Controller
 
     public function show($id)
     {
-        $facture = Facture::with(['patient', 'details.acte'])->findOrFail($id);
+        $facture = $this->facturesForCurrentCabinet()
+            ->with(['patient', 'details.acte'])->findOrFail($id);
         return view('consultations.show', compact('facture'));
     }
 
@@ -36,7 +37,7 @@ class ConsultationController extends Controller
         });
 
         // Précharger toutes les relations nécessaires en une seule requête
-        $facture = Facture::with([
+        $facture = $this->facturesForCurrentCabinet()->with([
             'patient',
             'medecin',
             'details.acte',
@@ -51,6 +52,8 @@ class ConsultationController extends Controller
 
     public function showFacturePatient($factureId)
     {
+        $cabinetId = Auth::user()->fkidcabinet;
+
         // Utiliser le cache pour les données du cabinet (24h car rarement modifiées)
         $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 86400, function() {
             $user = Auth::user();
@@ -62,8 +65,9 @@ class ConsultationController extends Controller
         });
 
         // Mettre en cache la facture avec ses relations (1h car peut être modifiée)
-        $facture = cache()->remember('facture_' . $factureId, 3600, function() use ($factureId) {
-            $facture = Facture::where('Idfacture', $factureId)
+        $factureCacheKey = "cabinet_{$cabinetId}_facture_{$factureId}";
+        $facture = cache()->remember($factureCacheKey, 3600, function() use ($factureId) {
+            $facture = $this->facturesForCurrentCabinet()->where('Idfacture', $factureId)
                 ->with([
                     'patient' => function($query) {
                         $query->select('ID', 'IdentifiantPatient', 'NomContact', 'Telephone1', 'IdentifiantAssurance', 'Assureur');
@@ -90,9 +94,9 @@ class ConsultationController extends Controller
 
         // Vider le cache si les données du patient sont manquantes
         if (!$facture->patient) {
-            cache()->forget('facture_' . $factureId);
+            cache()->forget($factureCacheKey);
             // Recharger la facture sans cache
-            $facture = Facture::with([
+            $facture = $this->facturesForCurrentCabinet()->with([
                 'patient' => function($query) {
                     $query->select('ID', 'IdentifiantPatient', 'NomContact', 'Telephone1', 'IdentifiantAssurance', 'Assureur');
                 },
@@ -105,7 +109,7 @@ class ConsultationController extends Controller
         }
 
         // Pré-calculer et mettre en cache les montants (1h)
-        $montants = cache()->remember('facture_montants_' . $factureId, 3600, function() use ($facture) {
+        $montants = cache()->remember("cabinet_{$cabinetId}_facture_montants_{$factureId}", 3600, function() use ($facture) {
             $restePEC = $facture->TotalPEC - $facture->ReglementPEC;
             $restePatient = $facture->ISTP == 1 
                 ? ($facture->TotalfactPatient - $facture->TotReglPatient)
@@ -118,7 +122,7 @@ class ConsultationController extends Controller
         });
 
         // Mettre en cache la conversion en lettres (1h)
-        $facture->en_lettres = cache()->remember('facture_lettres_' . $factureId, 3600, function() use ($facture) {
+        $facture->en_lettres = cache()->remember("cabinet_{$cabinetId}_facture_lettres_{$factureId}", 3600, function() use ($facture) {
             return $this->numberToWords($facture->TotFacture ?? 0);
         });
 
@@ -139,4 +143,9 @@ class ConsultationController extends Controller
         $f = new \NumberFormatter("fr", \NumberFormatter::SPELLOUT);
         return ucfirst($f->format($number));
     }
-} 
+
+    private function facturesForCurrentCabinet()
+    {
+        return Facture::where('fkidCabinet', Auth::user()->fkidcabinet);
+    }
+}

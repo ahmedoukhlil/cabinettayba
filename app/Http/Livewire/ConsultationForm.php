@@ -45,6 +45,7 @@ class ConsultationForm extends Component
     public $search = '';
     public $searchBy = 'telephone';
     public $isSearching = false;
+    public $patients;
 
     // Propriétés pour l'assurance
     public $assuranceInfo = null;
@@ -126,8 +127,10 @@ class ConsultationForm extends Component
     protected function loadMedecins()
     {
         // Utiliser le cache pour les médecins
-        $this->medecins = cache()->remember('active_medecins', 3600, function() {
-            return Medecin::where('Masquer', 0)
+        $cabinetId = Auth::user()->fkidcabinet;
+        $this->medecins = cache()->remember("cabinet_{$cabinetId}_active_medecins", 3600, function() use ($cabinetId) {
+            return Medecin::where('fkidcabinet', $cabinetId)
+                         ->where('Masquer', 0)
                          ->orderBy('Nom')
                          ->get();
         });
@@ -179,7 +182,7 @@ class ConsultationForm extends Component
         ]]);
 
         // Forcer la mise à jour des propriétés
-        $this->emit('refresh');
+        $this->dispatch('refresh');
     }
 
     protected function resetAssuranceInfo()
@@ -244,6 +247,16 @@ class ConsultationForm extends Component
                 throw new \Exception('Veuillez sélectionner un patient');
             }
 
+            if (!Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
+                ->whereKey($this->selectedPatient['ID'])->exists()) {
+                throw new \Exception('Patient non trouvé dans ce cabinet');
+            }
+
+            if (!Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)
+                ->whereKey($this->medecin_id)->exists()) {
+                throw new \Exception('Médecin non trouvé dans ce cabinet');
+            }
+
             DB::beginTransaction();
             try {
                 // Créer la facture
@@ -284,13 +297,16 @@ class ConsultationForm extends Component
     protected function createFacture()
     {
         $annee = Carbon::now()->year;
-        $derniereFacture = Facture::where('anneeFacture', $annee)
+        $cabinetId = Auth::user()->fkidcabinet;
+        $derniereFacture = Facture::where('fkidCabinet', $cabinetId)
+                                ->where('anneeFacture', $annee)
                                 ->orderBy('Nfacture', 'desc')
                                 ->first();
         
         $numero = $derniereFacture ? intval(explode('-', $derniereFacture->Nfacture)[0]) + 1 : 1;
         $nfacture = $numero . '-' . $annee;
-        $nordre = (Facture::where('anneeFacture', $annee)->max('nordre') ?? 0) + 1;
+        $nordre = (Facture::where('fkidCabinet', $cabinetId)
+            ->where('anneeFacture', $annee)->max('nordre') ?? 0) + 1;
 
         $montant = floatval($this->montant);
         
@@ -301,7 +317,8 @@ class ConsultationForm extends Component
         $totalPatient = $montant;
         
         if (isset($this->selectedPatient['Assureur']) && $this->selectedPatient['Assureur'] > 0) {
-            $patient = Patient::find($this->selectedPatient['ID']);
+            $patient = Patient::where('fkidcabinet', $cabinetId)
+                ->find($this->selectedPatient['ID']);
 
             if ($patient && $patient->Assureur) {
                 $fkidEtsAssurance = $patient->Assureur;
@@ -334,7 +351,7 @@ class ConsultationForm extends Component
             'ModeReglement' => $this->mode_paiement,
             'DtReglement' => Carbon::now(),
             'FkidMedecinInitiateur' => $this->medecin_id,
-            'fkidCabinet' => Auth::user()->fkidcabinet,
+            'fkidCabinet' => $cabinetId,
             'ispayerAssureur' => 0,
             'user' => Auth::user() ? (Auth::user()->NomComplet ?? Auth::user()->name) : null,
             'TotReglPatient' => $totalPatient,
@@ -359,7 +376,7 @@ class ConsultationForm extends Component
             'IsAct' => 1,
             'fkidcabinet' => Auth::user()->fkidcabinet,
             'ActesArab' => 'NR',
-            'user' => Auth::user()->name,
+            'user' => Auth::user()->NomComplet ?? Auth::user()->login,
             'TauxPEC' => $facture->TXPEC,
             'MontantPEC' => $facture->TotalPEC,
             'MontantPatient' => $facture->TotalfactPatient,
@@ -369,7 +386,8 @@ class ConsultationForm extends Component
 
     protected function createCaisseOperation($facture)
     {
-        $medecin = Medecin::find($this->medecin_id);
+        $medecin = Medecin::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->find($this->medecin_id);
         if (!$medecin) {
             throw new \Exception('Médecin non trouvé');
         }
@@ -411,7 +429,7 @@ class ConsultationForm extends Component
             'ActePrevu' => 'Consultation',
             'rdvConfirmer' => 'Confirmé',
             'DtAjRdv' => now(),
-            'user' => Auth::user()->name,
+            'user' => Auth::user()->NomComplet ?? Auth::user()->login,
             'fkidcabinet' => Auth::user()->fkidcabinet,
             'OrdreRDV' => $ordreRDV,
             'fkidFacture' => $facture->Idfacture
@@ -441,7 +459,7 @@ class ConsultationForm extends Component
         $this->loadConsultationAct();
         
         // Émettre un événement pour réinitialiser le composant de recherche de patient
-        $this->emit('patientCleared');
+        $this->dispatch('patientCleared');
     }
 
     public function hydrate()
@@ -453,7 +471,8 @@ class ConsultationForm extends Component
                 
                 // Restaurer les informations d'assurance si le patient est assuré
                 if (isset($this->selectedPatient['Assureur']) && $this->selectedPatient['Assureur'] > 0) {
-                    $patient = Patient::find($this->selectedPatient['ID']);
+                    $patient = Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
+                        ->find($this->selectedPatient['ID']);
                     if ($patient && $patient->Assureur) {
                         $assureur = Assureur::find($patient->Assureur);
                         if ($assureur) {
@@ -504,4 +523,4 @@ class ConsultationForm extends Component
         $this->showReceipt = false;
         $this->receiptUrl = '';
     }
-} 
+}

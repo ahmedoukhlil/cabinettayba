@@ -4,6 +4,7 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\CaisseOperation;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Patient;
 
 class HistoriquePaiement extends Component
@@ -53,6 +54,7 @@ class HistoriquePaiement extends Component
             return;
         }
         $this->paymentHistory = CaisseOperation::where('fkidTiers', $patientId)
+            ->where('fkidcabinet', Auth::user()->fkidcabinet)
             ->orderBy('dateoper', 'desc')
             ->get();
         $this->totalPaiements = $this->paymentHistory->sum('MontantOperation');
@@ -60,7 +62,7 @@ class HistoriquePaiement extends Component
 
     public function imprimerA4()
     {
-        $this->dispatchBrowserEvent('imprimer-a4');
+        $this->dispatch('imprimer-a4');
     }
 
     public function showModal($patientId)
@@ -71,7 +73,8 @@ class HistoriquePaiement extends Component
 
     public function loadPatient($patientId)
     {
-        $patient = Patient::find($patientId);
+        $patient = Patient::where('fkidcabinet', Auth::user()->fkidcabinet)
+            ->find($patientId);
         if ($patient) {
             $this->patient = [
                 'ID' => $patient->ID,
@@ -88,7 +91,7 @@ class HistoriquePaiement extends Component
     public function imprimer()
     {
         session()->flash('message', 'Méthode imprimer appelée');
-        $this->dispatchBrowserEvent('imprimer-modal');
+        $this->dispatch('imprimer-modal');
     }
 
     public function fermerModal()
@@ -101,4 +104,4 @@ class HistoriquePaiement extends Component
     {
         return view('livewire.historique-paiement');
     }
-} 
+}

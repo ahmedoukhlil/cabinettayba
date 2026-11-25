@@ -53,7 +53,8 @@ Route::delete('/reservation-suivi/{reference}/{token}/notifications', [PushSubsc
 
 // Authentification
 Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('login', [AuthController::class, 'login']);
+Route::post('login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1');
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 // Routes protégées par l'authentification
@@ -80,7 +81,9 @@ Route::middleware(['auth'])->group(function () {
         })->name('rendez-vous');
 
         Route::get('/rendez-vous/print/{id}', function ($id) {
-            $rendezVous = \App\Models\Rendezvou::with(['patient', 'medecin', 'cabinet'])->findOrFail($id);
+            $rendezVous = \App\Models\Rendezvou::with(['patient', 'medecin', 'cabinet'])
+                ->where('fkidcabinet', auth()->user()->fkidcabinet)
+                ->findOrFail($id);
             return view('rendez-vous.print', compact('rendezVous'));
         })->name('rendez-vous.print');
     });
@@ -142,9 +145,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Routes pour les consultations
     Route::middleware(['permission:patient.view'])->group(function () {
-        Route::get('/consultations/search-patient', [ConsultationController::class, 'searchPatient'])->name('consultations.search-patient');
         Route::get('/consultations/create', [ConsultationController::class, 'create'])->name('consultations.create');
-        Route::post('/consultations', [ConsultationController::class, 'store'])->name('consultations.store');
         Route::get('/consultations/{id}', [ConsultationController::class, 'show'])->name('consultations.show');
         Route::get('/consultations/{facture}/receipt', [ConsultationController::class, 'showReceipt'])->name('consultations.receipt');
         Route::get('/facture-patient/{facture}', [ConsultationController::class, 'showFacturePatient'])->name('consultations.facture-patient');

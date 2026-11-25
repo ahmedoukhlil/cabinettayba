@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class TUser extends Authenticatable
@@ -60,12 +59,13 @@ class TUser extends Authenticatable
     ];
 
     /**
-     * Méthode pour hasher automatiquement le mot de passe lors de la mise à jour
+     * Conserver le format en clair requis par l'application desktop historique.
+     * Aucune conversion des mots de passe existants n'est effectuée.
      */
     public function setPasswordAttribute($value)
     {
         if (!empty($value)) {
-            $this->attributes['password'] = Hash::make($value);
+            $this->attributes['password'] = $value;
         }
     }
 
@@ -74,7 +74,7 @@ class TUser extends Authenticatable
      */
     public function checkPassword($password)
     {
-        return Hash::check($password, $this->password);
+        return hash_equals((string) $this->password, (string) $password);
     }
 
     /**
@@ -96,7 +96,7 @@ class TUser extends Authenticatable
      */
     public function typeUser()
     {
-        return $this->belongsTo(Typeuser::class, 'IdClasseUser', 'IdClasseUser0');
+        return $this->belongsTo(TypeUser::class, 'IdClasseUser', 'IdClasseUser0');
     }
 
     /**
