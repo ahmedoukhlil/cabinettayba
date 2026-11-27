@@ -13,7 +13,10 @@ use Minishlink\WebPush\WebPush;
 
 class WebPushService
 {
-    public function __construct(private AppointmentQueueService $queue)
+    public function __construct(
+        private AppointmentQueueService $queue,
+        private CabinetBranding $branding
+    )
     {
     }
 
@@ -57,7 +60,8 @@ class WebPushService
             'title' => $confirmed ? 'تم تأكيد موعدك' : 'تحديث طلب الموعد',
             'body' => $confirmed
                 ? sprintf(
-                    'رقم موعدك %s، وأمامك %s في الطابور. اضغط للمتابعة.',
+                    'تم تأكيد موعدك في %s. رقم موعدك %s، وأمامك %s في الطابور.',
+                    $this->branding->get()['name_ar'],
                     $state['appointment_number'] ?? '—',
                     $state['people_ahead'] ?? 0
                 )

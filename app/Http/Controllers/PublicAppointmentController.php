@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Infocabinet;
 use App\Models\Medecin;
 use App\Models\Patient;
 use App\Models\PublicAppointmentRequest;
 use App\Models\Rendezvou;
 use App\Services\AppointmentQueueService;
 use App\Services\WebPushService;
+use App\Services\CabinetBranding;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -19,11 +19,17 @@ class PublicAppointmentController extends Controller
 {
     private WebPushService $webPush;
     private AppointmentQueueService $queue;
+    private CabinetBranding $branding;
 
-    public function __construct(WebPushService $webPush, AppointmentQueueService $queue)
+    public function __construct(
+        WebPushService $webPush,
+        AppointmentQueueService $queue,
+        CabinetBranding $branding
+    )
     {
         $this->webPush = $webPush;
         $this->queue = $queue;
+        $this->branding = $branding;
     }
 
     public function create()
@@ -31,7 +37,6 @@ class PublicAppointmentController extends Controller
         $cabinetId = $this->cabinetId();
 
         return view('public.appointments.create', [
-            'cabinet' => Infocabinet::find($cabinetId),
             'medecins' => Medecin::where('fkidcabinet', $cabinetId)
                 ->orderBy('Nom')
                 ->get(['idMedecin', 'Nom']),
@@ -408,7 +413,7 @@ class PublicAppointmentController extends Controller
     private function generateReference(): string
     {
         do {
-            $reference = 'TYB-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
+            $reference = $this->branding->get()['reference_prefix'] . '-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
         } while (PublicAppointmentRequest::where('reference', $reference)->exists());
 
         return $reference;

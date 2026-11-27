@@ -4,8 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\PublicAppointmentRequest;
 use App\Models\PushSubscription;
+use App\Models\Tenant;
 use App\Services\AppointmentQueueService;
 use App\Services\WebPushService;
+use App\Tenancy\TenantManager;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
@@ -15,7 +17,34 @@ class NotifyAppointmentQueue extends Command
 
     protected $description = 'Notify patients when their estimated appointment queue advances';
 
-    public function handle(AppointmentQueueService $queue, WebPushService $webPush): int
+    public function handle(
+        AppointmentQueueService $queue,
+        WebPushService $webPush,
+        TenantManager $tenants
+    ): int
+    {
+        if (!config('tenancy.enabled')) {
+            $this->notifyCurrentTenant($queue, $webPush);
+            return self::SUCCESS;
+        }
+
+        $failed = false;
+        foreach (Tenant::active()->cursor() as $tenant) {
+            try {
+                $tenants->activate($tenant);
+                $this->notifyCurrentTenant($queue, $webPush);
+            } catch (\Throwable $exception) {
+                $failed = true;
+                $this->error("{$tenant->slug}: {$exception->getMessage()}");
+            } finally {
+                $tenants->deactivate();
+            }
+        }
+
+        return $failed ? self::FAILURE : self::SUCCESS;
+    }
+
+    private function notifyCurrentTenant(AppointmentQueueService $queue, WebPushService $webPush): void
     {
         PublicAppointmentRequest::with('appointment')
             ->whereIn('status', ['confirmed', 'arrived', 'in_consultation'])
@@ -51,6 +80,5 @@ class NotifyAppointmentQueue extends Command
                 }
             });
 
-        return self::SUCCESS;
     }
 }

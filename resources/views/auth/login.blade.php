@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Connexion — Cabinet Tayba</title>
+    <title>Connexion — {{ $cabinetBrand['name'] }}</title>
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -18,6 +18,7 @@
             width: 100%; max-width: 25rem; background: #fff; border-radius: 1.25rem;
             box-shadow: 0 20px 60px rgba(30, 58, 138, .12); overflow: hidden;
         }
+        :root { --color-primary: {{ $cabinetBrand['primary_color'] }}; }
         .login-header { background: var(--color-primary, #1e3a8a); padding: 2rem 1.5rem 1.75rem; text-align: center; }
         .login-logo {
             width: 4.5rem; height: 4.5rem; margin: 0 auto .875rem; border-radius: 1rem;
@@ -46,8 +47,8 @@
 <body>
     <main class="login-card">
         <header class="login-header">
-            <div class="login-logo" aria-hidden="true"><i class="fas fa-tooth text-3xl"></i></div>
-            <h1>Cabinet Tayba</h1>
+            <div class="login-logo"><img src="{{ $cabinetBrand['logo_url'] }}" alt="" style="width:3.5rem;height:3.5rem;object-fit:contain"></div>
+            <h1>{{ $cabinetBrand['name'] }}</h1>
             <p>Accès sécurisé à votre espace professionnel</p>
         </header>
 
@@ -88,7 +89,7 @@
                 </a>
             </form>
 
-            <p class="login-footer">© {{ date('Y') }} Cabinet Tayba</p>
+            <p class="login-footer">© {{ date('Y') }} {{ $cabinetBrand['name'] }}</p>
         </div>
     </main>
 

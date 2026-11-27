@@ -97,7 +97,7 @@ class AppointmentConfirmationTest extends TestCase
             'date_souhaitee' => now()->addDay()->toDateString(),
             'heure_souhaitee' => '09:00:00',
             'status' => 'pending',
-            'reference' => 'TYB-CONFIRM-1',
+            'reference' => 'RDV-CONFIRM-1',
             'tracking_token_hash' => hash('sha256', 'token'),
             'patient_id' => $patient->ID,
         ]);
@@ -134,7 +134,7 @@ class AppointmentConfirmationTest extends TestCase
             'date_souhaitee' => now()->addDay()->toDateString(),
             'heure_souhaitee' => '09:00:00',
             'status' => 'pending',
-            'reference' => 'TYB-RESCHEDULE-1',
+            'reference' => 'RDV-RESCHEDULE-1',
             'tracking_token_hash' => hash('sha256', 'token'),
         ]);
 
@@ -160,7 +160,7 @@ class AppointmentConfirmationTest extends TestCase
         $user = $this->staffUser();
         $this->actingAs($user);
         $patient = $this->patient();
-        $appointmentRequest = $this->pendingRequest($patient, 'TYB-CONFIRMED-MOVE');
+        $appointmentRequest = $this->pendingRequest($patient, 'RDV-CONFIRMED-MOVE');
 
         $this->post(route('appointment-requests.confirm', $appointmentRequest))->assertRedirect();
         $appointmentRequest->refresh();
@@ -184,7 +184,7 @@ class AppointmentConfirmationTest extends TestCase
         $user = $this->staffUser();
         $this->actingAs($user);
         $patient = $this->patient();
-        $appointmentRequest = $this->pendingRequest($patient, 'TYB-CONFIRMED-CANCEL');
+        $appointmentRequest = $this->pendingRequest($patient, 'RDV-CONFIRMED-CANCEL');
 
         $this->post(route('appointment-requests.confirm', $appointmentRequest))->assertRedirect();
         $appointmentRequest->refresh();
@@ -206,8 +206,8 @@ class AppointmentConfirmationTest extends TestCase
     {
         $user = $this->staffUser();
         $this->actingAs($user);
-        $first = $this->pendingRequest($this->patient(), 'TYB-QUEUE-FIRST', '09:00:00');
-        $second = $this->pendingRequest($this->patient(), 'TYB-QUEUE-SECOND', '09:30:00');
+        $first = $this->pendingRequest($this->patient(), 'RDV-QUEUE-FIRST', '09:00:00');
+        $second = $this->pendingRequest($this->patient(), 'RDV-QUEUE-SECOND', '09:30:00');
         $this->post(route('appointment-requests.confirm', $first))->assertRedirect();
         $this->post(route('appointment-requests.confirm', $second))->assertRedirect();
         $first->refresh();

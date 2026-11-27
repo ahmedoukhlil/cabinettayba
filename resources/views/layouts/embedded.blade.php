@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Cabinet Tayba')</title>
+    <title>@yield('title', $cabinetBrand['name'])</title>
+    <style>:root{--color-primary:{{ $cabinetBrand['primary_color'] }};--color-primary-rgb:{{ $cabinetBrand['primary_rgb'] }};--color-primary-dark:color-mix(in srgb, {{ $cabinetBrand['primary_color'] }} 78%, #000);--color-primary-light:color-mix(in srgb, {{ $cabinetBrand['primary_color'] }} 10%, #fff)}</style>
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>

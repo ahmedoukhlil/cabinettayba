@@ -1,3 +1,3 @@
 <div class="print-footer">
-    <img src="{{ asset('PieddePageMedipole.jpg') }}" alt="Pied de page Medipole" class="w-100">
-</div> 
+    <div class="w-100 text-center">{{ $cabinetBrand['phone'] }}@if($cabinetBrand['email']) · {{ $cabinetBrand['email'] }}@endif</div>
+</div>

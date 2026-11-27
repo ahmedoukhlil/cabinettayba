@@ -1,8 +1,7 @@
-const CACHE_NAME = 'tayba-pwa-v10';
+const CACHE_NAME = 'cabinet-pwa-v11';
 const STATIC_ASSETS = [
   '/offline.html',
-  '/pwa-icons/pwa-logo-192.png',
-  '/pwa-icons/pwa-logo-512.png',
+  '/branding/logo.svg',
   '/js/pwa.js'
 ];
 
@@ -55,11 +54,11 @@ self.addEventListener('push', event => {
   try { payload = event.data ? event.data.json() : {}; } catch (_) {}
 
   event.waitUntil(Promise.all([
-    self.registration.showNotification(payload.title || 'Cabinet Tayba', {
+    self.registration.showNotification(payload.title || 'Nouvelle notification', {
       body: payload.body || 'Vous avez une nouvelle notification.',
-      icon: '/pwa-icons/pwa-logo-192.png',
-      badge: '/pwa-icons/pwa-logo-192.png',
-      tag: payload.tag || 'tayba-notification',
+      icon: '/branding/logo.svg',
+      badge: '/branding/logo.svg',
+      tag: payload.tag || 'cabinet-notification',
       dir: payload.dir || 'auto',
       data: { url: payload.url || '/' },
       vibrate: [150, 80, 150]

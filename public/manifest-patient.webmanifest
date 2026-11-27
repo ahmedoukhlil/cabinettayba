@@ -1,8 +1,8 @@
 {
   "id": "/reservation",
-  "name": "Cabinet Tayba - Rendez-vous",
-  "short_name": "Tayba RDV",
-  "description": "Réservation et suivi des rendez-vous du Cabinet Tayba",
+  "name": "Cabinet dentaire - Rendez-vous",
+  "short_name": "Rendez-vous",
+  "description": "Réservation et suivi des rendez-vous",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/reservation?source=pwa",
@@ -11,10 +11,9 @@
   "background_color": "#f8fafc",
   "theme_color": "#1e3a8a",
   "icons": [
-    { "src": "/pwa-icons/pwa-logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/pwa-icons/pwa-logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/branding/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Prendre rendez-vous", "short_name": "Réserver", "url": "/reservation", "icons": [{ "src": "/pwa-icons/pwa-logo-192.png", "sizes": "192x192" }] }
+    { "name": "Prendre rendez-vous", "short_name": "Réserver", "url": "/reservation", "icons": [{ "src": "/branding/logo.svg", "sizes": "any" }] }
   ]
 }

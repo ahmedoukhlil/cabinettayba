@@ -124,7 +124,7 @@ class PublicAppointmentTrackingTest extends TestCase
             'date_souhaitee' => '2026-11-25',
             'heure_souhaitee' => Carbon::parse($appointment->HeureRdv)->format('H:i:s'),
             'status' => 'confirmed',
-            'reference' => 'TYB-QUEUE-' . $appointment->IDRdv,
+            'reference' => 'RDV-QUEUE-' . $appointment->IDRdv,
             'tracking_token_hash' => hash('sha256', $token),
             'appointment_id' => $appointment->IDRdv,
         ]);

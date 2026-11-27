@@ -40,7 +40,7 @@ return [
     'inject_morph_markers' => true,
     'smart_wire_keys' => true,
     'pagination_theme' => 'tailwind',
-    'release_token' => 'cabinet-tayba-v1',
+    'release_token' => 'cabinet-app-v2',
     'csp_safe' => false,
     'payload' => [
         'max_size' => 1024 * 1024,

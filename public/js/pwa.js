@@ -6,7 +6,7 @@
   let installPrompt = null;
   let registration = null;
   let reloadingForServiceWorkerUpdate = false;
-  const subscriptionStorageKey = config.subscriptionId ? `tayba-push:${config.subscriptionId}` : null;
+  const subscriptionStorageKey = config.subscriptionId ? `cabinet-push:${config.subscriptionId}` : null;
 
   const installButtons = [...document.querySelectorAll('[data-pwa-install]')];
   const notificationButtons = [...document.querySelectorAll('[data-pwa-notifications]')];

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pied de page - Cabinet Tayba</title>
+    <title>Pied de page - {{ $cabinetBrand['name'] }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="footer">
-        <img src="{{ public_path('PieddePageTayba.png') }}" alt="Pied de page Cabinet Tayba">
+        <p>{{ $cabinetBrand['name'] }} · {{ $cabinetBrand['phone'] }} · {{ $cabinetBrand['email'] }}</p>
     </div>
 </body>
-</html> 
+</html>
