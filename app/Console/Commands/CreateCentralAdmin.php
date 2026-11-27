@@ -28,8 +28,8 @@ class CreateCentralAdmin extends Command
         $password = (string) $this->secret('Mot de passe');
         $confirmation = (string) $this->secret('Confirmez le mot de passe');
 
-        if (strlen($password) < 12) {
-            $this->error('Le mot de passe doit contenir au moins 12 caractères.');
+        if (strlen($password) < 8) {
+            $this->error('Le mot de passe doit contenir au moins 8 caractères.');
             return self::FAILURE;
         }
 
