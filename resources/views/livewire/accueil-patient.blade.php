@@ -1,4 +1,4 @@
-<div wire:poll.15s="refreshPendingAppointmentRequestsCount" class="mx-auto mt-4 w-full max-w-7xl px-3 sm:px-4 md:mt-8 md:px-6 lg:px-8">
+<div wire:poll.120s.visible="refreshPendingAppointmentRequestsCount" class="mx-auto mt-4 w-full max-w-7xl px-3 sm:px-4 md:mt-8 md:px-6 lg:px-8">
     @php
         $patientData = is_array($selectedPatient) ? $selectedPatient : ($selectedPatient ? $selectedPatient->toArray() : []);
         $patientFirstName = trim($patientData['Prenom'] ?? '');

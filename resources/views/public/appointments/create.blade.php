@@ -159,7 +159,6 @@
     const slotsList = document.getElementById('slots-list');
     const steps = [...document.querySelectorAll('[data-booking-step]')];
     let verifiedTelephone = null;
-    let verificationTimer = null;
     let patientRequest = null;
     let slotsRequest = null;
     let preferredSlot = @json(old('heure_souhaitee'));
@@ -283,8 +282,6 @@
     };
 
     const verifyPatient = async () => {
-        window.clearTimeout(verificationTimer);
-        verificationTimer = null;
         const phone = normalizedTelephone();
         if (phone.length < 8 || phone.length > 15) {
             showStatus('يرجى إدخال رقم هاتف صحيح يحتوي على 8 إلى 15 رقماً.', 'error');
@@ -353,12 +350,7 @@
     };
 
     telephone.addEventListener('input', () => {
-        window.clearTimeout(verificationTimer);
         resetVerification();
-        const length = normalizedTelephone().length;
-        if (length >= 8 && length <= 15) {
-            verificationTimer = window.setTimeout(verifyPatient, 500);
-        }
     });
     verifyButton.addEventListener('click', verifyPatient);
     nameInput.addEventListener('input', () => setStep(nameInput.value.trim().length >= 2 ? 3 : 2));

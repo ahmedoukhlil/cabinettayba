@@ -68,6 +68,16 @@ class UiContractTest extends TestCase
         $this->assertStringNotContainsString('absolute -right-2 -top-2', $view);
     }
 
+    public function test_background_refresh_does_not_flood_livewire_requests(): void
+    {
+        $dashboard = file_get_contents(dirname(__DIR__, 2) . '/resources/views/livewire/accueil-patient.blade.php');
+        $booking = file_get_contents(dirname(__DIR__, 2) . '/resources/views/public/appointments/create.blade.php');
+
+        $this->assertStringContainsString('wire:poll.120s.visible', $dashboard);
+        $this->assertStringNotContainsString('wire:poll.15s', $dashboard);
+        $this->assertStringNotContainsString('setTimeout(verifyPatient', $booking);
+    }
+
     public function test_escape_only_closes_the_topmost_modal(): void
     {
         $component = file_get_contents(dirname(__DIR__, 2) . '/resources/views/components/modal.blade.php');
