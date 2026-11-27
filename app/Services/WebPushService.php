@@ -33,7 +33,9 @@ class WebPushService
             })
             ->pluck('Iduser');
 
-        $subscriptions = PushSubscriptionModel::whereIn('user_id', $userIds)->get();
+        $subscriptions = PushSubscriptionModel::whereIn('user_id', $userIds)
+            ->where('cabinet_id', $appointmentRequest->fkidcabinet)
+            ->get();
         $pendingCount = PublicAppointmentRequest::where('fkidcabinet', $appointmentRequest->fkidcabinet)
             ->where('status', 'pending')
             ->count();
@@ -51,10 +53,7 @@ class WebPushService
     {
         $confirmed = $appointmentRequest->status === 'confirmed';
         $state = $this->queue->state($appointmentRequest->loadMissing('appointment'));
-        $subscriptions = PushSubscriptionModel::where(
-            'public_appointment_request_id',
-            $appointmentRequest->getKey()
-        )->get();
+        $subscriptions = $this->patientSubscriptions($appointmentRequest);
 
         $this->send($subscriptions, [
             'title' => $confirmed ? 'تم تأكيد موعدك' : 'تحديث طلب الموعد',
@@ -73,10 +72,7 @@ class WebPushService
 
     public function notifyPatientQueue(PublicAppointmentRequest $appointmentRequest, int $peopleAhead): void
     {
-        $subscriptions = PushSubscriptionModel::where(
-            'public_appointment_request_id',
-            $appointmentRequest->getKey()
-        )->get();
+        $subscriptions = $this->patientSubscriptions($appointmentRequest);
 
         $this->send($subscriptions, [
             'title' => $peopleAhead === 0 ? 'حان دورك قريباً' : 'تحديث طابور الموعد',
@@ -90,10 +86,7 @@ class WebPushService
 
     public function notifyPatientCancelled(PublicAppointmentRequest $appointmentRequest): void
     {
-        $subscriptions = PushSubscriptionModel::where(
-            'public_appointment_request_id',
-            $appointmentRequest->getKey()
-        )->get();
+        $subscriptions = $this->patientSubscriptions($appointmentRequest);
 
         $this->send($subscriptions, [
             'title' => 'تم إلغاء موعدك',
@@ -105,10 +98,7 @@ class WebPushService
 
     public function notifyPatientWorkflowStatus(PublicAppointmentRequest $appointmentRequest): void
     {
-        $subscriptions = PushSubscriptionModel::where(
-            'public_appointment_request_id',
-            $appointmentRequest->getKey()
-        )->get();
+        $subscriptions = $this->patientSubscriptions($appointmentRequest);
         $messages = [
             'arrived' => ['تم تسجيل وصولك', 'أنت الآن ضمن طابور العيادة. تابع عدد المرضى أمامك.'],
             'in_consultation' => ['حان دورك', 'يرجى التوجه إلى غرفة الطبيب.'],
@@ -129,7 +119,7 @@ class WebPushService
             PushSubscriptionModel::where(
                 'public_appointment_request_id',
                 $appointmentRequest->getKey()
-            )->delete();
+            )->where('cabinet_id', $appointmentRequest->fkidcabinet)->delete();
         }
     }
 
@@ -159,10 +149,7 @@ class WebPushService
 
     public function notifyPatientRescheduled(PublicAppointmentRequest $appointmentRequest): void
     {
-        $subscriptions = PushSubscriptionModel::where(
-            'public_appointment_request_id',
-            $appointmentRequest->getKey()
-        )->get();
+        $subscriptions = $this->patientSubscriptions($appointmentRequest);
 
         $date = $appointmentRequest->date_souhaitee->format('d/m/Y');
         $time = substr($appointmentRequest->heure_souhaitee, 0, 5);
@@ -175,15 +162,43 @@ class WebPushService
         ]);
     }
 
-    private function send(Collection $subscriptions, array $payload): void
+    public function sendDiagnostic(Collection $subscriptions, string $targetUrl = '/accueil-patient'): array
+    {
+        return $this->send($subscriptions, [
+            'title' => 'Test des notifications',
+            'body' => 'La configuration Web Push de ce cabinet fonctionne.',
+            'url' => $targetUrl,
+            'tag' => 'webpush-diagnostic-' . now()->timestamp,
+            'dir' => 'ltr',
+        ]);
+    }
+
+    private function patientSubscriptions(PublicAppointmentRequest $appointmentRequest): Collection
+    {
+        return PushSubscriptionModel::where(
+            'public_appointment_request_id',
+            $appointmentRequest->getKey()
+        )->where('cabinet_id', $appointmentRequest->fkidcabinet)->get();
+    }
+
+    private function send(Collection $subscriptions, array $payload): array
     {
         $vapid = config('webpush.vapid');
+        $result = [
+            'queued' => $subscriptions->count(),
+            'success' => 0,
+            'expired' => 0,
+            'failed' => 0,
+            'skipped' => false,
+        ];
+
         if (
             $subscriptions->isEmpty()
             || empty($vapid['public_key'])
             || empty($vapid['private_key'])
         ) {
-            return;
+            $result['skipped'] = true;
+            return $result;
         }
 
         try {
@@ -216,15 +231,25 @@ class WebPushService
 
             foreach ($webPush->flush() as $report) {
                 if ($report->isSubscriptionExpired()) {
+                    $result['expired']++;
                     PushSubscriptionModel::where('endpoint_hash', hash('sha256', $report->getEndpoint()))->delete();
                 } elseif (!$report->isSuccess()) {
+                    $result['failed']++;
                     Log::warning('Échec d’envoi Web Push', ['reason' => $report->getReason()]);
+                } else {
+                    $result['success']++;
                 }
             }
         } catch (\Throwable $exception) {
+            $result['failed'] = max(
+                $result['failed'],
+                $result['queued'] - $result['success'] - $result['expired']
+            );
             Log::warning('Notification Web Push indisponible', [
                 'message' => $exception->getMessage(),
             ]);
         }
+
+        return $result;
     }
 }

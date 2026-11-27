@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cabinet-pwa-v11';
+const CACHE_NAME = 'cabinet-pwa-v12';
 const STATIC_ASSETS = [
   '/offline.html',
   '/branding/logo.svg',

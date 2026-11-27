@@ -7,6 +7,8 @@
   let registration = null;
   let reloadingForServiceWorkerUpdate = false;
   const subscriptionStorageKey = config.subscriptionId ? `cabinet-push:${config.subscriptionId}` : null;
+  const subscriptionSyncStorageKey = subscriptionStorageKey ? `${subscriptionStorageKey}:synced-at` : null;
+  const SUBSCRIPTION_SYNC_INTERVAL = 6 * 60 * 60 * 1000;
 
   const installButtons = [...document.querySelectorAll('[data-pwa-install]')];
   const notificationButtons = [...document.querySelectorAll('[data-pwa-notifications]')];
@@ -139,7 +141,25 @@
       await navigator.serviceWorker.ready;
       if (config.subscribeUrl && config.vapidPublicKey && 'PushManager' in window) {
         const existing = await registration.pushManager.getSubscription();
-        const enabled = Boolean(existing && subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1');
+        let enabled = Boolean(existing && subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1');
+
+        // Une base tenant peut être restaurée ou déplacée alors que le navigateur
+        // conserve encore son abonnement. Réinscrire périodiquement l'abonnement
+        // évite un faux état « activé » côté PWA sans ligne correspondante en base.
+        if (enabled && subscriptionSyncStorageKey) {
+          const lastSync = Number(localStorage.getItem(subscriptionSyncStorageKey) || 0);
+          if (!lastSync || Date.now() - lastSync >= SUBSCRIPTION_SYNC_INTERVAL) {
+            const response = await request('POST', subscriptionPayload(existing));
+            enabled = response.ok;
+            if (enabled) {
+              localStorage.setItem(subscriptionSyncStorageKey, String(Date.now()));
+            } else {
+              localStorage.removeItem(subscriptionStorageKey);
+              localStorage.removeItem(subscriptionSyncStorageKey);
+            }
+          }
+        }
+
         updateNotificationButtons(enabled);
         if (standalone && !enabled) window.setTimeout(showNotificationOnboarding, 500);
       }
@@ -185,6 +205,7 @@
         const response = await request('DELETE', { endpoint: existing.endpoint });
         if (!response.ok) throw new Error('unsubscribe failed');
         localStorage.removeItem(subscriptionStorageKey);
+        if (subscriptionSyncStorageKey) localStorage.removeItem(subscriptionSyncStorageKey);
         updateNotificationButtons(false);
         return;
       }
@@ -208,6 +229,7 @@
         throw new Error('subscribe failed');
       }
       if (subscriptionStorageKey) localStorage.setItem(subscriptionStorageKey, '1');
+      if (subscriptionSyncStorageKey) localStorage.setItem(subscriptionSyncStorageKey, String(Date.now()));
       updateNotificationButtons(true);
       notify(labels.enabled, 'success');
     } catch (error) {

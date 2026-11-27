@@ -126,6 +126,16 @@ class UiContractTest extends TestCase
         $this->assertStringContainsString("document.querySelector('.modal-overlay')", $pwaScript);
     }
 
+    public function test_existing_push_subscription_is_resynchronized_with_the_tenant_database(): void
+    {
+        $pwaScript = file_get_contents(dirname(__DIR__, 2) . '/public/js/pwa.js');
+        $serviceWorker = file_get_contents(dirname(__DIR__, 2) . '/public/service-worker.js');
+
+        $this->assertStringContainsString('SUBSCRIPTION_SYNC_INTERVAL', $pwaScript);
+        $this->assertStringContainsString("request('POST', subscriptionPayload(existing))", $pwaScript);
+        $this->assertStringContainsString('cabinet-pwa-v12', $serviceWorker);
+    }
+
     private function livewireViewContents(): string
     {
         $directory = dirname(__DIR__, 2) . '/resources/views/livewire';
