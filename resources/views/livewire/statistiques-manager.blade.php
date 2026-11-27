@@ -33,7 +33,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="relative">
                         <label class="block text-sm font-semibold text-[#1e3a8a] mb-2">Médecin</label>
-                        <select wire:model="medecin_id" class="w-full px-4 py-3 rounded-lg border border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-colors">
+                        <select wire:model.live="medecin_id" class="w-full px-4 py-3 rounded-lg border border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-colors">
                             <option value="">Tous les médecins</option>
                             @foreach($medecins as $medecin)
                                 <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
@@ -42,17 +42,21 @@
                     </div>
                     <div class="relative">
                         <label class="block text-sm font-semibold text-[#1e3a8a] mb-2">Date début</label>
-                        <input type="date" wire:model="date_debut" class="w-full px-4 py-3 rounded-lg border border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-colors">
+                        <input type="date" wire:model.live="date_debut" class="w-full px-4 py-3 rounded-lg border border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-colors">
                     </div>
                     <div class="relative">
                         <label class="block text-sm font-semibold text-[#1e3a8a] mb-2">Date fin</label>
-                        <input type="date" wire:model="date_fin" class="w-full px-4 py-3 rounded-lg border border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-colors">
+                        <input type="date" wire:model.live="date_fin" class="w-full px-4 py-3 rounded-lg border border-[#1e3a8a] focus:ring-2 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-colors">
                     </div>
                     <div class="flex items-end gap-2">
                         <button wire:click="resetFilters" class="w-full px-4 py-3 bg-[#1e3a8a] text-white rounded-lg hover:bg-[#1e3a8a]/80 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:ring-offset-2 transition-colors">
                             Réinitialiser
                         </button>
                     </div>
+                </div>
+                <div wire:loading.flex wire:target="medecin_id,date_debut,date_fin,resetFilters" class="mt-4 items-center gap-2 text-sm font-medium text-[#1e3a8a]" role="status">
+                    <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+                    Actualisation des statistiques…
                 </div>
             </div>
         </div>
@@ -234,4 +238,4 @@
             </div>
         @endif
     </div>
-</div> 
+</div>
