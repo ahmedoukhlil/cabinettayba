@@ -36,7 +36,7 @@ Activer ensuite la résolution dans `.env` :
 ```dotenv
 TENANCY_ENABLED=true
 TENANCY_CENTRAL_DOMAINS=example.com
-TENANCY_DEFAULT_TENANT=cabinet-principal
+TENANCY_DEFAULT_TENANT=
 ```
 
 Puis vider la configuration :
@@ -45,6 +45,37 @@ Puis vider la configuration :
 php artisan optimize:clear
 php artisan tenant:list
 ```
+
+Laisser `TENANCY_DEFAULT_TENANT` vide en production évite qu'un domaine inconnu
+soit dirigé vers la base d'un cabinet existant.
+
+## Administration centrale
+
+Le domaine exact déclaré dans `TENANCY_CENTRAL_DOMAINS` ne charge aucune base
+métier. Il expose l'administration centrale sous `/admin`, par exemple
+`https://rdvsysdentalmr.com/admin`.
+
+Créer la table et le premier administrateur :
+
+```bash
+php artisan migrate --database=landlord --path=database/migrations/landlord --force
+php artisan central-admin:create admin@example.com --name="Administrateur"
+```
+
+Le mot de passe est demandé de manière interactive et n'apparaît ni dans la
+commande ni dans l'historique du terminal. L'interface permet de créer, modifier,
+suspendre et réactiver les cabinets. Chaque création ou modification teste la
+connexion SQL et vérifie les tables métier requises avant la sauvegarde.
+
+Les sessions doivent rester propres à chaque hôte :
+
+```dotenv
+SESSION_DOMAIN=null
+SESSION_SECURE_COOKIE=true
+```
+
+Ne pas définir `SESSION_DOMAIN=.example.com`, car cela partagerait un cookie de
+session entre le domaine central et tous les cabinets.
 
 ## Ajouter un nouveau cabinet
 

@@ -15,6 +15,10 @@ use App\Http\Controllers\AppointmentRequestController;
 use App\Http\Controllers\PublicAppointmentController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\BrandingController;
+use App\Http\Controllers\CentralAuthController;
+use App\Http\Controllers\CentralTenantController;
+use App\Tenancy\TenantResolver;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,8 +26,33 @@ use App\Http\Controllers\BrandingController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
+Route::get('/', function (Request $request, TenantResolver $resolver) {
+    if (config('tenancy.enabled') && $resolver->isCentralHost($request->getHost())) {
+        return redirect()->route(
+            auth('central')->check() ? 'central.dashboard' : 'central.login'
+        );
+    }
+
     return redirect()->route('login');
+});
+
+Route::middleware('central.domain')->prefix('admin')->name('central.')->group(function () {
+    Route::middleware('guest:central')->group(function () {
+        Route::get('/login', [CentralAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [CentralAuthController::class, 'login'])
+            ->middleware('throttle:10,1')
+            ->name('login.store');
+    });
+
+    Route::middleware('auth:central')->group(function () {
+        Route::get('/', [CentralTenantController::class, 'index'])->name('dashboard');
+        Route::get('/tenants/create', [CentralTenantController::class, 'create'])->name('tenants.create');
+        Route::post('/tenants', [CentralTenantController::class, 'store'])->name('tenants.store');
+        Route::get('/tenants/{tenant}/edit', [CentralTenantController::class, 'edit'])->name('tenants.edit');
+        Route::put('/tenants/{tenant}', [CentralTenantController::class, 'update'])->name('tenants.update');
+        Route::patch('/tenants/{tenant}/toggle', [CentralTenantController::class, 'toggle'])->name('tenants.toggle');
+        Route::post('/logout', [CentralAuthController::class, 'logout'])->name('logout');
+    });
 });
 
 Route::get('/branding/logo.svg', [BrandingController::class, 'logo'])->name('branding.logo');

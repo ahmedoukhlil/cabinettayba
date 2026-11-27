@@ -7,6 +7,16 @@ use Illuminate\Http\Request;
 
 class TenantResolver
 {
+    public function isCentralHost(string $host): bool
+    {
+        $host = strtolower(trim($host));
+
+        return in_array($host, array_map(
+            static fn ($domain) => strtolower(trim((string) $domain)),
+            config('tenancy.central_domains', [])
+        ), true);
+    }
+
     public function resolve(Request $request): ?Tenant
     {
         $host = strtolower($request->getHost());

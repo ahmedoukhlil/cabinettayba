@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Tenancy\TenantManager;
+use App\Tenancy\TenantResolver;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -11,6 +12,11 @@ class EnsureTenantSession
     public function handle(Request $request, Closure $next)
     {
         if (!config('tenancy.enabled')) {
+            return $next($request);
+        }
+
+        if (app(TenantResolver::class)->isCentralHost($request->getHost())) {
+            $request->session()->forget('tenant_id');
             return $next($request);
         }
 

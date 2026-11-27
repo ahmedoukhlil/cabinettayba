@@ -123,6 +123,21 @@ class TenantDatabaseIsolationTest extends TestCase
         $this->assertSame('sqlite', DB::getDefaultConnection());
     }
 
+    public function test_central_domain_does_not_activate_a_tenant_database(): void
+    {
+        $resolver = app(TenantResolver::class);
+        $middleware = app(ResolveTenant::class);
+        $request = Request::create('https://cabinet.test/');
+
+        $this->assertTrue($resolver->isCentralHost($request->getHost()));
+
+        $response = $middleware->handle($request, fn () => new Response('central'));
+
+        $this->assertSame('central', $response->getContent());
+        $this->assertSame('sqlite', DB::getDefaultConnection());
+        $this->assertNull(app(TenantManager::class)->current());
+    }
+
     public function test_branding_comes_from_the_central_tenant_registry(): void
     {
         $tenant = $this->createTenant('cabinet-a');
