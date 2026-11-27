@@ -30,6 +30,8 @@ class AccueilPatient extends Component
     public $showAppointmentRequests = false;
     public $showUsersModal = false;
     public $showStatistiques = false;
+    public $showPaymentMethods = false;
+    public $showCabinetHeader = false;
     public $showPatientMenu = false;
     public $showCabinetMenu = false;
 
@@ -51,7 +53,8 @@ class AccueilPatient extends Component
         'closeCreateModal' => 'closeCreateModal',
         'assureurCreated' => 'handleAssureurCreated',
         'acteCreated' => 'handleActeCreated',
-        'openModal' => 'handleOpenModal'
+        'openModal' => 'handleOpenModal',
+        'brandingUpdated' => 'refreshBranding',
     ];
 
     public function mount()
@@ -142,6 +145,12 @@ class AccueilPatient extends Component
             'showListeActesModal',
             'showCaisseOperations',
             'showAppointmentRequests',
+            'showUsersModal',
+            'showStatistiques',
+            'showPaymentMethods',
+            'showCabinetHeader',
+            'showPatientMenu',
+            'showCabinetMenu',
             'action',
             'editingPatient',
             'patientToDelete'
@@ -309,6 +318,33 @@ class AccueilPatient extends Component
     public function closeUsersModal()
     {
         $this->showUsersModal = false;
+    }
+
+    public function openPaymentMethods()
+    {
+        $this->resetState();
+        $this->showPaymentMethods = true;
+    }
+
+    public function closePaymentMethods()
+    {
+        $this->showPaymentMethods = false;
+    }
+
+    public function openCabinetHeader()
+    {
+        $this->resetState();
+        $this->showCabinetHeader = true;
+    }
+
+    public function closeCabinetHeader()
+    {
+        $this->showCabinetHeader = false;
+    }
+
+    public function refreshBranding()
+    {
+        // Le nouvel en-tête est injecté par le composeur de vues au rendu suivant.
     }
 
     public function openStatistiques()

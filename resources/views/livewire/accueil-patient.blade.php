@@ -101,6 +101,12 @@
                 <button wire:click="openUsersModal" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
                     <i class="fas fa-users-cog" aria-hidden="true"></i> Utilisateurs
                 </button>
+                <button wire:click="openPaymentMethods" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+                    <i class="fas fa-credit-card" aria-hidden="true"></i> Modes de paiement
+                </button>
+                <button wire:click="openCabinetHeader" class="nav-button btn-secondary min-w-[9rem] justify-center px-4 py-2.5 text-sm">
+                    <i class="fas fa-heading" aria-hidden="true"></i> En-tête du cabinet
+                </button>
             @endif
         </section>
     @endif
@@ -174,6 +180,18 @@
     @if($showUsersModal)
         <x-modal id="users" title="Utilisateurs" icon="fa-users-cog" close="closeUsersModal" max-width="max-w-5xl">
             <livewire:user-manager />
+        </x-modal>
+    @endif
+
+    @if($isDocteurProprietaire && $showPaymentMethods)
+        <x-modal id="payment-methods" title="Modes de paiement" subtitle="Moyens proposés lors des consultations et règlements" icon="fa-credit-card" close="closePaymentMethods" max-width="max-w-4xl" body-class="modal-body !p-0">
+            <livewire:payment-method-manager wire:key="payment-method-manager" />
+        </x-modal>
+    @endif
+
+    @if($isDocteurProprietaire && $showCabinetHeader)
+        <x-modal id="cabinet-header" title="En-tête du cabinet" subtitle="Logo, identité et coordonnées publiques" icon="fa-heading" close="closeCabinetHeader" max-width="max-w-5xl" body-class="modal-body !p-0">
+            <livewire:cabinet-header-manager wire:key="cabinet-header-manager" />
         </x-modal>
     @endif
 

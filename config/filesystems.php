@@ -42,6 +42,15 @@ return [
             'visibility' => 'public',
         ],
 
+        // Stockage centralisé des logos, indépendant du disque public isolé
+        // dynamiquement pour chaque tenant.
+        'branding' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/branding'),
+            'url' => env('APP_URL').'/storage/branding',
+            'visibility' => 'public',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -48,6 +48,16 @@ class UiContractTest extends TestCase
         $this->assertStringNotContainsString('wire:click="showStatistiques"', $view);
     }
 
+    public function test_cabinet_settings_are_exposed_as_consistent_modals(): void
+    {
+        $view = file_get_contents(dirname(__DIR__, 2) . '/resources/views/livewire/accueil-patient.blade.php');
+
+        $this->assertStringContainsString('wire:click="openPaymentMethods"', $view);
+        $this->assertStringContainsString('wire:click="openCabinetHeader"', $view);
+        $this->assertStringContainsString('<livewire:payment-method-manager', $view);
+        $this->assertStringContainsString('<livewire:cabinet-header-manager', $view);
+    }
+
     public function test_pending_requests_badge_is_anchored_to_a_notification_bell(): void
     {
         $view = file_get_contents(dirname(__DIR__, 2) . '/resources/views/livewire/accueil-patient.blade.php');

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Livewire\AssureurManager;
 use App\Http\Livewire\PatientSearch;
 use App\Http\Livewire\PatientManager;
+use App\Http\Livewire\PaymentMethodManager;
 use App\Http\Livewire\ReglementFacture;
 use App\Http\Livewire\UserManager;
 use App\Models\TUser;
@@ -146,6 +147,36 @@ class UpgradedUiBusinessLogicTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertEqualsWithDelta(0.75, (float) DB::table('assureurs')->where('IDAssureur', $id)->value('TauxdePEC'), 0.0001);
+    }
+
+    public function test_owner_can_create_and_edit_a_payment_method(): void
+    {
+        $owner = $this->createOwner();
+
+        $component = Livewire::actingAs($owner)
+            ->test(PaymentMethodManager::class)
+            ->call('openModal')
+            ->set('label', 'Carte bancaire')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('showModal', false);
+
+        $methodId = DB::table('ref_type_paiement')
+            ->where('LibPaie', 'Carte bancaire')
+            ->value('idtypepaie');
+
+        $this->assertNotNull($methodId);
+
+        $component
+            ->call('openModal', $methodId)
+            ->set('label', 'Terminal bancaire')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('ref_type_paiement', [
+            'idtypepaie' => $methodId,
+            'LibPaie' => 'Terminal bancaire',
+        ]);
     }
 
     public function test_doctor_user_must_be_linked_to_a_doctor_from_the_same_cabinet(): void

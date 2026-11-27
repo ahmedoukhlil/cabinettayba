@@ -57,6 +57,12 @@ class CabinetBranding
         ];
     }
 
+    public function forget(): void
+    {
+        $this->resolved = null;
+        $this->resolvedFor = null;
+    }
+
     private function logoUrl(?string $path): string
     {
         if (!$path) {
