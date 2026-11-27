@@ -44,7 +44,19 @@ class CaisseOperationsManager extends Component
 
     public function resetFilters()
     {
-        $this->reset(['medecin_id', 'date_debut', 'date_fin']);
+        $this->medecin_id = $this->isDocteur ? Auth::user()->fkidmedecin : null;
+        $this->date_debut = now()->toDateString();
+        $this->date_fin = null;
+        $this->resetPage();
+    }
+
+    public function updatedMedecinId()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDateDebut()
+    {
         $this->resetPage();
     }
 

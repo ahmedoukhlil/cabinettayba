@@ -14,7 +14,7 @@
             @else
             <div>
                 <label class="block text-sm font-medium text-white/80 mb-1">Médecin</label>
-                <select wire:model="medecin_id" class="form-select">
+                <select wire:model.live="medecin_id" class="form-select">
                     <option value="">Tous les médecins</option>
                     @foreach($medecins as $medecin)
                     <option value="{{ $medecin->idMedecin }}">{{ $medecin->Nom }}</option>
@@ -28,7 +28,7 @@
                 @if($isSecretaire)
                     <input type="date" value="{{ now()->toDateString() }}" disabled class="form-input bg-gray-100 cursor-not-allowed">
                 @else
-                    <input type="date" wire:model="date_debut" class="form-input">
+                    <input type="date" wire:model.live="date_debut" class="form-input">
                 @endif
             </div>
 
@@ -37,6 +37,10 @@
                     <i class="fas fa-undo mr-1"></i> Réinitialiser
                 </button>
             </div>
+        </div>
+        <div wire:loading.flex wire:target="medecin_id,date_debut,resetFilters" class="mt-3 items-center gap-2 text-sm font-medium text-white/80" role="status">
+            <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
+            Actualisation de la caisse…
         </div>
     </div>
 
