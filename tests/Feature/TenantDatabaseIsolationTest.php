@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Http\Middleware\ResolveTenant;
 use App\Tenancy\TenantManager;
 use App\Tenancy\TenantResolver;
+use App\Services\CabinetBranding;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,7 +37,7 @@ class TenantDatabaseIsolationTest extends TestCase
                 'foreign_key_constraints' => true,
             ],
             'tenancy.enabled' => true,
-            'tenancy.central_domains' => ['tayba.test'],
+            'tenancy.central_domains' => ['cabinet.test'],
             'tenancy.default_tenant' => null,
         ]);
 
@@ -48,6 +49,14 @@ class TenantDatabaseIsolationTest extends TestCase
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('domain')->nullable()->unique();
+            $table->string('name_ar')->nullable();
+            $table->string('logo_path')->nullable();
+            $table->string('primary_color', 7)->default('#1e3a8a');
+            $table->string('secondary_color', 7)->default('#0e7490');
+            $table->string('reference_prefix', 12)->default('RDV');
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->text('address')->nullable();
             $table->string('database')->unique();
             $table->string('db_host')->nullable();
             $table->unsignedInteger('db_port')->nullable();
@@ -97,8 +106,8 @@ class TenantDatabaseIsolationTest extends TestCase
         $resolver = app(TenantResolver::class);
 
         $this->assertTrue($domainTenant->is($resolver->resolve(Request::create('https://dentiste.example.com'))));
-        $this->assertTrue($subdomainTenant->is($resolver->resolve(Request::create('https://cabinet-b.tayba.test'))));
-        $this->assertNull($resolver->resolve(Request::create('https://inconnu.tayba.test')));
+        $this->assertTrue($subdomainTenant->is($resolver->resolve(Request::create('https://cabinet-b.cabinet.test'))));
+        $this->assertNull($resolver->resolve(Request::create('https://inconnu.cabinet.test')));
     }
 
     public function test_disabled_tenancy_keeps_the_historical_connection(): void
@@ -114,9 +123,30 @@ class TenantDatabaseIsolationTest extends TestCase
         $this->assertSame('sqlite', DB::getDefaultConnection());
     }
 
+    public function test_branding_comes_from_the_central_tenant_registry(): void
+    {
+        $tenant = $this->createTenant('cabinet-a');
+        $tenant->update([
+            'name' => 'Clinique Exemple',
+            'name_ar' => 'عيادة مثال',
+            'primary_color' => '#123456',
+            'reference_prefix' => 'EXEMPLE',
+            'phone' => '+222 45 00 00 00',
+        ]);
+
+        app(TenantManager::class)->activate($tenant->fresh());
+        $brand = app(CabinetBranding::class)->get();
+
+        $this->assertSame('Clinique Exemple', $brand['name']);
+        $this->assertSame('عيادة مثال', $brand['name_ar']);
+        $this->assertSame('#123456', $brand['primary_color']);
+        $this->assertSame('EXEMPLE', $brand['reference_prefix']);
+        $this->assertSame('+222 45 00 00 00', $brand['phone']);
+    }
+
     private function createTenant(string $slug, ?string $domain = null): Tenant
     {
-        $file = tempnam(sys_get_temp_dir(), 'tayba-tenant-');
+        $file = tempnam(sys_get_temp_dir(), 'cabinet-tenant-');
         $this->databaseFiles[] = $file;
 
         return Tenant::create([

@@ -5,7 +5,7 @@
     : { install: 'Installer l’application', enable: 'Activer les notifications', disable: 'Désactiver les notifications', enabled: 'Notifications activées', denied: 'Autorisez les notifications dans les réglages du navigateur.', error: 'Impossible d’activer les notifications.', promptTitle: 'Autoriser les notifications', promptBody: 'Recevez les nouvelles demandes de rendez-vous et leurs mises à jour.', later: 'Plus tard' };
   let installPrompt = null;
   let registration = null;
-  const subscriptionStorageKey = config.subscriptionId ? `tayba-push:${config.subscriptionId}` : null;
+  const subscriptionStorageKey = config.subscriptionId ? `cabinet-push:${config.subscriptionId}` : null;
 
   const installButtons = [...document.querySelectorAll('[data-pwa-install]')];
   const notificationButtons = [...document.querySelectorAll('[data-pwa-notifications]')];

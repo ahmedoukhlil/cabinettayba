@@ -12,6 +12,13 @@ use Minishlink\WebPush\WebPush;
 
 class WebPushService
 {
+    private CabinetBranding $branding;
+
+    public function __construct(CabinetBranding $branding)
+    {
+        $this->branding = $branding;
+    }
+
     public function notifyStaffForNewRequest(PublicAppointmentRequest $appointmentRequest): void
     {
         $userIds = TUser::where('fkidcabinet', $appointmentRequest->fkidcabinet)
@@ -50,7 +57,7 @@ class WebPushService
         $this->send($subscriptions, [
             'title' => $confirmed ? 'تم تأكيد موعدك' : 'تحديث طلب الموعد',
             'body' => $confirmed
-                ? 'تم تأكيد موعدك في عيادة طيبة. اضغط لعرض التفاصيل.'
+                ? 'تم تأكيد موعدك في ' . $this->branding->get()['name_ar'] . '. اضغط لعرض التفاصيل.'
                 : 'تعذر تأكيد الموعد المطلوب. اضغط لعرض التفاصيل.',
             'tag' => 'patient-appointment-' . $appointmentRequest->getKey(),
             'dir' => 'rtl',

@@ -50,7 +50,7 @@ class PwaSubscriptionTest extends TestCase
         $token = 'ValidTrackingToken123';
         $appointmentRequest = PublicAppointmentRequest::create([
             'fkidcabinet' => 1,
-            'reference' => 'TYB-TEST-123',
+            'reference' => 'RDV-TEST-123',
             'tracking_token_hash' => hash('sha256', $token),
         ]);
         $payload = [
@@ -78,7 +78,7 @@ class PwaSubscriptionTest extends TestCase
         $secondToken = 'SecondValidTrackingToken';
         $secondRequest = PublicAppointmentRequest::create([
             'fkidcabinet' => 1,
-            'reference' => 'TYB-TEST-456',
+            'reference' => 'RDV-TEST-456',
             'tracking_token_hash' => hash('sha256', $secondToken),
         ]);
         $this->postJson(route('public.appointment.notifications.store', [

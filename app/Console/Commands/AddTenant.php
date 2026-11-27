@@ -14,6 +14,7 @@ class AddTenant extends Command
         {slug : Identifiant court du cabinet}
         {database : Nom de la base métier déjà créée}
         {--name= : Nom affiché du cabinet}
+        {--name-ar= : Nom affiché en arabe}
         {--domain= : Domaine complet, par exemple clinique.example.com}
         {--host= : Hôte SQL spécifique}
         {--port= : Port SQL spécifique}
@@ -42,6 +43,7 @@ class AddTenant extends Command
 
         $tenant = new Tenant([
             'name' => $this->option('name') ?: Str::headline($slug),
+            'name_ar' => $this->option('name-ar') ?: null,
             'slug' => $slug,
             'domain' => $this->option('domain') ?: null,
             'database' => $this->argument('database'),

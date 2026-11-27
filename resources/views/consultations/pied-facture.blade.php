@@ -1,3 +1,3 @@
 <div @if(isset($class)) class="{{ $class }}" @endif style="width: 100%; margin-top: 30px;">
-    <img src="{{ asset('PieddePageTayba.png') }}" alt="Pied de page Cabinet Tayba" style="width: 100%; max-width: 100%; height: auto; display: block;" />
-</div> 
+    <div style="text-align:center;border-top:1px solid #cbd5e1;padding:10px;color:#64748b">{{ $cabinetBrand['name'] }}@if($cabinetBrand['email']) · {{ $cabinetBrand['email'] }}@endif</div>
+</div>

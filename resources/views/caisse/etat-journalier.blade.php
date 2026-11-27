@@ -82,9 +82,9 @@
 <body>
     <div class="a4">
         <div class="header">
-            <h1>Dental House - État de caisse journalier</h1>
+            <h1>{{ $cabinetBrand['name'] }} - État de caisse journalier</h1>
             <div class="cabinet-info">
-                <h2>{{ $cabinet->Nom ?? 'Dental House' }}</h2>
+                <h2>{{ $cabinetBrand['name'] }}</h2>
                 <p>Date : {{ $date->format('d/m/Y') }}</p>
             </div>
         </div>
@@ -225,4 +225,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>

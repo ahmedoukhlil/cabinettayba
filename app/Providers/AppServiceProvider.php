@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Tenancy\TenantManager;
 use App\Tenancy\TenantResolver;
+use App\Services\CabinetBranding;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TenantManager::class, fn () => new TenantManager());
         $this->app->singleton(TenantResolver::class, fn () => new TenantResolver());
+        $this->app->singleton(CabinetBranding::class, fn ($app) => new CabinetBranding($app->make(TenantManager::class)));
     }
 
     /**
@@ -28,5 +31,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Schema::defaultStringLength(191);
+        View::composer('*', function ($view): void {
+            $view->with('cabinetBrand', app(CabinetBranding::class)->get());
+        });
     }
 }

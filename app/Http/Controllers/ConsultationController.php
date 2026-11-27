@@ -9,9 +9,17 @@ use App\Models\Acte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\CabinetBranding;
 
 class ConsultationController extends Controller
 {
+    private CabinetBranding $branding;
+
+    public function __construct(CabinetBranding $branding)
+    {
+        $this->branding = $branding;
+    }
+
     public function create()
     {
         return view('consultations.create');
@@ -26,12 +34,13 @@ class ConsultationController extends Controller
     public function showReceipt($factureId)
     {
         // Utiliser le cache pour les données du cabinet
-        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 3600, function() {
+        $branding = $this->branding->get();
+        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 3600, function() use ($branding) {
             $user = Auth::user();
             return [
-                'NomCabinet' => $user->cabinet->NomCabinet ?? 'Medipole',
-                'Adresse' => $user->cabinet->Adresse ?? 'Adresse du Cabinet',
-                'Telephone' => $user->cabinet->Telephone ?? 'Téléphone du Cabinet'
+                'NomCabinet' => $branding['name'],
+                'Adresse' => $branding['address'] ?: ($user->cabinet->Adresse ?? ''),
+                'Telephone' => $branding['phone'] ?: ($user->cabinet->Telephone ?? '')
             ];
         });
 
@@ -52,12 +61,13 @@ class ConsultationController extends Controller
     public function showFacturePatient($factureId)
     {
         // Utiliser le cache pour les données du cabinet (24h car rarement modifiées)
-        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 86400, function() {
+        $branding = $this->branding->get();
+        $cabinet = cache()->remember('cabinet_info_' . Auth::id(), 86400, function() use ($branding) {
             $user = Auth::user();
             return [
-                'NomCabinet' => $user->cabinet->NomCabinet ?? 'Dental House',
-                'Adresse' => $user->cabinet->Adresse ?? 'Adresse de Dental House',
-                'Telephone' => $user->cabinet->Telephone ?? 'Téléphone de Dental House'
+                'NomCabinet' => $branding['name'],
+                'Adresse' => $branding['address'] ?: ($user->cabinet->Adresse ?? ''),
+                'Telephone' => $branding['phone'] ?: ($user->cabinet->Telephone ?? '')
             ];
         });
 
@@ -107,7 +117,7 @@ class ConsultationController extends Controller
         // Pré-calculer et mettre en cache les montants (1h)
         $montants = cache()->remember('facture_montants_' . $factureId, 3600, function() use ($facture) {
             $restePEC = $facture->TotalPEC - $facture->ReglementPEC;
-            $restePatient = $facture->ISTP == 1 
+            $restePatient = $facture->ISTP == 1
                 ? ($facture->TotalfactPatient - $facture->TotReglPatient)
                 : ($facture->TotFacture - $facture->TotReglPatient);
 
@@ -139,4 +149,4 @@ class ConsultationController extends Controller
         $f = new \NumberFormatter("fr", \NumberFormatter::SPELLOUT);
         return ucfirst($f->format($number));
     }
-} 
+}

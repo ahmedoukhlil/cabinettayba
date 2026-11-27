@@ -42,8 +42,8 @@ class PublicReservationViewTest extends TestCase
         $this->get(route('public.appointment.create'))
             ->assertOk()
             ->assertSee('window.PWA_CONFIG', false)
-            ->assertSee('manifest-patient.webmanifest', false)
-            ->assertSee('icons/pwa-logo-48.png', false)
+            ->assertSee('/branding/patient.webmanifest', false)
+            ->assertSee('/branding/logo.svg', false)
             ->assertSee('د. Dr Test', false)
             ->assertDontSee("idMedecin)&gt;", false);
     }

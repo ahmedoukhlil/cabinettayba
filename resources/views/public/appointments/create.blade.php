@@ -96,7 +96,7 @@
                         </div>
                     </fieldset>
 
-                    <button type="submit" id="submit-button" class="inline-flex w-full items-center justify-center rounded-lg bg-[#1e3a8a] px-5 py-3 text-base font-semibold text-white hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60">
+                    <button type="submit" id="submit-button" class="inline-flex w-full items-center justify-center rounded-lg px-5 py-3 text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60" style="background:{{ $cabinetBrand['primary_color'] }}">
                         إرسال الطلب
                     </button>
 
@@ -106,10 +106,10 @@
         @endif
     </section>
 
-    @if($cabinet && ($cabinet->TelephonePublic || $cabinet->AdresseFr1))
+    @if($cabinetBrand['phone'] || $cabinetBrand['address'])
         <div class="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-600">
-            @if($cabinet->TelephonePublic)<p><span class="font-medium">الهاتف:</span> <span dir="ltr">{{ $cabinet->TelephonePublic }}</span></p>@endif
-            @if($cabinet->AdresseFr1)<p><span class="font-medium">العنوان:</span> {{ $cabinet->AdresseFr1 }}</p>@endif
+            @if($cabinetBrand['phone'])<p><span class="font-medium">الهاتف:</span> <span dir="ltr">{{ $cabinetBrand['phone'] }}</span></p>@endif
+            @if($cabinetBrand['address'])<p><span class="font-medium">العنوان:</span> {{ $cabinetBrand['address'] }}</p>@endif
         </div>
     @endif
 </div>

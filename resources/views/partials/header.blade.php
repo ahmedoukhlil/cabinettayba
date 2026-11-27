@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabinet Tayba - Documents</title>
+    <title>{{ $cabinetBrand['name'] }} - Documents</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,7 +24,8 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('entetetayba.png') }}" alt="En-tête Cabinet Tayba">
+        <h1>{{ $cabinetBrand['name'] }}</h1>
+        <p>{{ $cabinetBrand['address'] }}</p>
     </div>
 </body>
-</html> 
+</html>

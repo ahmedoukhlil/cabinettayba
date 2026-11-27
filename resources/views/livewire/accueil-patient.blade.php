@@ -7,7 +7,7 @@
 
     <section class="mb-4 flex items-center justify-between gap-4 rounded-xl bg-primary p-4 text-white shadow-lg md:mb-6 md:p-6">
         <div>
-            <h1 class="text-xl font-bold leading-tight sm:text-2xl md:text-3xl">Cabinet Tayba</h1>
+            <h1 class="text-xl font-bold leading-tight sm:text-2xl md:text-3xl">{{ $cabinetBrand['name'] }}</h1>
             <p class="mt-1 text-xs text-white/80 sm:text-sm md:text-base">
                 {{ is_array(Auth::user()->typeuser) ? (Auth::user()->typeuser['Libelle'] ?? '') : (is_object(Auth::user()->typeuser) ? Auth::user()->typeuser->Libelle : Auth::user()->typeuser) }}
                 — <strong>{{ Auth::user()->NomComplet ?? Auth::user()->name ?? '' }}</strong>

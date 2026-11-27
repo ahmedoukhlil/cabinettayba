@@ -17,6 +17,14 @@ class Tenant extends Model
         'db_port',
         'db_username',
         'db_password',
+        'name_ar',
+        'logo_path',
+        'primary_color',
+        'secondary_color',
+        'reference_prefix',
+        'phone',
+        'email',
+        'address',
         'is_active',
     ];
 

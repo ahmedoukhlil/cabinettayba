@@ -94,7 +94,7 @@ class AppointmentConfirmationTest extends TestCase
             'date_souhaitee' => now()->addDay()->toDateString(),
             'heure_souhaitee' => '09:00:00',
             'status' => 'pending',
-            'reference' => 'TYB-CONFIRM-1',
+            'reference' => 'RDV-CONFIRM-1',
             'tracking_token_hash' => hash('sha256', 'token'),
             'patient_id' => $patient->ID,
         ]);
@@ -131,7 +131,7 @@ class AppointmentConfirmationTest extends TestCase
             'date_souhaitee' => now()->addDay()->toDateString(),
             'heure_souhaitee' => '09:00:00',
             'status' => 'pending',
-            'reference' => 'TYB-RESCHEDULE-1',
+            'reference' => 'RDV-RESCHEDULE-1',
             'tracking_token_hash' => hash('sha256', 'token'),
         ]);
 

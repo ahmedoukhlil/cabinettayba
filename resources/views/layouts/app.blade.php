@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="theme-color" content="{{ $cabinetBrand['primary_color'] }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="manifest" href="{{ asset('manifest-staff.webmanifest') }}">
-    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('pwa-icons/pwa-logo-48.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('pwa-icons/pwa-logo-192.png') }}">
-    <title>@yield('title', 'Cabinet Tayba')</title>
+    <link rel="manifest" href="{{ route('branding.manifest', 'staff') }}">
+    <link rel="icon" href="{{ $cabinetBrand['logo_url'] }}">
+    <link rel="apple-touch-icon" href="{{ $cabinetBrand['logo_url'] }}">
+    <title>@yield('title', $cabinetBrand['name'])</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="{{ asset('js/app.js') }}?v={{ filemtime(public_path('js/app.js')) }}" defer></script>
@@ -27,6 +27,7 @@
     </script>
     <script src="{{ asset('js/pwa.js') }}?v={{ filemtime(public_path('js/pwa.js')) }}" defer></script>
     <style>
+        :root{--color-primary:{{ $cabinetBrand['primary_color'] }};--color-primary-rgb:{{ $cabinetBrand['primary_rgb'] }};--color-primary-dark:color-mix(in srgb, {{ $cabinetBrand['primary_color'] }} 78%, #000);--color-primary-light:color-mix(in srgb, {{ $cabinetBrand['primary_color'] }} 10%, #fff);--color-secondary:{{ $cabinetBrand['secondary_color'] }}}
         .pwa-actions{position:fixed;right:1rem;bottom:1rem;z-index:60;display:flex;flex-direction:column;gap:.5rem;align-items:flex-end}
         .pwa-action{border:0;border-radius:.75rem;background:#1e3a8a;color:#fff;padding:.7rem 1rem;font-weight:700;box-shadow:0 8px 20px rgba(15,23,42,.2);cursor:pointer}
         .pwa-action[data-enabled="true"]{background:#475569}.pwa-action:disabled{opacity:.6;cursor:wait}
@@ -41,11 +42,11 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <div class="flex items-center">
-                        <a href="{{ route('accueil.patient') }}" class="flex items-center" aria-label="Accueil Cabinet Tayba">
+                        <a href="{{ route('accueil.patient') }}" class="flex items-center" aria-label="Accueil {{ $cabinetBrand['name'] }}">
                             <span class="h-10 w-10 mr-3 rounded-xl bg-primary-light text-primary inline-flex items-center justify-center" aria-hidden="true">
-                                <i class="fas fa-tooth text-xl"></i>
+                                <img src="{{ $cabinetBrand['logo_url'] }}" alt="" class="h-8 w-8 object-contain">
                             </span>
-                            <span class="text-lg sm:text-xl font-bold text-primary">Cabinet Tayba</span>
+                            <span class="text-lg sm:text-xl font-bold text-primary">{{ $cabinetBrand['name'] }}</span>
                         </a>
                     </div>
                     <!-- Menu desktop -->

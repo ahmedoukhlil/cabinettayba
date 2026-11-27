@@ -14,6 +14,7 @@ use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\AppointmentRequestController;
 use App\Http\Controllers\PublicAppointmentController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\BrandingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,11 @@ use App\Http\Controllers\PushSubscriptionController;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+Route::get('/branding/logo.svg', [BrandingController::class, 'logo'])->name('branding.logo');
+Route::get('/branding/{audience}.webmanifest', [BrandingController::class, 'manifest'])
+    ->where('audience', 'patient|staff')
+    ->name('branding.manifest');
 
 // Réservation publique (aucune authentification requise)
 Route::get('/reservation', [PublicAppointmentController::class, 'create'])

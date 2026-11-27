@@ -70,7 +70,7 @@ return [
             'driver' => 'mysql',
             'host' => env('LANDLORD_DB_HOST', '127.0.0.1'),
             'port' => env('LANDLORD_DB_PORT', '3306'),
-            'database' => env('LANDLORD_DB_DATABASE', 'tayba_landlord'),
+            'database' => env('LANDLORD_DB_DATABASE', 'cabinets_landlord'),
             'username' => env('LANDLORD_DB_USERNAME', 'forge'),
             'password' => env('LANDLORD_DB_PASSWORD', ''),
             'unix_socket' => env('LANDLORD_DB_SOCKET', ''),
