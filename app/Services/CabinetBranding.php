@@ -41,8 +41,11 @@ class CabinetBranding
 
         $primaryColor = $this->color($tenant->primary_color ?? null, '#1e3a8a');
 
+        $name = $name !== '' ? $name : 'Cabinet dentaire';
+
         return $this->resolved = [
-            'name' => $name !== '' ? $name : 'Cabinet dentaire',
+            'name' => $name,
+            'pwa_name' => $this->pwaName($name),
             'name_ar' => $nameAr !== '' ? $nameAr : 'عيادة الأسنان',
             'logo_url' => $this->logoUrl($logoPath),
             'has_logo' => !empty($logoPath),
@@ -95,5 +98,14 @@ class CabinetBranding
     {
         $prefix = strtoupper(preg_replace('/[^A-Z0-9]/i', '', (string) $prefix));
         return $prefix !== '' ? substr($prefix, 0, 12) : 'RDV';
+    }
+
+    private function pwaName(string $name): string
+    {
+        $name = trim(preg_replace('/\s+/u', ' ', $name));
+
+        return preg_match('/^cabinet(?:\s|$)/iu', $name)
+            ? $name
+            : 'Cabinet ' . $name;
     }
 }

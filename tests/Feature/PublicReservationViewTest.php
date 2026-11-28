@@ -54,4 +54,20 @@ class PublicReservationViewTest extends TestCase
 
         $this->assertStringNotContainsString('alert(', file_get_contents(public_path('js/pwa.js')));
     }
+
+    public function test_pwa_manifests_use_the_dynamic_cabinet_identity(): void
+    {
+        $this->get('/branding/staff.webmanifest')
+            ->assertOk()
+            ->assertJsonPath('id', '/login')
+            ->assertJsonPath('name', 'Cabinet dentaire')
+            ->assertJsonPath('short_name', 'Cabinet dentaire')
+            ->assertJsonPath('icons.0.src', route('branding.logo'));
+
+        $this->get('/manifest-staff.webmanifest')
+            ->assertOk()
+            ->assertJsonPath('id', '/cabinet-pwa')
+            ->assertJsonPath('name', 'Cabinet dentaire')
+            ->assertJsonPath('icons.0.src', route('branding.logo'));
+    }
 }

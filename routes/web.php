@@ -59,6 +59,9 @@ Route::get('/branding/logo.svg', [BrandingController::class, 'logo'])->name('bra
 Route::get('/branding/{audience}.webmanifest', [BrandingController::class, 'manifest'])
     ->where('audience', 'patient|staff')
     ->name('branding.manifest');
+// Compatibilite avec les PWA deja installees avant les manifestes multi-tenant.
+Route::get('/manifest-staff.webmanifest', [BrandingController::class, 'staffManifest']);
+Route::get('/manifest-patient.webmanifest', [BrandingController::class, 'patientManifest']);
 
 // Réservation publique (aucune authentification requise)
 Route::get('/reservation', [PublicAppointmentController::class, 'create'])

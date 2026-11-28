@@ -135,7 +135,8 @@ class UiContractTest extends TestCase
         $this->assertStringContainsString("request('POST', subscriptionPayload(existing))", $pwaScript);
         $this->assertStringContainsString('subscriptionUsesCurrentKey', $pwaScript);
         $this->assertStringContainsString('replacesEndpoint', $pwaScript);
-        $this->assertStringContainsString('cabinet-pwa-v13', $serviceWorker);
+        $this->assertStringContainsString('cabinet-pwa-v14', $serviceWorker);
+        $this->assertStringContainsString("payload.icon || '/branding/logo.svg'", $serviceWorker);
     }
 
     private function livewireViewContents(): string

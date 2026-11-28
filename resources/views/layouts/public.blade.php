@@ -9,6 +9,7 @@
     <meta name="theme-color" content="{{ $cabinetBrand['primary_color'] }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ $cabinetBrand['pwa_name'] }}">
     <link rel="manifest" href="{{ route('branding.manifest', 'patient') }}">
     <link rel="icon" href="{{ $cabinetBrand['logo_url'] }}">
     <link rel="apple-touch-icon" href="{{ $cabinetBrand['logo_url'] }}">
@@ -20,6 +21,8 @@
             'vapidPublicKey' => config('webpush.vapid.public_key'),
             'subscribeUrl' => trim($__env->yieldContent('pwa_subscribe_url')) ?: null,
             'subscriptionId' => trim($__env->yieldContent('pwa_subscription_id')) ?: null,
+            'appName' => $cabinetBrand['pwa_name'],
+            'logoUrl' => $cabinetBrand['logo_url'],
         ];
     @endphp
     <script>

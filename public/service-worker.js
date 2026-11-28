@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cabinet-pwa-v13';
+const CACHE_NAME = 'cabinet-pwa-v14';
 const STATIC_ASSETS = [
   '/offline.html',
   '/branding/logo.svg',
@@ -56,8 +56,8 @@ self.addEventListener('push', event => {
   event.waitUntil(Promise.all([
     self.registration.showNotification(payload.title || 'Nouvelle notification', {
       body: payload.body || 'Vous avez une nouvelle notification.',
-      icon: '/branding/logo.svg',
-      badge: '/branding/logo.svg',
+      icon: payload.icon || '/branding/logo.svg',
+      badge: payload.badge || payload.icon || '/branding/logo.svg',
       tag: payload.tag || 'cabinet-notification',
       dir: payload.dir || 'auto',
       data: { url: payload.url || '/' },

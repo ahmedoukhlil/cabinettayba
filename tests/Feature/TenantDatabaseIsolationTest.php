@@ -153,6 +153,7 @@ class TenantDatabaseIsolationTest extends TestCase
         $brand = app(CabinetBranding::class)->get();
 
         $this->assertSame('Clinique Exemple', $brand['name']);
+        $this->assertSame('Cabinet Clinique Exemple', $brand['pwa_name']);
         $this->assertSame('عيادة مثال', $brand['name_ar']);
         $this->assertSame('#123456', $brand['primary_color']);
         $this->assertSame('EXEMPLE', $brand['reference_prefix']);
@@ -171,6 +172,7 @@ class TenantDatabaseIsolationTest extends TestCase
 
         $manager->activate($first->fresh());
         $this->assertSame('Cabinet A', $branding->get()['name']);
+        $this->assertSame('Cabinet A', $branding->get()['pwa_name']);
         $manager->deactivate();
 
         $manager->activate($second->fresh());

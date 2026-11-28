@@ -184,6 +184,12 @@ class WebPushService
     private function send(Collection $subscriptions, array $payload): array
     {
         $vapid = config('webpush.vapid');
+        $brand = $this->branding->get();
+        $payload += [
+            'appName' => $brand['pwa_name'],
+            'icon' => $brand['logo_url'],
+            'badge' => $brand['logo_url'],
+        ];
         $result = [
             'queued' => $subscriptions->count(),
             'success' => 0,
