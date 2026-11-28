@@ -31,6 +31,7 @@ class PushSubscriptionController extends Controller
         $validated = $request->validate(['endpoint' => ['required', 'url', 'max:2048']]);
         PushSubscription::where('endpoint_hash', hash('sha256', $validated['endpoint']))
             ->where('user_id', $request->user()->getAuthIdentifier())
+            ->where('cabinet_id', $request->user()->fkidcabinet)
             ->delete();
 
         return response()->json(['message' => 'Notifications désactivées.']);
@@ -58,6 +59,7 @@ class PushSubscriptionController extends Controller
         $validated = $request->validate(['endpoint' => ['required', 'url', 'max:2048']]);
         PushSubscription::where('endpoint_hash', hash('sha256', $validated['endpoint']))
             ->where('public_appointment_request_id', $appointmentRequest->getKey())
+            ->where('cabinet_id', $appointmentRequest->fkidcabinet)
             ->delete();
 
         return response()->json(['message' => 'تم إيقاف إشعارات الموعد.']);
@@ -70,6 +72,7 @@ class PushSubscriptionController extends Controller
             'keys.p256dh' => ['required', 'string', 'max:512'],
             'keys.auth' => ['required', 'string', 'max:512'],
             'contentEncoding' => ['nullable', 'in:aesgcm,aes128gcm'],
+            'replacesEndpoint' => ['nullable', 'url', 'max:2048'],
         ]);
 
         $endpointHash = hash('sha256', $validated['endpoint']);
@@ -77,7 +80,7 @@ class PushSubscriptionController extends Controller
             ? 'user:' . $owner['user_id']
             : 'appointment:' . $owner['public_appointment_request_id'];
 
-        return PushSubscription::updateOrCreate(
+        $subscription = PushSubscription::updateOrCreate(
             ['target_key' => hash('sha256', $endpointHash . '|' . $ownerKey)],
             array_merge($owner, [
                 'endpoint_hash' => $endpointHash,
@@ -87,6 +90,24 @@ class PushSubscriptionController extends Controller
                 'content_encoding' => $validated['contentEncoding'] ?? 'aes128gcm',
             ])
         );
+
+        if (!empty($validated['replacesEndpoint'])) {
+            $replacedHash = hash('sha256', $validated['replacesEndpoint']);
+            if (!hash_equals($endpointHash, $replacedHash)) {
+                $staleQuery = PushSubscription::where('endpoint_hash', $replacedHash)
+                    ->where('cabinet_id', $owner['cabinet_id']);
+
+                if ($owner['user_id']) {
+                    $staleQuery->where('user_id', $owner['user_id']);
+                } else {
+                    $staleQuery->where('public_appointment_request_id', $owner['public_appointment_request_id']);
+                }
+
+                $staleQuery->delete();
+            }
+        }
+
+        return $subscription;
     }
 
     private function appointmentRequest(string $reference, string $token): PublicAppointmentRequest

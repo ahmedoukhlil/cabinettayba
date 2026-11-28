@@ -121,6 +121,10 @@ class DiagnoseWebPush extends Command
             $result['failed'],
         ]]);
 
+        foreach (array_unique($result['reasons']) as $reason) {
+            $this->warn('Motif du refus : ' . $reason);
+        }
+
         if ($result['skipped'] || $result['success'] === 0) {
             $this->error('Aucune notification de test n’a été acceptée par le fournisseur Push.');
             return false;

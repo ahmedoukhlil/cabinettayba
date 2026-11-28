@@ -133,7 +133,9 @@ class UiContractTest extends TestCase
 
         $this->assertStringContainsString('SUBSCRIPTION_SYNC_INTERVAL', $pwaScript);
         $this->assertStringContainsString("request('POST', subscriptionPayload(existing))", $pwaScript);
-        $this->assertStringContainsString('cabinet-pwa-v12', $serviceWorker);
+        $this->assertStringContainsString('subscriptionUsesCurrentKey', $pwaScript);
+        $this->assertStringContainsString('replacesEndpoint', $pwaScript);
+        $this->assertStringContainsString('cabinet-pwa-v13', $serviceWorker);
     }
 
     private function livewireViewContents(): string

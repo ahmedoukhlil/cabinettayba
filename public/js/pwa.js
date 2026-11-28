@@ -64,13 +64,28 @@
     return Uint8Array.from([...raw].map(char => char.charCodeAt(0)));
   };
 
-  const subscriptionPayload = subscription => {
+  const subscriptionUsesCurrentKey = subscription => {
+    const configuredKey = base64ToUint8Array(config.vapidPublicKey || '');
+    const storedKey = subscription?.options?.applicationServerKey;
+    if (!storedKey || configuredKey.length === 0) return true;
+    const storedBytes = new Uint8Array(storedKey);
+    return storedBytes.length === configuredKey.length
+      && storedBytes.every((value, index) => value === configuredKey[index]);
+  };
+
+  const subscriptionPayload = (subscription, replacesEndpoint = null) => {
     const json = subscription.toJSON();
     return {
       endpoint: json.endpoint,
       keys: json.keys,
-      contentEncoding: PushManager.supportedContentEncodings?.[0] || 'aes128gcm'
+      contentEncoding: PushManager.supportedContentEncodings?.[0] || 'aes128gcm',
+      replacesEndpoint
     };
+  };
+
+  const clearStoredSubscriptionState = () => {
+    if (subscriptionStorageKey) localStorage.removeItem(subscriptionStorageKey);
+    if (subscriptionSyncStorageKey) localStorage.removeItem(subscriptionSyncStorageKey);
   };
 
   const request = (method, body) => fetch(config.subscribeUrl, {
@@ -140,8 +155,24 @@
       await registration.update();
       await navigator.serviceWorker.ready;
       if (config.subscribeUrl && config.vapidPublicKey && 'PushManager' in window) {
-        const existing = await registration.pushManager.getSubscription();
+        let existing = await registration.pushManager.getSubscription();
         let enabled = Boolean(existing && subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1');
+
+        if (enabled && !subscriptionUsesCurrentKey(existing)) {
+          const replacesEndpoint = existing.endpoint;
+          await existing.unsubscribe();
+          existing = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64ToUint8Array(config.vapidPublicKey)
+          });
+          const response = await request('POST', subscriptionPayload(existing, replacesEndpoint));
+          enabled = response.ok;
+          if (enabled) {
+            localStorage.setItem(subscriptionSyncStorageKey, String(Date.now()));
+          } else {
+            clearStoredSubscriptionState();
+          }
+        }
 
         // Une base tenant peut être restaurée ou déplacée alors que le navigateur
         // conserve encore son abonnement. Réinscrire périodiquement l'abonnement
@@ -154,8 +185,7 @@
             if (enabled) {
               localStorage.setItem(subscriptionSyncStorageKey, String(Date.now()));
             } else {
-              localStorage.removeItem(subscriptionStorageKey);
-              localStorage.removeItem(subscriptionSyncStorageKey);
+              clearStoredSubscriptionState();
             }
           }
         }
@@ -199,13 +229,19 @@
     if (!registration) return notify(labels.error, 'error');
     button.disabled = true;
     try {
-      const existing = await registration.pushManager.getSubscription();
+      let existing = await registration.pushManager.getSubscription();
+      let replacesEndpoint = null;
+      if (existing && !subscriptionUsesCurrentKey(existing)) {
+        replacesEndpoint = existing.endpoint;
+        await existing.unsubscribe();
+        existing = null;
+        clearStoredSubscriptionState();
+      }
       const enabledForThisContext = existing && subscriptionStorageKey && localStorage.getItem(subscriptionStorageKey) === '1';
       if (enabledForThisContext) {
         const response = await request('DELETE', { endpoint: existing.endpoint });
         if (!response.ok) throw new Error('unsubscribe failed');
-        localStorage.removeItem(subscriptionStorageKey);
-        if (subscriptionSyncStorageKey) localStorage.removeItem(subscriptionSyncStorageKey);
+        clearStoredSubscriptionState();
         updateNotificationButtons(false);
         return;
       }
@@ -223,7 +259,7 @@
           });
         createdSubscription = true;
       }
-      const response = await request('POST', subscriptionPayload(subscription));
+      const response = await request('POST', subscriptionPayload(subscription, replacesEndpoint));
       if (!response.ok) {
         if (createdSubscription) await subscription.unsubscribe();
         throw new Error('subscribe failed');

@@ -190,6 +190,7 @@ class WebPushService
             'expired' => 0,
             'failed' => 0,
             'skipped' => false,
+            'reasons' => [],
         ];
 
         if (
@@ -235,7 +236,9 @@ class WebPushService
                     PushSubscriptionModel::where('endpoint_hash', hash('sha256', $report->getEndpoint()))->delete();
                 } elseif (!$report->isSuccess()) {
                     $result['failed']++;
-                    Log::warning('Échec d’envoi Web Push', ['reason' => $report->getReason()]);
+                    $reason = (string) $report->getReason();
+                    $result['reasons'][] = $reason;
+                    Log::warning('Échec d’envoi Web Push', ['reason' => $reason]);
                 } else {
                     $result['success']++;
                 }
@@ -248,6 +251,7 @@ class WebPushService
             Log::warning('Notification Web Push indisponible', [
                 'message' => $exception->getMessage(),
             ]);
+            $result['reasons'][] = $exception->getMessage();
         }
 
         return $result;
